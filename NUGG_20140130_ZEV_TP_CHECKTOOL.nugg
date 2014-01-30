@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="utf-16"?>
-<nugget name="20130614_ZEV_TP_CHECKTOOL">
+<?xml version="1.0" encoding="iso-8859-1"?>
+<nugget name="20140130_ZEV_TP_CHECKTOOL">
  <TRAN TCODE="ZTCT" PGMNA="ZEV_TP_CHECKTOOL" DYPNO="1000" CINFO="80">
-  <tstct SPRSL="E" TCODE="ZTCT" TTEXT="Transport Checking Tool"/>
+  <tstct/>
   <tstcc TCODE="ZTCT"/>
   <tstcp/>
   <rsstcd ST_PROG="X" DEVCLASS="$TMP"/>
  </TRAN>
- <PROG NAME="ZEV_TP_CHECKTOOL" VARCL="X" SUBC="1" CNAM="EDVLS0" CDAT="20130308" UNAM="EVLEESHOUWER" UDAT="20130614" VERN="000168" RMAND="100" RLOAD="N" FIXPT="X" SDATE="20130614" STIME="145039" IDATE="20130614" ITIME="145039" UCCHECK="X">
+ <PROG NAME="ZEV_TP_CHECKTOOL" VARCL="X" SUBC="1" CNAM="EDVLS0" CDAT="20130308" UNAM="EDVLS0" UDAT="20140130" VERN="000175" RMAND="100" RLOAD="N" FIXPT="X" SDATE="20140130" STIME="090949" IDATE="20140130" ITIME="090949" UCCHECK="X">
   <textPool>
    <language SPRAS="E">
     <textElement ID="I" KEY="008" ENTRY="Desktop not found" LENGTH="50 "/>
@@ -249,6 +249,7 @@
     <textElement ID="S" KEY="SO_USER" ENTRY="        User Name" LENGTH="17 "/>
    </language>
   </textPool>
+  <programDocumentation/>
   <pfstatus>
    <pfstatus_sta CODE="STANDARD_FULLSCREEN" MODAL="D" ACTCODE="000001" PFKCODE="000001" BUTCODE="0001" INT_NOTE="Standard for generic List Output in Fullscreen Grid"/>
    <pfstatus_fun CODE="%ML" TEXTNO="001" TEXT_TYPE="S" FUN_TEXT="Folder" PATH="F"/>
@@ -681,6 +682,7 @@ DATA:  ta_targets              TYPE trsysclis.
 DATA:  st_target               TYPE trsyscli.
 DATA:  tp_sysname              TYPE sysname.
 DATA:  tp_index                TYPE sytabix.
+DATA:  tp_msg                  TYPE string.
 
 *--------------------------------------------------------------------*
 * Data - ALV
@@ -811,7 +813,6 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     METHODS: get_tp_prefix            IMPORTING im_dev              TYPE sysname   OPTIONAL
                                       RETURNING value(re_tp_prefix) TYPE char5.
     METHODS: get_filename             EXPORTING ex_file             TYPE localfile.
-    METHODS: handle_error             IMPORTING rf_oref             TYPE REF TO cx_root.
     METHODS: set_check_flag           IMPORTING im_check_flag       TYPE abap_bool OPTIONAL.
     METHODS: set_check_ddic           IMPORTING im_check_ddic       TYPE abap_bool OPTIONAL.
     METHODS: set_check_tabkeys        IMPORTING im_check_tabkeys    TYPE abap_bool OPTIONAL.
@@ -919,6 +920,7 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     DATA:  building_conflict_popup    TYPE flag.
 
     METHODS: refresh_import_queues.
+    METHODS: handle_error             IMPORTING rf_oref             TYPE REF TO cx_root.
     METHODS: flag_for_process         IMPORTING rows                TYPE salv_t_row
                                                 cell                TYPE salv_s_cell.
     METHODS: get_main_transports      IMPORTING im_trkorr_range     TYPE gtabkey_trkorrt.
@@ -1195,7 +1197,9 @@ INITIALIZATION.
     TRY .
         CREATE OBJECT rf_ztct.
       CATCH cx_root INTO rf_root.
-        rf_ztct-&gt;handle_error( EXPORTING rf_oref = rf_root ).
+        tp_msg = rf_root-&gt;get_text( ).
+        CONCATENATE &apos;ERROR:&apos;(038) tp_msg INTO tp_msg SEPARATED BY space.
+        MESSAGE tp_msg TYPE &apos;E&apos;.
     ENDTRY.
   ENDIF.
 
@@ -2664,7 +2668,12 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDIF.
 
 * To avoid timeouts
-    lp_counter_reset = im_counter MOD 50.
+    IF me-&gt;check_tabkeys = abap_true.
+      lp_counter_reset = im_counter MOD 5.
+    ELSE.
+      lp_counter_reset = im_counter MOD 50.
+    ENDIF.
+
     IF lp_counter_reset = 0.
       CALL FUNCTION &apos;TH_REDISPATCH&apos;.
     ENDIF.
@@ -3469,7 +3478,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA: lp_string             TYPE string.
     DATA: lp_type               TYPE char01.
     DATA: lp_com                TYPE i.
-    FIELD-SYMBOLS: &lt;l_fs&gt;       TYPE any.
+    FIELD-SYMBOLS: &lt;l_fs&gt;       TYPE ANY.
 
 *   Determine the number of fields in the structure
     DATA: lr_tabledescr         TYPE REF TO cl_abap_tabledescr,
@@ -3578,7 +3587,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA: ls_main           TYPE ty_request_details.
     DATA: lp_type           TYPE char01.
     DATA: lp_com            TYPE i.
-    FIELD-SYMBOLS: &lt;l_fs&gt;   TYPE any.
+    FIELD-SYMBOLS: &lt;l_fs&gt;   TYPE ANY.
 *   Determine the number of fields in the structure
     DATA: l_o_tabledescr         TYPE REF TO cl_abap_tabledescr.
     DATA: l_o_typedescr          TYPE REF TO cl_abap_typedescr.
@@ -4513,7 +4522,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD is_empty_column.
     DATA: ls_line TYPE ty_request_details.
-    FIELD-SYMBOLS: &lt;column&gt; TYPE any.
+    FIELD-SYMBOLS: &lt;column&gt; TYPE ANY.
     re_is_empty = abap_true.
     LOOP AT im_table INTO ls_line.
       ASSIGN COMPONENT im_column OF STRUCTURE ls_line TO &lt;column&gt;.
@@ -4528,7 +4537,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     CALL FUNCTION &apos;DOCU_CALL&apos;
       EXPORTING
         id         = &apos;TA&apos;
-        langu      = &apos;E&apos;
+        langu      = sy-langu
         object     = im_object
       EXCEPTIONS
         wrong_name = 1
@@ -4549,7 +4558,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 
     CLEAR: ex_colwidth.
     IF NOT im_field IS INITIAL.
-      lp_value = strlen( im_field ).
+      lp_value = STRLEN( im_field ).
       IF lp_value &gt; ex_colwidth.
         ex_colwidth = lp_value.
       ENDIF.
@@ -4762,7 +4771,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                       AND   ddlanguage = sy-langu.
       ENDIF.
     ENDIF.
-    lp_len = strlen( lp_as4text ).
+    lp_len = STRLEN( lp_as4text ).
     IF lp_len &gt; im_colwidth.
       re_colwidth = lp_len.
     ELSE.
@@ -4860,8 +4869,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     lr_logo-&gt;set_left_content( lr_rows_flow ).
     lr_logo-&gt;set_right_logo( lp_picture ).
     ex_form_element = lr_logo.
-
-
   ENDMETHOD.                    &quot;top_of_page
 
   METHOD version_check.
@@ -5077,7 +5084,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           l_o_typedescr          TYPE REF TO cl_abap_typedescr,
           l_o_structdescr        TYPE REF TO cl_abap_structdescr,
           l_s_abap_compdescr_tab TYPE abap_compdescr.
-    FIELD-SYMBOLS: &lt;l_type&gt; TYPE any.
+    FIELD-SYMBOLS: &lt;l_type&gt; TYPE ANY.
 *   To remove some columns from the output
     DATA: lra_fieldname TYPE RANGE OF lty_field_ran.
     DATA: ls_fieldname  TYPE lty_field_ran.
@@ -5138,11 +5145,11 @@ CLASS lcl_ztct IMPLEMENTATION.
       ASSIGN (lp_field) TO &lt;l_type&gt;.
       CHECK &lt;l_type&gt; IS ASSIGNED.
       lr_type_des = cl_abap_typedescr=&gt;describe_by_data( &lt;l_type&gt; ).
-      lp_length = strlen( lr_type_des-&gt;absolute_name ).
+      lp_length = STRLEN( lr_type_des-&gt;absolute_name ).
       lp_data_type = lr_type_des-&gt;absolute_name+6(lp_length).
     ENDLOOP.
 *   Determine the number of fields in the structure
-    FIELD-SYMBOLS:  &lt;l_fs_field1&gt; TYPE any.
+    FIELD-SYMBOLS:  &lt;l_fs_field1&gt; TYPE ANY.
     TRY.
         l_o_typedescr = cl_abap_tabledescr=&gt;describe_by_data( p_data = im_table ).
         l_o_tabledescr ?= l_o_typedescr.
@@ -5775,7 +5782,9 @@ START-OF-SELECTION.
     TRY .
         CREATE OBJECT rf_ztct.
       CATCH cx_root INTO rf_root.
-        rf_ztct-&gt;handle_error( EXPORTING rf_oref = rf_root ).
+        tp_msg = rf_root-&gt;get_text( ).
+        CONCATENATE &apos;ERROR:&apos;(038) tp_msg INTO tp_msg SEPARATED BY space.
+        MESSAGE tp_msg TYPE &apos;E&apos;.
     ENDTRY.
   ENDIF.
 
