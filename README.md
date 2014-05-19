@@ -29,5 +29,5 @@ It is possible to save your list so you can continue the check later. You can me
 
 Limitations
 
-This tool was developed for use in a 3-Tier system.
-(Development --> Acceptance --> Production).
+This tool was initially developed for use in a 3-Tier system (DEV-->QAS-->PRD), to chekc if transports can safely be moved to Production. However, it can also be used to check if transports can be moved to other environments.
+For example: If the company uses a 4-tier system (DEV-->TST-->QAS-->PRD), a check can be done on the route DEV-->TST-->QAS, DEV-->QAS-->PRD or DEV-->TST-->PRD.
