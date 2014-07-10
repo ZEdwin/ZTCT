@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<nugget name="20140707_ZEV_TP_CHECKTOOL">
+<nugget name="20140708_ZEV_TP_CHECKTOOL">
  <PROG NAME="ZEV_TP_CHECKTOOL" VARCL="X" SUBC="1" RMAND="100" RLOAD="N" FIXPT="X" UCCHECK="X">
   <textPool>
    <language SPRAS="E">
@@ -44,7 +44,7 @@
     <textElement ID="I" KEY="050" ENTRY="Checking buffer" LENGTH="15 "/>
     <textElement ID="I" KEY="051" ENTRY="DDIC not transported..." LENGTH="26 "/>
     <textElement ID="I" KEY="052" ENTRY="Retrieving Where Used list" LENGTH="26 "/>
-    <textElement ID="I" KEY="053" ENTRY="Collecting DDIC Info" LENGTH="20 "/>
+    <textElement ID="I" KEY="053" ENTRY="Collecting DDIC transports" LENGTH="29 "/>
     <textElement ID="I" KEY="B10" ENTRY="Selection range / Upload file" LENGTH="29 "/>
     <textElement ID="I" KEY="B21" ENTRY="Selection criteria" LENGTH="18 "/>
     <textElement ID="I" KEY="B22" ENTRY="File upload" LENGTH="14 "/>
@@ -83,6 +83,7 @@
     <textElement ID="I" KEY="M11" ENTRY="No records selected that can be re-imported" LENGTH="43 "/>
     <textElement ID="I" KEY="M12" ENTRY="Transport not in Transport Buffer" LENGTH="36 "/>
     <textElement ID="I" KEY="M13" ENTRY="No transports found..." LENGTH="22 "/>
+    <textElement ID="I" KEY="M14" ENTRY="Object cannot be displayed..." LENGTH="29 "/>
     <textElement ID="I" KEY="T01" ENTRY="Selected transports" LENGTH="19 "/>
     <textElement ID="I" KEY="T02" ENTRY="Keys can be checked for the following tables" LENGTH="47 "/>
     <textElement ID="I" KEY="T03" ENTRY="Error Creating ALV Grid" LENGTH="23 "/>
@@ -203,6 +204,7 @@
     <textElement ID="I" KEY="M11" ENTRY="No records selected that can be re-imported" LENGTH="43 "/>
     <textElement ID="I" KEY="M12" ENTRY="Transport not in Transport Buffer" LENGTH="36 "/>
     <textElement ID="I" KEY="M13" ENTRY="No transports found..." LENGTH="22 "/>
+    <textElement ID="I" KEY="M14" ENTRY="Object cannot be displayed..." LENGTH="29 "/>
     <textElement ID="I" KEY="T01" ENTRY="Selected transports" LENGTH="19 "/>
     <textElement ID="I" KEY="T02" ENTRY="Keys can be checked for the following tables" LENGTH="47 "/>
     <textElement ID="I" KEY="T03" ENTRY="Error Creating ALV Grid" LENGTH="23 "/>
@@ -636,12 +638,13 @@
 *&amp; Title    : Transport checking tool (on object level)             &amp;*
 *&amp; Purpose  : Check transport objects before moving to production   &amp;*
 *&amp;------------------------------------------------------------------&amp;*
-*
+* SOURCE: https://github.com/ZEdwin/ZTCT
+* BLOG (SCN):
+* http://scn.sap.com/community/abap/blog/2013/05/31/transport-
+* checking-tool-object-level
 *--------------------------------------------------------------------*
 * INSTALLATION
 *--------------------------------------------------------------------*
-* Code Exchange link: https://cw.sdn.sap.com/cw/groups/ztct
-*
 * Use SAPLINK to import the Nugget file (located under Releases).
 * This will only install a local program (R3TR PROG: this includes
 * report texts and program documentation.
@@ -1978,7 +1981,9 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
             iv_action   = &apos;SHOW&apos;
           EXCEPTIONS
             OTHERS      = 1.
-
+        IF sy-subrc &lt;&gt; 0.
+          MESSAGE i000(db) WITH &apos;Object cannot be displayed...&apos;(m14).
+        ENDIF.
       WHEN OTHERS.
     ENDCASE.
   ENDMETHOD.                                       &quot;on_link_click
@@ -4385,6 +4390,8 @@ CLASS lcl_ztct IMPLEMENTATION.
         ls_fieldname-low = &apos;KEYOBJNAME&apos;.
         APPEND ls_fieldname TO lra_fieldname.
         ls_fieldname-low = &apos;TABKEY&apos;.
+        APPEND ls_fieldname TO lra_fieldname.
+        ls_fieldname-low = &apos;PGMID&apos;.
         APPEND ls_fieldname TO lra_fieldname.
         ls_fieldname-low = &apos;DEV&apos;.
         APPEND ls_fieldname TO lra_fieldname.
