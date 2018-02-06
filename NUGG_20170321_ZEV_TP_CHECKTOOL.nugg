@@ -2726,8 +2726,8 @@ CLASS lcl_ztct IMPLEMENTATION.
                       ls_keys-keyobjname,
                       ls_keys-tabkey)
               WHERE   e071k~trkorr     EQ ls_keys-trkorr
-                AND   e071k~trkorr     NOT IN me->project_trkorrs
-                AND   e071k~trkorr     LIKE me->prefix
+                AND   e071k~trkorr     NOT IN me-&gt;project_trkorrs
+                AND   e071k~trkorr     LIKE me-&gt;prefix
                 AND   e070~trfunction  NE 'T'
                 AND   mastertype =  ls_keys-object
                 AND   mastername =  ls_keys-obj_name
