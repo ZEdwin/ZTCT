@@ -2721,14 +2721,16 @@ CLASS lcl_ztct IMPLEMENTATION.
 * Now read the keys from the database
       SELECT object objname tabkey
                 FROM e071k
+                INNER JOIN e070 ON e070~trkorr EQ e071k~trkorr
                 INTO (ls_keys-keyobject,
                       ls_keys-keyobjname,
                       ls_keys-tabkey)
-                WHERE trkorr     =  ls_keys-trkorr
+              WHERE   e071k~trkorr     EQ ls_keys-trkorr
+                AND   e071k~trkorr     NOT IN me-&gt;project_trkorrs
+                AND   e071k~trkorr     LIKE me-&gt;prefix
+                AND   e070~trfunction  NE 'T'
                 AND   mastertype =  ls_keys-object
                 AND   mastername =  ls_keys-obj_name
-                AND   NOT trkorr IN  me-&gt;project_trkorrs
-                AND   trkorr     LIKE me-&gt;prefix
                 AND   objname    IN excluded_objects. &quot;#EC CI_SEL_NESTED
         APPEND ls_keys TO lt_keys.
       ENDSELECT.
@@ -4817,6 +4819,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                    ls_tp_same_object-as4date,
                    ls_tp_same_object-as4time)
              WHERE NOT a~trkorr IN  me-&gt;project_trkorrs
+             AND   a~trfunction NE 'T'
              AND   b~obj_name   IN excluded_objects
              AND   a~strkorr    = &apos;&apos;
              AND   a~trkorr     LIKE me-&gt;prefix
@@ -4835,6 +4838,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       SELECT korrnum objtype objname
              author
              FROM  vrsd
+             INNER JOIN e070 ON vrsd~korrnum EQ e070~trkorr
              INTO (ls_tp_same_object-trkorr,
                    ls_tp_same_object-object,
                    ls_tp_same_object-obj_name,
@@ -4845,7 +4849,8 @@ CLASS lcl_ztct IMPLEMENTATION.
              AND   korrnum     LIKE me-&gt;prefix
              AND   korrnum     &lt;&gt; &apos;&apos;
              AND   objtype     =  im_line-object
-             AND   objname     =  im_line-obj_name.     &quot;#EC CI_NOFIELD
+             AND   objname     =  im_line-obj_name      &quot;#EC CI_NOFIELD
+             AND   e070~trfunction NE 'T'.
 
         APPEND ls_tp_same_object TO lt_aggr_tp_list_of_objects.
       ENDSELECT.
