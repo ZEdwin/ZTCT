@@ -17,7 +17,7 @@ Transporting a project to Production gets more complicated with increasing numbe
 
 Short Description
 
-This tool checks if transports can be moved from Acceptance to Production. The check is performed on object level. All objects in the selected transports are checked.
+This tool checks if transports can be moved from one environment they have been transported to (usually this will be Test or Acceptance) to the next environment. The check is performed on object level. All objects in the selected transports are checked.
 
 Checks
 
