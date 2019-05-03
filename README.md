@@ -5,7 +5,7 @@ ZTCT - SAP ABAP Transport Checking Tool (Object Level)
 
 Transport Checking Tool: Analyze transports before moving them to production. Determine the proper order and highlight risks.
 
-PLEASE NOET: This README is just a very short summary. For a more detailed explanation, please check out the Blog on SCN or the manual included here on GitHub.
+NOTE: This README is just a very short summary. For a more detailed explanation, please check out the Blog on SCN or the manual included here on GitHub.
 
 BLOG: http://scn.sap.com/community/abap/blog/2013/05/31/transport-checking-tool-object-level
 
