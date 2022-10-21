@@ -4,6 +4,7 @@ ZTCT
 ZTCT - SAP ABAP Transport Checking Tool (Object Level)
 
 Transport Checking Tool: Analyze transports before moving them to production. Determine the proper order and highlight risks.
+AbapGit is highly recommended to install this tool and to keep it up to date. Saplink is outdated and no longer maintained.
 
 NOTE: This README is just a very short summary. For a more detailed explanation, please check out the Blog on SCN or the manual included here on GitHub.
 
