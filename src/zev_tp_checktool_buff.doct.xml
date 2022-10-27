@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_DOCT" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <DOC>
+    <item>
+     <DOKIL>
+      <ID>TX</ID>
+      <OBJECT>ZEV_TP_CHECKTOOL_BUFF</OBJECT>
+      <LANGU>E</LANGU>
+      <TYP>E</TYP>
+      <VERSION>0003</VERSION>
+      <MASTERLANG>X</MASTERLANG>
+      <TXTLINES>00014</TXTLINES>
+      <DOKSTATE>R</DOKSTATE>
+     </DOKIL>
+     <HEAD>
+      <TDOBJECT>DOKU</TDOBJECT>
+      <TDNAME>ZEV_TP_CHECKTOOL_BUFF</TDNAME>
+      <TDID>TX</TDID>
+      <TDSPRAS>E</TDSPRAS>
+      <TDFORM>S_DOCU_SHOW</TDFORM>
+      <TDSTYLE>S_DOCUS1</TDSTYLE>
+      <TDVERSION>00003</TDVERSION>
+      <TDLINESIZE>072</TDLINESIZE>
+     </HEAD>
+     <LINES>
+      <TLINE>
+       <TDFORMAT>U2</TDFORMAT>
+       <TDLINE>Information</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>*</TDFORMAT>
+       <TDLINE>If a transport is no longer in the buffer, it usually means that the</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>transport has been removed from the buffer. The reason might be that it</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>contained an error and a new correction transport was created to fix the</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>issue.</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>*</TDFORMAT>
+       <TDLINE>The option to check the buffer is default switched ON. If a transport is</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>not found in the buffer, a warning message will be given. The user can</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>then check if this transport needs to be skipped.</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>*</TDFORMAT>
+       <TDLINE>If there are transports in the output that are no longer in the buffer,</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>run the program again with the &apos;Check transport buffer&apos; switched OFF.</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>*</TDFORMAT>
+       <TDLINE>The correction transport for this object should be either in the list as</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>well (Information message) or already in production (ERROR message).</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>*</TDFORMAT>
+       <TDLINE>There is also an option to automatically remove the transports that are</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>not in the buffer.</TDLINE>
+      </TLINE>
+     </LINES>
+    </item>
+   </DOC>
+  </asx:values>
+ </asx:abap>
+</abapGit>

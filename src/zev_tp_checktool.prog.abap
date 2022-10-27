@@ -248,6 +248,10 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     METHODS: constructor.
     METHODS: execute.
     METHODS: refresh_alv.
+    METHODS: docu_call                IMPORTING im_object     TYPE doku_obj
+                                                im_id         TYPE dokhl-id
+                                                im_display    TYPE abap_bool OPTIONAL
+                                                im_displ_mode TYPE c         OPTIONAL.
     METHODS: get_tp_prefix            IMPORTING im_dev              TYPE sysname   OPTIONAL
                                       RETURNING VALUE(re_tp_prefix) TYPE char5.
     METHODS: get_filename             EXPORTING ex_file             TYPE string.
@@ -406,7 +410,7 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
                                       EXPORTING ex_line  TYPE ty_request_details.
     METHODS: check_documentation      IMPORTING im_trkorr TYPE trkorr
                                       CHANGING  ch_table  TYPE tt_request_details.
-    METHODS: docu_call                IMPORTING im_object           TYPE doku_obj.
+*    METHODS: docu_call                IMPORTING im_object           TYPE doku_obj.
     METHODS: clear_flags.
     METHODS: column_settings          IMPORTING im_column_ref       TYPE salv_t_column_ref
                                                 im_rf_columns_table TYPE REF TO cl_salv_columns_table
@@ -475,7 +479,7 @@ ENDCLASS.                    "lcl_ztct DEFINITION
 * Possibility to add a button on the selection screen application
 * toolbar (If required, uncomment). Function text and icon is filled
 * in AT SELECTION-SCREEN OUTPUT
-* SELECTION-SCREEN: FUNCTION KEY 1.
+SELECTION-SCREEN: FUNCTION KEY 1.
 
 * B10: Selection range / Upload file
 *---------------------------------------
@@ -561,12 +565,10 @@ PARAMETERS:       pa_buff AS CHECKBOX DEFAULT 'X' USER-COMMAND buf.
 SELECTION-SCREEN: COMMENT 4(27) tp_c42.
 PARAMETERS:       pa_buffd AS CHECKBOX DEFAULT '' MODIF ID buf.
 SELECTION-SCREEN: COMMENT 35(35) tp_c45 MODIF ID buf.
+SELECTION-SCREEN: PUSHBUTTON (4) i_buff USER-COMMAND buff
+                                        MODIF ID buf
+                                        VISIBLE LENGTH 2.     "#EC NEEDED
 SELECTION-SCREEN: END OF LINE.
-
-*SELECTION-SCREEN: BEGIN OF LINE .
-*PARAMETERS:       pa_buffd AS CHECKBOX default '' MODIF ID buf.
-*SELECTION-SCREEN: COMMENT 4(63) tp_c45 MODIF ID buf.
-*SELECTION-SCREEN: END OF LINE.
 
 SELECTION-SCREEN: BEGIN OF LINE.
 PARAMETERS:       pa_chkky AS CHECKBOX DEFAULT 'X' MODIF ID chk
@@ -725,6 +727,8 @@ INITIALIZATION.
   tp_w04 = 'All conflicts are dealt with'(w04).
   tp_w18 = 'Marked for re-import to target environment'(w18).
 
+  WRITE icon_information AS ICON TO i_buff.
+
 * Create a range table containing all project numbers:
   st_project_trkorrs-sign = 'E'.
   st_project_trkorrs-option = 'EQ'.
@@ -780,6 +784,18 @@ INITIALIZATION.
 *--------------------------------------------------------------------*
 AT SELECTION-SCREEN.
   CASE sy-ucomm.
+    WHEN 'FC01'.
+      MOVE 'ZEV_TP_CHECKTOOL' TO tp_dokl_object.
+      rf_ztct->docu_call( EXPORTING im_object     = tp_dokl_object
+                                    im_id         = 'TX'
+                                    im_display    = abap_true
+                                    im_displ_mode = '2').
+    WHEN 'BUFF'.
+      MOVE 'ZEV_TP_CHECKTOOL_BUFF' TO tp_dokl_object.
+      rf_ztct->docu_call( EXPORTING im_object     = tp_dokl_object
+                                    im_id         = 'TX'
+                                    im_display    = abap_true
+                                    im_displ_mode = '2').
     WHEN 'NAME'.
       IF NOT so_user IS INITIAL.
         REFRESH: so_user.
@@ -837,7 +853,7 @@ AT SELECTION-SCREEN OUTPUT.
   st_smp_dyntxt-icon_text  = 'Info'(024).
   st_smp_dyntxt-quickinfo  = 'General Info'(028).
   st_smp_dyntxt-path       = 'I'.
-  sscrfields-functxt_01 = st_smp_dyntxt.
+  sscrfields-functxt_01    = st_smp_dyntxt.
 
   LOOP AT SCREEN.
     CASE screen-group1.
@@ -1222,7 +1238,8 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
         rf_ztct->refresh_alv( ).                   "Refresh the ALV
       WHEN '&DOC'. "Button clicked
         MOVE rf_ztct->main_list_line-trkorr TO tp_dokl_object.
-        rf_ztct->docu_call( EXPORTING im_object = tp_dokl_object ).
+        rf_ztct->docu_call( EXPORTING im_object  = tp_dokl_object
+                                      im_id      = 'TA' ).
         rf_ztct->check_documentation( EXPORTING im_trkorr = rf_ztct->main_list_line-trkorr
                                         CHANGING  ch_table  = rf_ztct->main_list ).
       WHEN '&PREP_XLS'.
@@ -3116,7 +3133,8 @@ CLASS lcl_ztct IMPLEMENTATION.
   METHOD display_docu.
     DATA: lp_dokl_object TYPE doku_obj.
     MOVE: im_trkorr  TO lp_dokl_object.
-    me->docu_call( EXPORTING im_object = lp_dokl_object ).
+    me->docu_call( EXPORTING im_object  = lp_dokl_object
+                             im_id      = 'TA' ).
     me->check_documentation( EXPORTING im_trkorr = im_trkorr
                              CHANGING  ch_table  = me->main_list ).
   ENDMETHOD.                    "display_docu
@@ -4177,7 +4195,7 @@ CLASS lcl_ztct IMPLEMENTATION.
            FROM  dokil
            INTO  lv_langu
            WHERE object = im_object
-           AND   id     = 'TA'.
+           AND   id     = im_id.
     IF sy-subrc <> 0.
       lv_langu = co_langu.
     ENDIF.
@@ -4185,7 +4203,9 @@ CLASS lcl_ztct IMPLEMENTATION.
 * Call the documentation
     CALL FUNCTION 'DOCU_CALL'
       EXPORTING
-        id         = 'TA'
+        displ      = im_display
+        displ_mode = im_displ_mode
+        id         = im_id
         langu      = lv_langu
         object     = im_object
       EXCEPTIONS
@@ -4461,7 +4481,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA: lr_row              TYPE REF TO cl_salv_form_layout_flow.
     CREATE OBJECT lr_rows_flow.
     lr_rows = lr_rows_flow->create_grid( ).
-    lr_rows->create_grid( row     = 0
+    lr_rows->create_grid( row     = 4
                           column  = 0
                           rowspan = 0
                           colspan = 0 ).
