@@ -724,7 +724,7 @@ INITIALIZATION.
   tp_w05 = 'Object missing in list and target environment!'(w05).
   tp_w17 = 'Previous transport not transported'(w17).
   tp_w23 = 'Newer version in test environment'(w23).
-  tp_w04 = 'All conflicts are dealt with'(w04).
+  tp_w04 = 'Conflicts are dealt with'(w04).
   tp_w18 = 'Marked for re-import to target environment'(w18).
 
   WRITE icon_information AS ICON TO i_buff.
@@ -1476,7 +1476,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     lp_alert2_text = 'Release started'(w20).
     lp_alert3_text = 'Transport not in Transport Buffer'(m12).
     lp_hint1_text  = 'Newer version in Acceptance, but in list'(w22).
-    lp_hint2_text  = 'All conflicts are dealt with by the list'(w04).
+    lp_hint2_text  = 'Conflicts are dealt with'(w04).
     lp_hint3_text  = 'Couldn''t read log, but object in list'(w21).
     lp_hint4_text  = 'Overwrites version(s), newer version in list'(w11).
     lp_warn_text   = 'Previous transport not transported'(w17).
@@ -3842,7 +3842,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       CATCH cx_salv_existing INTO rf_root.
     ENDTRY.
     TRY.
-        lp_text = 'All conflicts are dealt with by the list'(w04).
+        lp_text = 'Conflicts are dealt with'(w04).
         tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
                                value   = '@AI@'
                                tooltip = lp_text ).
