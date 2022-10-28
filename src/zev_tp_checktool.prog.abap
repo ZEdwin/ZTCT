@@ -567,7 +567,7 @@ PARAMETERS:       pa_buffd AS CHECKBOX DEFAULT '' MODIF ID buf.
 SELECTION-SCREEN: COMMENT 35(35) tp_c45 MODIF ID buf.
 SELECTION-SCREEN: PUSHBUTTON (4) i_buff USER-COMMAND buff
                                         MODIF ID buf
-                                        VISIBLE LENGTH 2.     "#EC NEEDED
+                                        VISIBLE LENGTH 2.   "#EC NEEDED
 SELECTION-SCREEN: END OF LINE.
 
 SELECTION-SCREEN: BEGIN OF LINE.
@@ -4382,9 +4382,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDIF.
 
 *   Remove duplicates:
-    SORT me->aggr_tp_list_of_objects[] BY trkorr object obj_name.
-    DELETE ADJACENT DUPLICATES FROM me->aggr_tp_list_of_objects
-                               COMPARING trkorr object obj_name.
+*    SORT me->aggr_tp_list_of_objects[] BY trkorr object obj_name.
+*    DELETE ADJACENT DUPLICATES FROM me->aggr_tp_list_of_objects
+*                               COMPARING trkorr object obj_name.
 
 *   Move newer transports for this object to the relevant internal table:
     LOOP AT me->aggr_tp_list_of_objects INTO ls_tp_same_object
