@@ -1164,22 +1164,22 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
         CHECK NOT ls_fields-value IS INITIAL.
 *       Is it already in the list?
         READ TABLE rf_ztct->main_list WITH KEY trkorr = ls_fields-value(20)
-                                        TRANSPORTING NO FIELDS.
+                                      TRANSPORTING NO FIELDS.
         CHECK sy-subrc <> 0.
 *       Add transport number to the internal table to add:
         st_transports_to_add-low = ls_fields-value.
         APPEND st_transports_to_add TO ra_transports_to_add.
         rf_ztct->get_added_objects( EXPORTING im_to_add = ra_transports_to_add
-                                      IMPORTING ex_to_add = rf_ztct->add_to_main ).
+                                    IMPORTING ex_to_add = rf_ztct->add_to_main ).
         rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
         rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
-                                IMPORTING ex_main   = rf_ztct->main_list ).
+                              IMPORTING ex_main   = rf_ztct->main_list ).
 *       After the transports have been added, check if there are added
 *       transports that are already in prd. If so, make them visible by
 *       changing the prd icon to co_scrap.
         LOOP AT rf_ztct->main_list INTO  rf_ztct->main_list_line
-                             WHERE prd    = rf_ztct->co_okay
-                             AND   trkorr IN ra_transports_to_add.
+                                   WHERE prd    = rf_ztct->co_okay
+                                   AND   trkorr IN ra_transports_to_add.
           rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
           MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
         ENDLOOP.
@@ -2466,9 +2466,10 @@ CLASS lcl_ztct IMPLEMENTATION.
     CLEAR:   ls_main.
 *   Select all requests (not tasks) in the range. Objects belonging to
 *   the request are included in the table.
-    SELECT a~trkorr   a~trfunction a~trstatus
-           a~as4user  a~as4date    a~as4time
-           b~object   b~obj_name   b~objfunc
+    SELECT a~trkorr  a~trfunction a~trstatus
+           a~as4user a~as4date    a~as4time
+           b~pgmid   b~object     b~obj_name
+           b~objfunc
            INTO CORRESPONDING FIELDS OF TABLE ex_to_add
            FROM  e070 AS a JOIN e071 AS b
              ON  a~trkorr = b~trkorr
