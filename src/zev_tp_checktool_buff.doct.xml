@@ -9,9 +9,9 @@
       <OBJECT>ZEV_TP_CHECKTOOL_BUFF</OBJECT>
       <LANGU>E</LANGU>
       <TYP>E</TYP>
-      <VERSION>0004</VERSION>
+      <VERSION>0006</VERSION>
       <MASTERLANG>X</MASTERLANG>
-      <TXTLINES>00014</TXTLINES>
+      <TXTLINES>00015</TXTLINES>
       <DOKSTATE>A</DOKSTATE>
      </DOKIL>
      <HEAD>
@@ -21,7 +21,7 @@
       <TDSPRAS>E</TDSPRAS>
       <TDFORM>S_DOCU_SHOW</TDFORM>
       <TDSTYLE>S_DOCUS1</TDSTYLE>
-      <TDVERSION>00004</TDVERSION>
+      <TDVERSION>00006</TDVERSION>
       <TDLINESIZE>072</TDLINESIZE>
      </HEAD>
      <LINES>
@@ -31,26 +31,30 @@
       </TLINE>
       <TLINE>
        <TDFORMAT>*</TDFORMAT>
-       <TDLINE>If a transport is no longer in the buffer, it usually means that the</TDLINE>
+       <TDLINE>If a transport is no longer in the buffer, the most likely reason will</TDLINE>
       </TLINE>
       <TLINE>
-       <TDLINE>transport has been removed from the buffer. The reason might be that it</TDLINE>
-      </TLINE>
-      <TLINE>
-       <TDLINE>contained an error and a new correction transport was created to fix the</TDLINE>
-      </TLINE>
-      <TLINE>
-       <TDLINE>issue.</TDLINE>
+       <TDLINE>be that transport has been removed from the buffer.</TDLINE>
       </TLINE>
       <TLINE>
        <TDFORMAT>*</TDFORMAT>
-       <TDLINE>The option to check the buffer is default switched ON. If a transport is</TDLINE>
+       <TDLINE>E.g. the transport contained an error and a new correction transport was</TDLINE>
       </TLINE>
       <TLINE>
-       <TDLINE>not found in the buffer, a warning message will be given. The user can</TDLINE>
+       <TDLINE>created to fix the issue. The original transport should never be moved</TDLINE>
       </TLINE>
       <TLINE>
-       <TDLINE>then check if this transport needs to be skipped.</TDLINE>
+       <TDLINE>to production.</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>*</TDFORMAT>
+       <TDLINE>The option to check the buffer is default switched to ON. If a</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>transportis not found in the buffer, a warning message will be given.</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>The user can then check if this transport needs to be skipped.</TDLINE>
       </TLINE>
       <TLINE>
        <TDFORMAT>*</TDFORMAT>

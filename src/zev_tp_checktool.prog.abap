@@ -1636,6 +1636,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     CLEAR:   me->conflict_line,
              me->total.
     CHECK me->check_flag = abap_true.
+    me->sort_main_list( ).
 *   For each transports, all the objects in the transport will be checked.
 *   If there is a newer version of an object in prd, then a warning will
 *   be displayed. Also if a newer version that was in prd was actually
