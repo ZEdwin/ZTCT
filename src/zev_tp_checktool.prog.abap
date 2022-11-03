@@ -2148,6 +2148,9 @@ CLASS lcl_ztct IMPLEMENTATION.
         lp_xend = lp_xend + lp_xstart + 5.
         DESCRIBE TABLE table_keys LINES lp_yend.
         lp_yend = lp_yend + lp_ystart.
+        IF lp_yend > 30.
+          lp_yend = 30.
+        ENDIF.
 *       Display as popup
         rf_table_keys->set_screen_popup( start_column = lp_xstart
                                          end_column   = lp_xend
