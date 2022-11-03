@@ -543,8 +543,9 @@ SELECTION-SCREEN: BEGIN OF BLOCK box4 WITH FRAME TITLE tp_b40.
 SELECTION-SCREEN: BEGIN OF LINE.
 PARAMETERS:       pa_check RADIOBUTTON GROUP rad DEFAULT 'X'
                            USER-COMMAND chk.
-SELECTION-SCREEN: COMMENT 4(20)   tp_c46.
+SELECTION-SCREEN: COMMENT 4(22) tp_c46.
 PARAMETERS:       pa_nochk RADIOBUTTON GROUP rad.
+SELECTION-SCREEN: COMMENT 29(35) tp_c47.
 SELECTION-SCREEN: END OF LINE.
 SELECTION-SCREEN: SKIP 1.
 SELECTION-SCREEN: BEGIN OF LINE.
@@ -562,19 +563,21 @@ SELECTION-SCREEN: END OF LINE.
 SELECTION-SCREEN: BEGIN OF LINE.
 PARAMETERS:       pa_buff AS CHECKBOX DEFAULT 'X' USER-COMMAND buf.
 * C42 - Check transport buffer
-SELECTION-SCREEN: COMMENT 4(27) tp_c42.
+SELECTION-SCREEN: COMMENT 4(22) tp_c42.
 PARAMETERS:       pa_buffd AS CHECKBOX DEFAULT '' MODIF ID buf.
-SELECTION-SCREEN: COMMENT 35(35) tp_c45 MODIF ID buf.
+SELECTION-SCREEN: COMMENT 29(35) tp_c45 MODIF ID buf.
 SELECTION-SCREEN: PUSHBUTTON (4) i_buff USER-COMMAND buff
-                                        MODIF ID buf
-                                        VISIBLE LENGTH 2.   "#EC NEEDED
+                                          MODIF ID buf
+                                          VISIBLE LENGTH 2.   "#EC NEEDED
 SELECTION-SCREEN: END OF LINE.
 
 SELECTION-SCREEN: BEGIN OF LINE.
 PARAMETERS:       pa_chkky AS CHECKBOX DEFAULT 'X' MODIF ID chk
                            USER-COMMAND key.
 * C43 - Check table keys
-SELECTION-SCREEN: COMMENT 4(16) tp_c43 MODIF ID chk.
+SELECTION-SCREEN: COMMENT 4(16) tp_c43  MODIF ID chk.
+SELECTION-SCREEN: PUSHBUTTON 65(4) i_ckey USER-COMMAND ckey
+                                          VISIBLE LENGTH 2.   "#EC NEEDED
 SELECTION-SCREEN: END OF LINE.
 *PARAMETERS:       pa_kdate TYPE as4date MODIF ID key.
 SELECTION-SCREEN: BEGIN OF LINE.
@@ -711,7 +714,8 @@ INITIALIZATION.
   tp_c43 = 'Check table keys'(c43).
   tp_c44 = 'Reset `Checked` field'(c44).
   tp_c45 = 'Remove transports not in buffer'(c45).
-  tp_c46 = 'Check ON / Check OFF'(c46).
+  tp_c46 = 'Check ON'(c46).
+  tp_c47 = 'Check OFF'(c47).
   tp_c51 = 'Objects in the range will not be taken into account ' &
            'when checking the'(c51).
   tp_c52 = 'transports. Useful to exclude common customizing tables ' &
@@ -728,6 +732,7 @@ INITIALIZATION.
   tp_w18 = 'Marked for re-import to target environment'(w18).
 
   WRITE icon_information AS ICON TO i_buff.
+  WRITE icon_information AS ICON TO i_ckey.
 
 * Create a range table containing all project numbers:
   st_project_trkorrs-sign = 'E'.
@@ -792,6 +797,12 @@ AT SELECTION-SCREEN.
                                     im_displ_mode = '2').
     WHEN 'BUFF'.
       MOVE 'ZEV_TP_CHECKTOOL_BUFF' TO tp_dokl_object.
+      rf_ztct->docu_call( EXPORTING im_object     = tp_dokl_object
+                                    im_id         = 'TX'
+                                    im_display    = abap_true
+                                    im_displ_mode = '2').
+    WHEN 'CKEY'.
+      MOVE 'ZEV_TP_CHECKTOOL_CKEY' TO tp_dokl_object.
       rf_ztct->docu_call( EXPORTING im_object     = tp_dokl_object
                                     im_id         = 'TX'
                                     im_display    = abap_true
@@ -861,9 +872,13 @@ AT SELECTION-SCREEN OUTPUT.
         IF pa_sel = 'X'.
           screen-active = '1'.
           tp_b20 = 'Selection criteria'(b21).
+          pa_nochk = ' '.
+          pa_check = 'X'.
         ELSE.
           screen-active = '0'.
           tp_b20 = 'File upload'(b22).
+          pa_check = ' '.
+          pa_nochk = 'X'.
         ENDIF.
         MODIFY SCREEN.
       WHEN 'CHK'.
@@ -1029,26 +1044,29 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           ENDIF.
           FREE rf_conflicts.
         ELSE.
-*         If row(s) are selected, use the table
+* Not in the Conflicts Popup, but in the Table Key popup. Based on the user decision,
+* the tables that do NOT have to be checked, are added to the excluded object list.
+* If no tables are selected, all tables are excluded from the check.
+*         If row(s) are selected, determine the tables to be check from the selected
+*         rows. All rows that weren't selected will be added to the excluded object list.
           rf_table_keys->close_screen( ).
-          LOOP AT lt_rows INTO ls_row.
-            READ TABLE rf_ztct->table_keys INTO rf_ztct->table_keys_line
-                                           INDEX ls_row.
-*           Add all tables that were NOT selected to the exclusion range
-            IF sy-subrc <> 0.
-              ls_excluded_objects-sign   = 'E'.
-              ls_excluded_objects-option = 'EQ'.
-              ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
-              APPEND ls_excluded_objects TO ta_excluded_objects.
-            ENDIF.
-          ENDLOOP.
-*         If user pressed cancel (Add all tables, do not check any)
-          IF lt_rows[] IS INITIAL.
+          IF lt_rows[] IS NOT INITIAL.
+            LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
+              READ TABLE lt_rows WITH KEY table_line = sy-tabix TRANSPORTING NO FIELDS.
+              IF sy-subrc <> 0.
+                ls_excluded_objects-sign   = 'E'.
+                ls_excluded_objects-option = 'EQ'.
+                ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
+                APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
+              ENDIF.
+            ENDLOOP.
+*         If user pressed cancel, then add all tables to the excluded object list
+          ELSE.
             LOOP AT rf_ztct->table_keys INTO  rf_ztct->table_keys_line.
               ls_excluded_objects-sign   = 'E'.
               ls_excluded_objects-option = 'EQ'.
               ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
-              APPEND ls_excluded_objects TO ta_excluded_objects.
+              APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
             ENDLOOP.
             MESSAGE i000(db) WITH 'No rows selected: Table keys will ' &
                                   'not be checked'(m07).
@@ -2043,11 +2061,11 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA: lp_medium_text      TYPE char20.
     DATA: lp_long_text        TYPE char40.
 
-    lp_title = 'Keys can be checked for ' &
-               'the following tables'(t02).
+    lp_title = 'Select the tables for which '(t06) &&
+               ' the keys must be checked'(t07).
 *   Only if the option to check for table keys is switched ON and
 *   checking is active
-    CHECK: me->check_tabkeys = abap_true AND
+    CHECK: "me->check_tabkeys = abap_true AND
            me->check_flag    = abap_true.
 * Determine the transport prefix (if not done already)
     lp_tp_prefix = me->get_tp_prefix( im_dev = me->dev_system ).
@@ -2078,6 +2096,22 @@ CLASS lcl_ztct IMPLEMENTATION.
     DELETE table_keys WHERE counter = 0.
     CHECK NOT table_keys[] IS INITIAL.
     SORT  table_keys BY counter DESCENDING.
+
+* Only display the popup if the user selected the option 'Check table keys'
+* on the selection screen. If not, the popup does not need to be displayed,
+* but the tables still need to be added to the list of excluded objects.
+* If the user will NOT check the table keys, all tables need to be added to
+* the excluded object list (Tables will NOT be checked).
+    IF me->check_tabkeys = abap_false.
+      LOOP AT rf_ztct->table_keys INTO  rf_ztct->table_keys_line.
+        ls_excluded_objects-sign   = 'E'.
+        ls_excluded_objects-option = 'EQ'.
+        ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
+        APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
+      ENDLOOP.
+      EXIT.
+    ENDIF.
+
 *   Determine total width
     LOOP AT table_keys INTO table_keys_line.
       me->determine_col_width( EXPORTING im_field    = table_keys_line-tabname

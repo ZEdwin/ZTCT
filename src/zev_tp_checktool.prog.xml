@@ -2418,8 +2418,14 @@
     <item>
      <ID>I</ID>
      <KEY>C46</KEY>
-     <ENTRY>Check ON / Check OFF</ENTRY>
+     <ENTRY>Check ON</ENTRY>
      <LENGTH>20</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>C47</KEY>
+     <ENTRY>Check OFF</ENTRY>
+     <LENGTH>9</LENGTH>
     </item>
     <item>
      <ID>I</ID>
@@ -2555,12 +2561,6 @@
     </item>
     <item>
      <ID>I</ID>
-     <KEY>T02</KEY>
-     <ENTRY>Keys can be checked for the following tables</ENTRY>
-     <LENGTH>47</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
      <KEY>T03</KEY>
      <ENTRY>Error Creating ALV Grid</ENTRY>
      <LENGTH>23</LENGTH>
@@ -2576,6 +2576,18 @@
      <KEY>T05</KEY>
      <ENTRY>Information</ENTRY>
      <LENGTH>11</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>T06</KEY>
+     <ENTRY>Select the tables for which</ENTRY>
+     <LENGTH>40</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>T07</KEY>
+     <ENTRY> the keys must be checked</ENTRY>
+     <LENGTH>40</LENGTH>
     </item>
     <item>
      <ID>I</ID>
@@ -3160,7 +3172,7 @@
       <item>
        <ID>I</ID>
        <KEY>C42</KEY>
-       <ENTRY>Skip transport buffer check</ENTRY>
+       <ENTRY>Check transport buffer</ENTRY>
        <LENGTH>27</LENGTH>
       </item>
       <item>
@@ -3178,8 +3190,14 @@
       <item>
        <ID>I</ID>
        <KEY>C46</KEY>
-       <ENTRY>Check ON / Check OFF</ENTRY>
+       <ENTRY>Check ON</ENTRY>
        <LENGTH>20</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>C47</KEY>
+       <ENTRY>Check OFF</ENTRY>
+       <LENGTH>9</LENGTH>
       </item>
       <item>
        <ID>I</ID>
@@ -3232,8 +3250,8 @@
       <item>
        <ID>I</ID>
        <KEY>M02</KEY>
-       <ENTRY>Some transports will be deleted from the list because</ENTRY>
-       <LENGTH>53</LENGTH>
+       <ENTRY>Some transports were deleted from the list because</ENTRY>
+       <LENGTH>50</LENGTH>
       </item>
       <item>
        <ID>I</ID>
@@ -3315,12 +3333,6 @@
       </item>
       <item>
        <ID>I</ID>
-       <KEY>T02</KEY>
-       <ENTRY>Keys can be checked for the following tables</ENTRY>
-       <LENGTH>47</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
        <KEY>T03</KEY>
        <ENTRY>Error Creating ALV Grid</ENTRY>
        <LENGTH>23</LENGTH>
@@ -3336,6 +3348,18 @@
        <KEY>T05</KEY>
        <ENTRY>Information</ENTRY>
        <LENGTH>11</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>T06</KEY>
+       <ENTRY>Select the tables for which</ENTRY>
+       <LENGTH>40</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>T07</KEY>
+       <ENTRY> the keys must be checked</ENTRY>
+       <LENGTH>40</LENGTH>
       </item>
       <item>
        <ID>I</ID>
@@ -3358,7 +3382,7 @@
       <item>
        <ID>I</ID>
        <KEY>W04</KEY>
-       <ENTRY>All conflicts are dealt with</ENTRY>
+       <ENTRY>Conflicts are dealt with</ENTRY>
        <LENGTH>50</LENGTH>
       </item>
       <item>

@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_DOCT" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <DOC>
+    <item>
+     <DOKIL>
+      <ID>TX</ID>
+      <OBJECT>ZEV_TP_CHECKTOOL_CKEY</OBJECT>
+      <LANGU>E</LANGU>
+      <TYP>E</TYP>
+      <VERSION>0003</VERSION>
+      <MASTERLANG>X</MASTERLANG>
+      <TXTLINES>00018</TXTLINES>
+      <DOKSTATE>A</DOKSTATE>
+     </DOKIL>
+     <HEAD>
+      <TDOBJECT>DOKU</TDOBJECT>
+      <TDNAME>ZEV_TP_CHECKTOOL_CKEY</TDNAME>
+      <TDID>TX</TDID>
+      <TDSPRAS>E</TDSPRAS>
+      <TDFORM>S_DOCU_SHOW</TDFORM>
+      <TDSTYLE>S_DOCUS1</TDSTYLE>
+      <TDVERSION>00003</TDVERSION>
+      <TDLINESIZE>072</TDLINESIZE>
+     </HEAD>
+     <LINES>
+      <TLINE>
+       <TDFORMAT>U2</TDFORMAT>
+       <TDLINE>Information</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>*</TDFORMAT>
+       <TDLINE>Not all tables will need to be checked. Tables for authorisations (e.g.</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>UST12) are huge and will often have unique keys anyway. Default setting</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>is ON.</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>U2</TDFORMAT>
+       <TDLINE>When flagged:</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>*</TDFORMAT>
+       <TDLINE>The program will open a popup window with all the tables that are found</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>in the transport list.</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>*</TDFORMAT>
+       <TDLINE>In the popup the user has the option to select the rows for which a</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>check should be done. The program will then check the table entries</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>found in the transport, using the table keys.</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>*</TDFORMAT>
+       <TDLINE>Advised is to select all tables in the popup, except the ones the user</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>knows are not important.</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>U2</TDFORMAT>
+       <TDLINE>When NOT flagged:</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>*</TDFORMAT>
+       <TDLINE>Tables that are not selected will not be checked.</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>*</TDFORMAT>
+       <TDLINE>PLEASE NOTE: This does not mean that there won&apos;t not be a conflict. The</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>check on table key is skipped. A warning on a table (e.g. newer</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>transport in Production) would be meaningless without checking the table</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>key.</TDLINE>
+      </TLINE>
+     </LINES>
+    </item>
+   </DOC>
+  </asx:values>
+ </asx:abap>
+</abapGit>
