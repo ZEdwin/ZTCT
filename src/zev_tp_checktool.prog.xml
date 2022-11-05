@@ -2381,12 +2381,6 @@
     </item>
     <item>
      <ID>I</ID>
-     <KEY>C33</KEY>
-     <ENTRY>--&gt;</ENTRY>
-     <LENGTH>3</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
      <KEY>C40</KEY>
      <ENTRY>Do not select transports already in production</ENTRY>
      <LENGTH>49</LENGTH>
@@ -2414,6 +2408,12 @@
      <KEY>C44</KEY>
      <ENTRY>Reset `Checked` field</ENTRY>
      <LENGTH>21</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>C45</KEY>
+     <ENTRY>Remove transports not in buffer</ENTRY>
+     <LENGTH>50</LENGTH>
     </item>
     <item>
      <ID>I</ID>

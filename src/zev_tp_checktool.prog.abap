@@ -300,23 +300,23 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     DATA:  ta_ddic_e071 TYPE tt_ddic_e071.
 
     CONSTANTS:
-      co_error   TYPE icon_d     VALUE '@F1@', "ICON_LED_RED
-      co_tp_fail TYPE icon_d     VALUE '@2O@', "ICON_SYSTEM_CANCEL
-      co_ddic    TYPE icon_d     VALUE '@CY@', "ICON_INCOMPLETE
-      co_warn    TYPE icon_d     VALUE '@5D@', "ICON_LED_YELLOW
-      co_okay    TYPE icon_d     VALUE '@5B@', "ICON_LED_GREEN
-      co_checked TYPE icon_d     VALUE '@01@', "ICON_CHECKED
-      co_hint    TYPE icon_d     VALUE '@AI@', "ICON_HINT
-      co_alert   TYPE icon_d     VALUE '@03@', "ICON_FAILURE
-      co_scrap   TYPE icon_d     VALUE '@K3@', "ICON_SCRAP
-      co_docu    TYPE icon_d     VALUE '@DH@', "ICON_PROTOCOL
-      co_inact   TYPE icon_d     VALUE '@BZ@'. "ICON_LED_INACTIVE
+      co_error   TYPE icon_d          VALUE '@F1@', "ICON_LED_RED
+      co_tp_fail TYPE icon_d          VALUE '@2O@', "ICON_SYSTEM_CANCEL
+      co_ddic    TYPE icon_d          VALUE '@CY@', "ICON_INCOMPLETE
+      co_warn    TYPE icon_d          VALUE '@5D@', "ICON_LED_YELLOW
+      co_okay    TYPE icon_d          VALUE '@5B@', "ICON_LED_GREEN
+      co_checked TYPE icon_d          VALUE '@01@', "ICON_CHECKED
+      co_hint    TYPE icon_d          VALUE '@AI@', "ICON_HINT
+      co_alert   TYPE icon_d          VALUE '@03@', "ICON_FAILURE
+      co_scrap   TYPE icon_d          VALUE '@K3@', "ICON_SCRAP
+      co_docu    TYPE icon_d          VALUE '@DH@', "ICON_PROTOCOL
+      co_inact   TYPE icon_d          VALUE '@BZ@'. "ICON_LED_INACTIVE
     CONSTANTS:
       co_okay_rank    TYPE i          VALUE 0,  "ICON_LED_GREEN
-      co_alert0_rank  TYPE i          VALUE 5,  "ICON_FAILURE
-      co_alert1_rank  TYPE i          VALUE 6,  "ICON_FAILURE
-      co_alert2_rank  TYPE i          VALUE 7,  "ICON_FAILURE
-      co_alert3_rank  TYPE i          VALUE 8,  "ICON_FAILURE
+      co_alert0_rank  TYPE i          VALUE 25, "ICON_FAILURE
+      co_alert1_rank  TYPE i          VALUE 26, "ICON_FAILURE
+      co_alert2_rank  TYPE i          VALUE 27, "ICON_FAILURE
+      co_alert3_rank  TYPE i          VALUE 28, "ICON_FAILURE
       co_hint1_rank   TYPE i          VALUE 10, "ICON_HINT
       co_hint2_rank   TYPE i          VALUE 12, "ICON_HINT
       co_hint3_rank   TYPE i          VALUE 14, "ICON_HINT
@@ -362,7 +362,7 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     DATA:  check_ddic                 TYPE abap_bool.
     DATA:  check_tabkeys              TYPE abap_bool.
     DATA:  clear_checked              TYPE abap_bool.
-    DATA:  buffer_chk            TYPE abap_bool.
+    DATA:  buffer_chk                 TYPE abap_bool.
     DATA:  buffer_remove_tp           TYPE abap_bool.
     DATA:  trkorr_range               TYPE ra_trkorr.
     DATA:  project_range              TYPE ra_trkorr.
@@ -380,10 +380,10 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     DATA:  building_conflict_popup    TYPE flag.
 
     METHODS: refresh_import_queues.
-    METHODS: handle_error             IMPORTING rf_oref             TYPE REF TO cx_root.
+    METHODS: handle_error             IMPORTING rf_oref TYPE REF TO cx_root.
     METHODS: flag_for_process         IMPORTING rows TYPE salv_t_row
                                                 cell TYPE salv_s_cell.
-    METHODS: get_main_transports      IMPORTING im_trkorr_range     TYPE gtabkey_trkorrt.
+    METHODS: get_main_transports      IMPORTING im_trkorr_range TYPE gtabkey_trkorrt.
     METHODS: get_tp_info              IMPORTING im_trkorr      TYPE trkorr
                                                 im_obj_name    TYPE trobj_name
                                       RETURNING VALUE(re_line) TYPE ty_request_details.
@@ -415,49 +415,49 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     METHODS: column_settings          IMPORTING im_column_ref       TYPE salv_t_column_ref
                                                 im_rf_columns_table TYPE REF TO cl_salv_columns_table
                                                 im_table            TYPE REF TO cl_salv_table.
-    METHODS: is_empty_column          IMPORTING im_column          TYPE lvc_fname
-                                                im_table           TYPE tt_request_details
-                                      RETURNING VALUE(re_is_empty) TYPE abap_bool.
+    METHODS: is_empty_column          IMPORTING im_column           TYPE lvc_fname
+                                                im_table            TYPE tt_request_details
+                                      RETURNING VALUE(re_is_empty)  TYPE abap_bool.
 *    METHODS: refresh_alv.
     METHODS: display_excel            IMPORTING im_table            TYPE tt_request_details.
     METHODS: set_tp_prefix            IMPORTING im_dev              TYPE sysname OPTIONAL.
     METHODS: top_of_page              EXPORTING ex_form_element     TYPE REF TO cl_salv_form_element.
-    METHODS: check_if_same_object     IMPORTING im_line        TYPE ty_request_details
-                                                im_newer_older TYPE ty_request_details
-                                      EXPORTING ex_tabkey      TYPE trobj_name
-                                                ex_return      TYPE c.
+    METHODS: check_if_same_object     IMPORTING im_line             TYPE ty_request_details
+                                                im_newer_older      TYPE ty_request_details
+                                      EXPORTING ex_tabkey           TYPE trobj_name
+                                                ex_return           TYPE c.
     METHODS: sort_main_list.
-    METHODS: determine_warning_text   IMPORTING im_highest_rank TYPE numc4
-                                      EXPORTING ex_highest_text TYPE text74.
-    METHODS: get_tps_for_same_object  IMPORTING im_line  TYPE ty_request_details
-                                      EXPORTING ex_newer TYPE tt_request_details
-                                                ex_older TYPE tt_request_details.
-    METHODS: progress_indicator       IMPORTING im_counter TYPE sytabix
-                                                im_object  TYPE trobj_name
-                                                im_total   TYPE numc10
-                                                im_text    TYPE itex132
-                                                im_flag    TYPE c.
-    METHODS: alv_xls_init             EXPORTING ex_rf_table TYPE REF TO cl_salv_table
-                                      CHANGING  ch_table    TYPE table.
+    METHODS: determine_warning_text   IMPORTING im_highest_rank     TYPE numc4
+                                      EXPORTING ex_highest_text     TYPE text74.
+    METHODS: get_tps_for_same_object  IMPORTING im_line             TYPE ty_request_details
+                                      EXPORTING ex_newer            TYPE tt_request_details
+                                                ex_older            TYPE tt_request_details.
+    METHODS: progress_indicator       IMPORTING im_counter          TYPE sytabix
+                                                im_object           TYPE trobj_name
+                                                im_total            TYPE numc10
+                                                im_text             TYPE itex132
+                                                im_flag             TYPE c.
+    METHODS: alv_xls_init             EXPORTING ex_rf_table         TYPE REF TO cl_salv_table
+                                      CHANGING  ch_table            TYPE table.
     METHODS: alv_xls_output.
     METHODS: prepare_ddic_check.
     METHODS: set_ddic_objects.
     METHODS: do_ddic_check            CHANGING  ch_main_list        TYPE tt_request_details.
-    METHODS: set_properties_conflicts IMPORTING im_table TYPE tt_request_details
-                                      EXPORTING ex_xend  TYPE i.
+    METHODS: set_properties_conflicts IMPORTING im_table            TYPE tt_request_details
+                                      EXPORTING ex_xend             TYPE i.
     METHODS: get_data                 IMPORTING im_trkorr_range     TYPE gtabkey_trkorrt.
     METHODS: check_for_conflicts      CHANGING  ch_main_list        TYPE tt_request_details.
     METHODS: build_table_keys_popup.
     METHODS: add_table_keys_to_list   EXPORTING table               TYPE tt_request_details.
     METHODS: get_additional_tp_info   CHANGING  ch_table            TYPE tt_request_details.
-    METHODS: gui_upload               IMPORTING im_filename      TYPE string
-                                      EXPORTING ex_tab_delimited TYPE table_of_strings
-                                                ex_cancelled     TYPE abap_bool.
-    METHODS: determine_col_width      IMPORTING im_field    TYPE any
-                                      CHANGING  ex_colwidth TYPE lvc_outlen.
-    METHODS: check_colwidth           IMPORTING im_name            TYPE abap_compname
-                                                im_colwidth        TYPE lvc_outlen
-                                      RETURNING VALUE(re_colwidth) TYPE lvc_outlen.
+    METHODS: gui_upload               IMPORTING im_filename         TYPE string
+                                      EXPORTING ex_tab_delimited    TYPE table_of_strings
+                                                ex_cancelled        TYPE abap_bool.
+    METHODS: determine_col_width      IMPORTING im_field            TYPE any
+                                      CHANGING  ex_colwidth         TYPE lvc_outlen.
+    METHODS: check_colwidth           IMPORTING im_name             TYPE abap_compname
+                                                im_colwidth         TYPE lvc_outlen
+                                      RETURNING VALUE(re_colwidth)  TYPE lvc_outlen.
     METHODS: remove_tp_in_prd.
     METHODS: version_check.
     METHODS: alv_init.
@@ -466,10 +466,10 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     METHODS: alv_set_tooltips         IMPORTING im_table            TYPE REF TO cl_salv_table.
     METHODS: alv_output.
     METHODS: set_where_used.
-    METHODS: get_import_datetime_qas  IMPORTING im_trkorr  TYPE trkorr
-                                      EXPORTING ex_as4time TYPE as4time
-                                                ex_as4date TYPE as4date
-                                                ex_return  TYPE sysubrc.
+    METHODS: get_import_datetime_qas  IMPORTING im_trkorr           TYPE trkorr
+                                      EXPORTING ex_as4time          TYPE as4time
+                                                ex_as4date          TYPE as4date
+                                                ex_return           TYPE sysubrc.
 ENDCLASS.                    "lcl_ztct DEFINITION
 
 *--------------------------------------------------------------------*
@@ -540,14 +540,14 @@ SELECTION-SCREEN: END OF BLOCK box3.
 * B40: Check options
 *---------------------------------------
 SELECTION-SCREEN: BEGIN OF BLOCK box4 WITH FRAME TITLE tp_b40.
-SELECTION-SCREEN: BEGIN OF LINE.
-PARAMETERS:       pa_check RADIOBUTTON GROUP rad DEFAULT 'X'
-                           USER-COMMAND chk.
-SELECTION-SCREEN: COMMENT 4(22) tp_c46.
-PARAMETERS:       pa_nochk RADIOBUTTON GROUP rad.
-SELECTION-SCREEN: COMMENT 29(35) tp_c47.
-SELECTION-SCREEN: END OF LINE.
-SELECTION-SCREEN: SKIP 1.
+*SELECTION-SCREEN: BEGIN OF LINE.
+*PARAMETERS:       pa_check RADIOBUTTON GROUP rad DEFAULT 'X'
+*                           USER-COMMAND chk.
+*SELECTION-SCREEN: COMMENT 4(22) tp_c46.
+*PARAMETERS:       pa_nochk RADIOBUTTON GROUP rad.
+*SELECTION-SCREEN: COMMENT 29(35) tp_c47.
+*SELECTION-SCREEN: END OF LINE.
+*SELECTION-SCREEN: SKIP 1.
 SELECTION-SCREEN: BEGIN OF LINE.
 PARAMETERS:       pa_noprd AS CHECKBOX DEFAULT 'X'.
 * C41 - Use User specific layout
@@ -564,20 +564,21 @@ SELECTION-SCREEN: BEGIN OF LINE.
 PARAMETERS:       pa_buff AS CHECKBOX DEFAULT 'X' USER-COMMAND buf.
 * C42 - Check transport buffer
 SELECTION-SCREEN: COMMENT 4(22) tp_c42.
-PARAMETERS:       pa_buffd AS CHECKBOX DEFAULT '' MODIF ID buf.
+PARAMETERS:       pa_buffd AS CHECKBOX DEFAULT 'X' MODIF ID buf.
 SELECTION-SCREEN: COMMENT 29(35) tp_c45 MODIF ID buf.
 SELECTION-SCREEN: PUSHBUTTON (4) i_buff USER-COMMAND buff
                                           MODIF ID buf
-                                          VISIBLE LENGTH 2.   "#EC NEEDED
+                                          VISIBLE LENGTH 2. "#EC NEEDED
 SELECTION-SCREEN: END OF LINE.
 
 SELECTION-SCREEN: BEGIN OF LINE.
 PARAMETERS:       pa_chkky AS CHECKBOX DEFAULT 'X' MODIF ID chk
                            USER-COMMAND key.
 * C43 - Check table keys
-SELECTION-SCREEN: COMMENT 4(16) tp_c43  MODIF ID chk.
+SELECTION-SCREEN: COMMENT 4(16) tp_c43    MODIF ID chk.
 SELECTION-SCREEN: PUSHBUTTON 65(4) i_ckey USER-COMMAND ckey
-                                          VISIBLE LENGTH 2.   "#EC NEEDED
+                                          MODIF ID chk
+                                          VISIBLE LENGTH 2. "#EC NEEDED
 SELECTION-SCREEN: END OF LINE.
 *PARAMETERS:       pa_kdate TYPE as4date MODIF ID key.
 SELECTION-SCREEN: BEGIN OF LINE.
@@ -706,16 +707,15 @@ INITIALIZATION.
   tp_c21 = 'User'(c21).
   tp_c22 = 'File name'(c22).
   tp_c31 = 'Route'(c31).
-  tp_c32 = '-->'(c32).
-  tp_c33 = '-->'(c33).
+  tp_c32 = tp_c33 = '-->'(c32).
   tp_c40 = 'Do not select transports already in production'(c40).
   tp_c41 = 'Use User specific layout'(c41).
   tp_c42 = 'Check transport buffer'(c42).
   tp_c43 = 'Check table keys'(c43).
   tp_c44 = 'Reset `Checked` field'(c44).
   tp_c45 = 'Remove transports not in buffer'(c45).
-  tp_c46 = 'Check ON'(c46).
-  tp_c47 = 'Check OFF'(c47).
+*  tp_c46 = 'Check ON'(c46).
+*  tp_c47 = 'Check OFF'(c47).
   tp_c51 = 'Objects in the range will not be taken into account ' &
            'when checking the'(c51).
   tp_c52 = 'transports. Useful to exclude common customizing tables ' &
@@ -872,17 +872,13 @@ AT SELECTION-SCREEN OUTPUT.
         IF pa_sel = 'X'.
           screen-active = '1'.
           tp_b20 = 'Selection criteria'(b21).
-          pa_nochk = ' '.
-          pa_check = 'X'.
         ELSE.
           screen-active = '0'.
           tp_b20 = 'File upload'(b22).
-          pa_check = ' '.
-          pa_nochk = 'X'.
         ENDIF.
         MODIFY SCREEN.
       WHEN 'CHK'.
-        IF pa_check = 'X'.
+        IF pa_sel = 'X'.
           screen-active = '1'.
         ELSE.
           screen-active = '0'.
@@ -896,14 +892,14 @@ AT SELECTION-SCREEN OUTPUT.
         ENDIF.
         MODIFY SCREEN.
       WHEN 'DIC'.
-        IF pa_check = 'X'.
+        IF pa_sel = 'X'.
           screen-active = '1'.
         ELSE.
           screen-active = '0'.
         ENDIF.
         MODIFY SCREEN.
       WHEN 'KEY'.
-        IF pa_chkky = 'X' AND pa_check = 'X'.
+        IF pa_chkky = 'X' AND pa_sel = 'X'.
           screen-active = '1'.
         ELSE.
           screen-active = '0'.
@@ -5655,7 +5651,7 @@ END-OF-SELECTION.
 *&      Form  INIT_ZTCT
 *&---------------------------------------------------------------------*
 FORM init_ztct.
-  rf_ztct->set_check_flag( pa_check ).
+  rf_ztct->set_check_flag( pa_sel ).
   rf_ztct->set_check_tabkeys( pa_chkky ).
   rf_ztct->set_clear_checked( pa_chd ).
   rf_ztct->set_buffer_chk( pa_buff ).
