@@ -52,13 +52,8 @@ REPORT  zev_tp_checktool.
 *--------------------------------------------------------------------*
 * INSTALLATION
 *--------------------------------------------------------------------*
-* Use SAPLINK to import the Nugget file (located under Releases).
-* This will only install a local program (R3TR PROG: this includes
-* report texts and program documentation.
-*
-*&------------------------------------------------------------------&*
-*& Change History                                                   &*
-*&------------------------------------------------------------------&*
+* Use of ABAPGIT is recommended. SAPLINK is no longer maintained
+*&=------------------------------------------------------------------&*
 TYPE-POOLS: ctslg. "Types for Function Group TR_LOG_OVERVIEW
 TYPE-POOLS: icon.  "Assignment: Icon Names in List of ASCII Codes
 TYPE-POOLS: slis.  "Global types for generic list modules
@@ -415,49 +410,49 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     METHODS: column_settings          IMPORTING im_column_ref       TYPE salv_t_column_ref
                                                 im_rf_columns_table TYPE REF TO cl_salv_columns_table
                                                 im_table            TYPE REF TO cl_salv_table.
-    METHODS: is_empty_column          IMPORTING im_column           TYPE lvc_fname
-                                                im_table            TYPE tt_request_details
-                                      RETURNING VALUE(re_is_empty)  TYPE abap_bool.
+    METHODS: is_empty_column          IMPORTING im_column          TYPE lvc_fname
+                                                im_table           TYPE tt_request_details
+                                      RETURNING VALUE(re_is_empty) TYPE abap_bool.
 *    METHODS: refresh_alv.
     METHODS: display_excel            IMPORTING im_table            TYPE tt_request_details.
     METHODS: set_tp_prefix            IMPORTING im_dev              TYPE sysname OPTIONAL.
     METHODS: top_of_page              EXPORTING ex_form_element     TYPE REF TO cl_salv_form_element.
-    METHODS: check_if_same_object     IMPORTING im_line             TYPE ty_request_details
-                                                im_newer_older      TYPE ty_request_details
-                                      EXPORTING ex_tabkey           TYPE trobj_name
-                                                ex_return           TYPE c.
+    METHODS: check_if_same_object     IMPORTING im_line        TYPE ty_request_details
+                                                im_newer_older TYPE ty_request_details
+                                      EXPORTING ex_tabkey      TYPE trobj_name
+                                                ex_return      TYPE c.
     METHODS: sort_main_list.
-    METHODS: determine_warning_text   IMPORTING im_highest_rank     TYPE numc4
-                                      EXPORTING ex_highest_text     TYPE text74.
-    METHODS: get_tps_for_same_object  IMPORTING im_line             TYPE ty_request_details
-                                      EXPORTING ex_newer            TYPE tt_request_details
-                                                ex_older            TYPE tt_request_details.
-    METHODS: progress_indicator       IMPORTING im_counter          TYPE sytabix
-                                                im_object           TYPE trobj_name
-                                                im_total            TYPE numc10
-                                                im_text             TYPE itex132
-                                                im_flag             TYPE c.
-    METHODS: alv_xls_init             EXPORTING ex_rf_table         TYPE REF TO cl_salv_table
-                                      CHANGING  ch_table            TYPE table.
+    METHODS: determine_warning_text   IMPORTING im_highest_rank TYPE numc4
+                                      EXPORTING ex_highest_text TYPE text74.
+    METHODS: get_tps_for_same_object  IMPORTING im_line  TYPE ty_request_details
+                                      EXPORTING ex_newer TYPE tt_request_details
+                                                ex_older TYPE tt_request_details.
+    METHODS: progress_indicator       IMPORTING im_counter TYPE sytabix
+                                                im_object  TYPE trobj_name
+                                                im_total   TYPE numc10
+                                                im_text    TYPE itex132
+                                                im_flag    TYPE c.
+    METHODS: alv_xls_init             EXPORTING ex_rf_table TYPE REF TO cl_salv_table
+                                      CHANGING  ch_table    TYPE table.
     METHODS: alv_xls_output.
     METHODS: prepare_ddic_check.
     METHODS: set_ddic_objects.
     METHODS: do_ddic_check            CHANGING  ch_main_list        TYPE tt_request_details.
-    METHODS: set_properties_conflicts IMPORTING im_table            TYPE tt_request_details
-                                      EXPORTING ex_xend             TYPE i.
+    METHODS: set_properties_conflicts IMPORTING im_table TYPE tt_request_details
+                                      EXPORTING ex_xend  TYPE i.
     METHODS: get_data                 IMPORTING im_trkorr_range     TYPE gtabkey_trkorrt.
     METHODS: check_for_conflicts      CHANGING  ch_main_list        TYPE tt_request_details.
     METHODS: build_table_keys_popup.
     METHODS: add_table_keys_to_list   EXPORTING table               TYPE tt_request_details.
     METHODS: get_additional_tp_info   CHANGING  ch_table            TYPE tt_request_details.
-    METHODS: gui_upload               IMPORTING im_filename         TYPE string
-                                      EXPORTING ex_tab_delimited    TYPE table_of_strings
-                                                ex_cancelled        TYPE abap_bool.
-    METHODS: determine_col_width      IMPORTING im_field            TYPE any
-                                      CHANGING  ex_colwidth         TYPE lvc_outlen.
-    METHODS: check_colwidth           IMPORTING im_name             TYPE abap_compname
-                                                im_colwidth         TYPE lvc_outlen
-                                      RETURNING VALUE(re_colwidth)  TYPE lvc_outlen.
+    METHODS: gui_upload               IMPORTING im_filename      TYPE string
+                                      EXPORTING ex_tab_delimited TYPE table_of_strings
+                                                ex_cancelled     TYPE abap_bool.
+    METHODS: determine_col_width      IMPORTING im_field    TYPE any
+                                      CHANGING  ex_colwidth TYPE lvc_outlen.
+    METHODS: check_colwidth           IMPORTING im_name            TYPE abap_compname
+                                                im_colwidth        TYPE lvc_outlen
+                                      RETURNING VALUE(re_colwidth) TYPE lvc_outlen.
     METHODS: remove_tp_in_prd.
     METHODS: version_check.
     METHODS: alv_init.
@@ -466,10 +461,10 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     METHODS: alv_set_tooltips         IMPORTING im_table            TYPE REF TO cl_salv_table.
     METHODS: alv_output.
     METHODS: set_where_used.
-    METHODS: get_import_datetime_qas  IMPORTING im_trkorr           TYPE trkorr
-                                      EXPORTING ex_as4time          TYPE as4time
-                                                ex_as4date          TYPE as4date
-                                                ex_return           TYPE sysubrc.
+    METHODS: get_import_datetime_qas  IMPORTING im_trkorr  TYPE trkorr
+                                      EXPORTING ex_as4time TYPE as4time
+                                                ex_as4date TYPE as4date
+                                                ex_return  TYPE sysubrc.
 ENDCLASS.                    "lcl_ztct DEFINITION
 
 *--------------------------------------------------------------------*
@@ -1208,6 +1203,11 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
         MOVE lp_localfile TO lp_filename.
         rf_ztct->gui_upload( EXPORTING im_filename      = lp_filename
                              IMPORTING ex_tab_delimited = rf_ztct->tab_delimited ).
+        MOVE 'ZEV_TP_CHECKTOOL_ADD_FILE' TO tp_dokl_object.
+        rf_ztct->docu_call( EXPORTING im_object     = tp_dokl_object
+                                      im_id         = 'TX'
+                                      im_display    = abap_true
+                                      im_displ_mode = '2').
         rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
         rf_ztct->refresh_alv( ).                   "Refresh the ALV
       WHEN '&DEL'.                                "Button clicked
@@ -1226,14 +1226,14 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
 *       Re-transport a request (transport already in production)
         rf_ztct->clear_flags( ).
         rf_ztct->flag_for_process( EXPORTING rows = lt_rows
-                                               cell = ls_cell ).
+                                             cell = ls_cell ).
         REFRESH: ra_transports_to_add.
         CLEAR:   st_transports_to_add.
-        st_transports_to_add-sign = 'I'.
+        st_transports_to_add-sign   = 'I'.
         st_transports_to_add-option = 'EQ'.
         LOOP AT rf_ztct->main_list INTO  rf_ztct->main_list_line
-                                     WHERE flag = 'X'
-                                     AND   prd  = rf_ztct->co_okay.
+                                   WHERE flag = 'X'
+                                   AND   prd  = rf_ztct->co_okay.
           st_transports_to_add-low = rf_ztct->main_list_line-trkorr.
           APPEND st_transports_to_add TO ra_transports_to_add.
         ENDLOOP.
@@ -1255,7 +1255,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
         rf_ztct->docu_call( EXPORTING im_object  = tp_dokl_object
                                       im_id      = 'TA' ).
         rf_ztct->check_documentation( EXPORTING im_trkorr = rf_ztct->main_list_line-trkorr
-                                        CHANGING  ch_table  = rf_ztct->main_list ).
+                                      CHANGING  ch_table  = rf_ztct->main_list ).
       WHEN '&PREP_XLS'.
         CHECK rf_table_xls IS NOT BOUND.
         rf_ztct->display_excel( EXPORTING im_table = rf_ztct->main_list ).
@@ -1988,7 +1988,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Check if the transport is in Transport Buffer
 *   TMS_MGR_REFRESH_IMPORT_QUEUES updates this table
     CLEAR:lp_counter.
-    IF me->buffer_chk         = abap_true AND " X = Perform buffer check.
+    IF me->buffer_chk = abap_true AND               " X = Perform buffer check.
        me->building_conflict_popup = abap_false.    " Never when building popup
       LOOP AT ch_main_list INTO ls_main WHERE prd  <> co_okay
                                         AND   dev  <> co_error
@@ -2925,8 +2925,8 @@ CLASS lcl_ztct IMPLEMENTATION.
 *       Save reference to access object from handler
         lcl_eventhandler_ztct=>rf_conflicts = rf_conflicts.
 *       Use gui-status ST850 from program SAPLKKB
-        rf_conflicts->set_screen_status( pfstatus      = 'ST850'
-                                         report        = 'SAPLKKBL' ).
+        rf_conflicts->set_screen_status( pfstatus = 'ST850'
+                                         report   = 'SAPLKKBL' ).
 *       Determine the size of the popup window:
         lp_xend = lp_xend + lp_xstart + 5.
         DESCRIBE TABLE me->conflicts LINES lp_yend.
@@ -2951,7 +2951,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA: ra_trkorr TYPE RANGE OF trkorr.
     DATA: ls_trkorr LIKE LINE  OF ra_trkorr.
     DATA: ls_row TYPE int4.
-*   If row(s) are selected, use the table
+* If row(s) are selected, use the table
 * Add transports to range
     ls_trkorr-sign   = 'I'.
     ls_trkorr-option = 'EQ'.
@@ -2992,6 +2992,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDLOOP.
     ex_main_list[] = lt_main_list_copy[].
     FREE lt_main_list_copy.
+
   ENDMETHOD.                    "flag_same_objects
 
   METHOD mark_all_tp_records.
@@ -3372,7 +3373,11 @@ CLASS lcl_ztct IMPLEMENTATION.
       me->tab_delimited_to_main( EXPORTING im_tab_delimited = lt_tab_delimited
                                  IMPORTING ex_main_list     = me->main_list ).
       DESCRIBE TABLE me->main_list LINES me->total.
-*     Always reset the Check flag when uploading.
+*     Always reset the Check flag when uploading. Reason is that
+*     when combining multiple ZTCT files, these SHOULD be corrected
+*     already. First ythe user collects and combines ALL the files.
+*     When all files have been combined/uploaded, the user can use
+*     the RECHECK button to do a final check on all transports.
       me->clear_flags( ).
       LOOP AT me->main_list INTO me->main_list_line.
         me->progress_indicator( EXPORTING im_counter = sy-tabix
@@ -4227,10 +4232,10 @@ CLASS lcl_ztct IMPLEMENTATION.
 
 * Get used language for existing documentation
     SELECT SINGLE langu
-           FROM  dokil
-           INTO  lv_langu
-           WHERE object = im_object
-           AND   id     = im_id.
+           FROM   dokil
+           INTO   lv_langu
+           WHERE  object = im_object
+           AND    id     = im_id.
     IF sy-subrc <> 0.
       lv_langu = co_langu.
     ENDIF.
