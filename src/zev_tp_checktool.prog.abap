@@ -28,10 +28,10 @@ TYPE-POOLS: abap.
 CLASS: lcl_eventhandler_ztct DEFINITION DEFERRED.
 CLASS: lcl_ztct              DEFINITION DEFERRED.
 
-DATA: e070       TYPE e070.       "CTS: Header
-DATA: e071       TYPE e071.       "CTS: Object Entries Requests/Task
-DATA: vrsd       TYPE vrsd.       "Version management: directory table
-DATA: ctsproject TYPE ctsproject. "Assignm. of CTS Proj. to Ext. Proj.
+DATA e070       TYPE e070.       "CTS: Header
+DATA e071       TYPE e071.       "CTS: Object Entries Requests/Task
+DATA vrsd       TYPE vrsd.       "Version management: directory table
+DATA ctsproject TYPE ctsproject. "Assignm. of CTS Proj. to Ext. Proj.
 
 *--------------------------------------------------------------------*
 * Data definitions
@@ -43,56 +43,56 @@ CONSTANTS:
   co_langu  TYPE ddlanguage   VALUE 'E'.
 
 
-DATA:  ra_project_trkorrs     TYPE RANGE OF ctsproject-trkorr.
-DATA:  st_project_trkorrs     LIKE LINE  OF ra_project_trkorrs.
-DATA:  ra_systems             TYPE RANGE OF tmscsys-sysnam.
-DATA:  st_systems             LIKE LINE  OF ra_systems.
+DATA  ra_project_trkorrs     TYPE RANGE OF ctsproject-trkorr.
+DATA  st_project_trkorrs     LIKE LINE  OF ra_project_trkorrs.
+DATA  ra_systems             TYPE RANGE OF tmscsys-sysnam.
+DATA  st_systems             LIKE LINE  OF ra_systems.
 
 * Global data declarations:
-DATA:  tp_prefix              TYPE char5.
-DATA:  ta_sapsystems          TYPE TABLE OF tmscsys.
-DATA:  st_sapsystems          TYPE tmscsys.
-DATA:  st_tcesyst             TYPE tcesyst.
-DATA:  st_smp_dyntxt          TYPE smp_dyntxt.
-DATA:  tp_dokl_object         TYPE doku_obj. "To check existence of doc
+DATA  tp_prefix              TYPE char5.
+DATA  ta_sapsystems          TYPE TABLE OF tmscsys.
+DATA  st_sapsystems          TYPE tmscsys.
+DATA  st_tcesyst             TYPE tcesyst.
+DATA  st_smp_dyntxt          TYPE smp_dyntxt.
+DATA  tp_dokl_object         TYPE doku_obj. "To check existence of doc
 
-DATA:  ta_trkorr_range        TYPE RANGE OF e070-trkorr.
-DATA:  st_trkorr_range        LIKE LINE OF ta_trkorr_range.
-DATA:  ta_project_range       TYPE RANGE OF ctsproject-trkorr.
-DATA:  ta_date_range          TYPE RANGE OF as4date.
-DATA:  ta_excluded_objects    TYPE RANGE OF trobj_name.
-DATA:  tp_transport_descr     TYPE as4text.
-DATA:  tp_project_reference   TYPE trvalue.
+DATA  ta_trkorr_range        TYPE RANGE OF e070-trkorr.
+DATA  st_trkorr_range        LIKE LINE OF ta_trkorr_range.
+DATA  ta_project_range       TYPE RANGE OF ctsproject-trkorr.
+DATA  ta_date_range          TYPE RANGE OF as4date.
+DATA  ta_excluded_objects    TYPE RANGE OF trobj_name.
+DATA  tp_transport_descr     TYPE as4text.
+DATA  tp_project_reference   TYPE trvalue.
 * Process type is used to identify if a list is build (1),
 * uploaded (2) or the program is used for version checking (3)
-DATA:  tp_process_type        TYPE i.
+DATA  tp_process_type        TYPE i.
 * Date from for transport collection (passed to class)
-DATA:  tp_date_from           TYPE as4date.
+DATA  tp_date_from           TYPE as4date.
 * To determine transport track on selection screen
-DATA:  ta_prev_systems        TYPE tmscsyss.
-DATA:  st_prev_system         TYPE tmscsys.
-DATA:  ta_system_track        TYPE tcesys.
-DATA:  st_system_track        TYPE sysname.
-DATA:  ta_targets             TYPE trsysclis.
-DATA:  st_target              TYPE trsyscli.
-DATA:  tp_sysname             TYPE sysname.
-DATA:  tp_index               TYPE sytabix.
-DATA:  tp_msg                 TYPE string.
+DATA  ta_prev_systems        TYPE tmscsyss.
+DATA  st_prev_system         TYPE tmscsys.
+DATA  ta_system_track        TYPE tcesys.
+DATA  st_system_track        TYPE sysname.
+DATA  ta_targets             TYPE trsysclis.
+DATA  st_target              TYPE trsyscli.
+DATA  tp_sysname             TYPE sysname.
+DATA  tp_index               TYPE sytabix.
+DATA  tp_msg                 TYPE string.
 
 *--------------------------------------------------------------------*
 * Data - ALV
 *--------------------------------------------------------------------*
 * Declaration for ALV Grid
-DATA: rf_table                TYPE REF TO cl_salv_table.
-DATA: rf_table_xls            TYPE REF TO cl_salv_table.
-DATA: rf_conflicts            TYPE REF TO cl_salv_table.
-DATA: rf_table_keys           TYPE REF TO cl_salv_table.
-DATA: rf_handle_events        TYPE REF TO lcl_eventhandler_ztct.
-DATA: rf_events_table         TYPE REF TO cl_salv_events_table.
+DATA rf_table                TYPE REF TO cl_salv_table.
+DATA rf_table_xls            TYPE REF TO cl_salv_table.
+DATA rf_conflicts            TYPE REF TO cl_salv_table.
+DATA rf_table_keys           TYPE REF TO cl_salv_table.
+DATA rf_handle_events        TYPE REF TO lcl_eventhandler_ztct.
+DATA rf_events_table         TYPE REF TO cl_salv_events_table.
 
 * Exception handling
-DATA: rf_root                 TYPE REF TO cx_root.
-DATA: rf_ztct                 TYPE REF TO lcl_ztct.
+DATA rf_root                 TYPE REF TO cx_root.
+DATA rf_ztct                 TYPE REF TO lcl_ztct.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_eventhandler_ztct DEFINITION
@@ -133,10 +133,10 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
 
   PUBLIC SECTION.
 
-    TYPES: ra_trkorr                  TYPE RANGE OF trkorr.
-    TYPES: ra_excluded_objects        TYPE RANGE OF trobj_name.
-    TYPES: ra_date                    TYPE RANGE OF as4date.
-    DATA:  ls_excluded_objects        LIKE LINE  OF ta_excluded_objects.
+    TYPES ra_trkorr                  TYPE RANGE OF trkorr.
+    TYPES ra_excluded_objects        TYPE RANGE OF trobj_name.
+    TYPES ra_date                    TYPE RANGE OF as4date.
+    DATA  ls_excluded_objects        LIKE LINE  OF ta_excluded_objects.
     TYPES: BEGIN OF ty_request_details,
              trkorr         TYPE trkorr,
              checked        TYPE icon_l4,
@@ -182,27 +182,27 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
              ddtext  TYPE as4text,
              counter TYPE i, "lvc_outlen,
            END OF lty_tables_with_keys.
-    DATA: table_keys                  TYPE TABLE OF lty_tables_with_keys.
-    DATA: table_keys_line             TYPE lty_tables_with_keys.
+    DATA table_keys                  TYPE TABLE OF lty_tables_with_keys.
+    DATA table_keys_line             TYPE lty_tables_with_keys.
 
     CONSTANTS:
       co_info                         TYPE  icon_d
                                       VALUE '@0S@'. "ICON_INFORMATION
 
 *   Attributes
-    DATA:  main_list                  TYPE  tt_request_details.
-    DATA:  main_list_line             TYPE  ty_request_details.
-    DATA:  main_list_xls              TYPE  tt_request_details.
-    DATA:  main_list_line_xls         TYPE  ty_request_details.
-    DATA:  conflicts                  TYPE  tt_request_details.
-    DATA:  st_request                 TYPE  ctslg_request_info.
-    DATA:  st_steps                   TYPE  ctslg_step.
-    DATA:  st_actions                 TYPE  ctslg_action.
-    DATA:  tp_tabkey                  TYPE  trobj_name.
-    DATA:  tp_lines                   TYPE  i.
-    DATA:  tp_tab                     TYPE  char1
+    DATA  main_list                  TYPE  tt_request_details.
+    DATA  main_list_line             TYPE  ty_request_details.
+    DATA  main_list_xls              TYPE  tt_request_details.
+    DATA  main_list_line_xls         TYPE  ty_request_details.
+    DATA  conflicts                  TYPE  tt_request_details.
+    DATA  st_request                 TYPE  ctslg_request_info.
+    DATA  st_steps                   TYPE  ctslg_step.
+    DATA  st_actions                 TYPE  ctslg_action.
+    DATA  tp_tabkey                  TYPE  trobj_name.
+    DATA  tp_lines                   TYPE  i.
+    DATA  tp_tab                     TYPE  char1
                                       VALUE cl_abap_char_utilities=>horizontal_tab.
-    DATA: lp_save_restriction         TYPE  salv_de_layout_restriction.
+    DATA lp_save_restriction         TYPE  salv_de_layout_restriction.
 
 *   Methods
     METHODS: constructor.
@@ -247,17 +247,17 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     TYPES: tt_tms_mgr_buffer   TYPE HASHED TABLE OF ty_tms_mgr_buffer
                                WITH UNIQUE KEY request target_system.
 
-    DATA:  tms_mgr_buffer      TYPE tt_tms_mgr_buffer.
-    DATA:  tms_mgr_buffer_line TYPE ty_tms_mgr_buffer.
+    DATA  tms_mgr_buffer      TYPE tt_tms_mgr_buffer.
+    DATA  tms_mgr_buffer_line TYPE ty_tms_mgr_buffer.
     TYPES: BEGIN OF ty_ddic_e071,
              trkorr   TYPE trkorr,
              pgmid    TYPE pgmid,
              object   TYPE trobjtype,
              obj_name TYPE trobj_name,
            END OF ty_ddic_e071.
-    TYPES: tt_ddic_e071 TYPE STANDARD TABLE OF ty_ddic_e071.
+    TYPES tt_ddic_e071 TYPE STANDARD TABLE OF ty_ddic_e071.
 
-    DATA:  ta_ddic_e071 TYPE tt_ddic_e071.
+    DATA  ta_ddic_e071 TYPE tt_ddic_e071.
 
     CONSTANTS:
       co_error   TYPE icon_d          VALUE '@F1@', "ICON_LED_RED
@@ -289,55 +289,55 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     CONSTANTS:
       co_non_charlike                 TYPE string       VALUE 'h'.
 
-    DATA: lp_alert0_text              TYPE text74.
-    DATA: lp_alert1_text              TYPE text74.
-    DATA: lp_alert2_text              TYPE text74.
-    DATA: lp_alert3_text              TYPE text74.
-    DATA: lp_hint1_text               TYPE text74.
-    DATA: lp_hint2_text               TYPE text74.
-    DATA: lp_hint3_text               TYPE text74.
-    DATA: lp_hint4_text               TYPE text74.
-    DATA: lp_info_text                TYPE text74.
-    DATA: lp_fail_text                TYPE text74.
-    DATA: lp_warn_text                TYPE text74.
-    DATA: lp_error_text               TYPE text74.
-    DATA: lp_ddic_text                TYPE text74.
+    DATA lp_alert0_text              TYPE text74.
+    DATA lp_alert1_text              TYPE text74.
+    DATA lp_alert2_text              TYPE text74.
+    DATA lp_alert3_text              TYPE text74.
+    DATA lp_hint1_text               TYPE text74.
+    DATA lp_hint2_text               TYPE text74.
+    DATA lp_hint3_text               TYPE text74.
+    DATA lp_hint4_text               TYPE text74.
+    DATA lp_info_text                TYPE text74.
+    DATA lp_fail_text                TYPE text74.
+    DATA lp_warn_text                TYPE text74.
+    DATA lp_error_text               TYPE text74.
+    DATA lp_ddic_text                TYPE text74.
 
 * Attributes
-    DATA:  project_trkorrs            TYPE ra_trkorr.
-    DATA:  prefix                     TYPE char5.
-    DATA:  aggr_tp_list_of_objects    TYPE tt_request_details.
-    DATA:  add_to_main                TYPE tt_request_details.
-    DATA:  tab_delimited              TYPE table_of_strings.
-    DATA:  conflict_line              TYPE ty_request_details.
-    DATA:  line_found_in_list         TYPE ty_request_details.
-    DATA:  total(10)                  TYPE n.
-    DATA:  ddic_objects               TYPE string_table.
-    DATA:  ddic_objects_sub           TYPE string_table.
-    DATA:  ddic_e071                  TYPE tt_ddic_e071.
-    DATA:  ddic_e071_line             TYPE ty_ddic_e071.
-    DATA:  where_used                 TYPE sci_findlst.
-    DATA:  where_used_line            TYPE rsfindlst.
-    DATA:  check_flag                 TYPE abap_bool.
-    DATA:  check_ddic                 TYPE abap_bool.
-    DATA:  check_tabkeys              TYPE abap_bool.
-    DATA:  clear_checked              TYPE abap_bool.
-    DATA:  buffer_chk                 TYPE abap_bool.
-    DATA:  buffer_remove_tp           TYPE abap_bool.
-    DATA:  trkorr_range               TYPE ra_trkorr.
-    DATA:  project_range              TYPE ra_trkorr.
-    DATA:  date_range                 TYPE ra_date.
-    DATA:  excluded_objects           TYPE ra_excluded_objects.
-    DATA:  search_string              TYPE as4text.
-    DATA:  user_layout                TYPE abap_bool.
-    DATA:  process_type               TYPE i.
-    DATA:  skiplive                   TYPE abap_bool.
-    DATA:  filename                   TYPE string.
-    DATA:  dev_system                 TYPE sysname.
-    DATA:  qas_system                 TYPE sysname.
-    DATA:  prd_system                 TYPE sysname.
-    DATA:  tooltips                   TYPE REF TO cl_salv_tooltips.
-    DATA:  building_conflict_popup    TYPE flag.
+    DATA  project_trkorrs            TYPE ra_trkorr.
+    DATA  prefix                     TYPE char5.
+    DATA  aggr_tp_list_of_objects    TYPE tt_request_details.
+    DATA  add_to_main                TYPE tt_request_details.
+    DATA  tab_delimited              TYPE table_of_strings.
+    DATA  conflict_line              TYPE ty_request_details.
+    DATA  line_found_in_list         TYPE ty_request_details.
+    DATA  total(10)                  TYPE n.
+    DATA  ddic_objects               TYPE string_table.
+    DATA  ddic_objects_sub           TYPE string_table.
+    DATA  ddic_e071                  TYPE tt_ddic_e071.
+    DATA  ddic_e071_line             TYPE ty_ddic_e071.
+    DATA  where_used                 TYPE sci_findlst.
+    DATA  where_used_line            TYPE rsfindlst.
+    DATA  check_flag                 TYPE abap_bool.
+    DATA  check_ddic                 TYPE abap_bool.
+    DATA  check_tabkeys              TYPE abap_bool.
+    DATA  clear_checked              TYPE abap_bool.
+    DATA  buffer_chk                 TYPE abap_bool.
+    DATA  buffer_remove_tp           TYPE abap_bool.
+    DATA  trkorr_range               TYPE ra_trkorr.
+    DATA  project_range              TYPE ra_trkorr.
+    DATA  date_range                 TYPE ra_date.
+    DATA  excluded_objects           TYPE ra_excluded_objects.
+    DATA  search_string              TYPE as4text.
+    DATA  user_layout                TYPE abap_bool.
+    DATA  process_type               TYPE i.
+    DATA  skiplive                   TYPE abap_bool.
+    DATA  filename                   TYPE string.
+    DATA  dev_system                 TYPE sysname.
+    DATA  qas_system                 TYPE sysname.
+    DATA  prd_system                 TYPE sysname.
+    DATA  tooltips                   TYPE REF TO cl_salv_tooltips.
+    DATA  building_conflict_popup    TYPE flag.
 
     METHODS: refresh_import_queues.
     METHODS: handle_error                IMPORTING rf_oref                    TYPE REF TO cx_root.
@@ -829,35 +829,35 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     TYPES: BEGIN OF lty_sval.
             INCLUDE TYPE sval.
     TYPES: END OF lty_sval.
-    TYPES: lty_field TYPE STANDARD TABLE OF lty_sval.
-    DATA: ra_transports_to_add TYPE RANGE OF e070-trkorr,
-          st_transports_to_add LIKE LINE OF ra_transports_to_add.
-    DATA: ta_excluded_objects  TYPE RANGE OF trobj_name.
-    DATA: ls_excluded_objects  LIKE LINE  OF ta_excluded_objects.
+    TYPES lty_field TYPE STANDARD TABLE OF lty_sval.
+    DATA ra_transports_to_add TYPE RANGE OF e070-trkorr.
+    DATA st_transports_to_add LIKE LINE OF ra_transports_to_add.
+    DATA ta_excluded_objects  TYPE RANGE OF trobj_name.
+    DATA ls_excluded_objects  LIKE LINE  OF ta_excluded_objects.
 * Global data declarations:
-    DATA: lp_title            TYPE string.
-    DATA: lp_filename         TYPE string.
-    DATA: lp_file             TYPE localfile.
-    DATA: lt_fields           TYPE lty_field. "ty_sval.
-    DATA: ls_fields           TYPE sval.
-    DATA: lp_tabix            TYPE sytabix.
-    DATA: lr_selections       TYPE REF TO cl_salv_selections.
-    DATA: lp_localfile        TYPE string.
-    DATA: lp_filelength       TYPE i.
-    DATA: ls_row              TYPE int4.
-    DATA: lp_row_found        TYPE abap_bool.
-    DATA: lp_return           TYPE c.
+    DATA lp_title            TYPE string.
+    DATA lp_filename         TYPE string.
+    DATA lp_file             TYPE localfile.
+    DATA lt_fields           TYPE lty_field. "ty_sval.
+    DATA ls_fields           TYPE sval.
+    DATA lp_tabix            TYPE sytabix.
+    DATA lr_selections       TYPE REF TO cl_salv_selections.
+    DATA lp_localfile        TYPE string.
+    DATA lp_filelength       TYPE i.
+    DATA ls_row              TYPE int4.
+    DATA lp_row_found        TYPE abap_bool.
+    DATA lp_return           TYPE c.
 *   Selected rows
-    DATA: lt_rows             TYPE salv_t_row.
-    DATA: ls_cell             TYPE salv_s_cell.
-    DATA: lp_path             TYPE string.
-    DATA: lp_fullpath         TYPE string.
-    DATA: lp_result           TYPE i.
-    DATA: lp_desktop          TYPE string.
-    DATA: lp_timestamp        TYPE tzntstmps.
-    DATA: lp_default_filename TYPE string.
-    DATA: lp_question         TYPE string.
-    DATA: lp_answer           TYPE char01.
+    DATA lt_rows             TYPE salv_t_row.
+    DATA ls_cell             TYPE salv_s_cell.
+    DATA lp_path             TYPE string.
+    DATA lp_fullpath         TYPE string.
+    DATA lp_result           TYPE i.
+    DATA lp_desktop          TYPE string.
+    DATA lp_timestamp        TYPE tzntstmps.
+    DATA lp_default_filename TYPE string.
+    DATA lp_question         TYPE string.
+    DATA lp_answer           TYPE char01.
 
     FIELD-SYMBOLS: <rf_ref_table> TYPE REF TO cl_salv_table.
 
@@ -1265,10 +1265,10 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
   ENDMETHOD.                    "on_function_click
 
   METHOD on_double_click.
-    DATA: lr_selections      TYPE REF TO cl_salv_selections.
+    DATA lr_selections      TYPE REF TO cl_salv_selections.
 *   Selected rows
-    DATA: lt_rows    TYPE salv_t_row.
-    DATA: ls_cell    TYPE salv_s_cell.
+    DATA lt_rows    TYPE salv_t_row.
+    DATA ls_cell    TYPE salv_s_cell.
 
     lr_selections = rf_table->get_selections(  ).
     lt_rows = lr_selections->get_selected_rows( ).
@@ -1304,10 +1304,10 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
   ENDMETHOD.                                       "on_double_click
 
   METHOD on_double_click_popup.
-    DATA: lr_selections      TYPE REF TO cl_salv_selections.
+    DATA lr_selections      TYPE REF TO cl_salv_selections.
 *   Selected rows
-    DATA: lt_rows    TYPE salv_t_row.
-    DATA: ls_cell    TYPE salv_s_cell.
+    DATA lt_rows    TYPE salv_t_row.
+    DATA ls_cell    TYPE salv_s_cell.
 
     lr_selections = rf_table->get_selections(  ).
     lt_rows = lr_selections->get_selected_rows( ).
@@ -1373,8 +1373,8 @@ ENDCLASS.                    "lcl_eventhandler_ztct IMPLEMENTATION
 CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD constructor.
-    DATA: ra_project_trkorrs            TYPE RANGE OF trkorr.
-    DATA: st_project_trkorrs            LIKE LINE OF ra_project_trkorrs.
+    DATA ra_project_trkorrs            TYPE RANGE OF trkorr.
+    DATA st_project_trkorrs            LIKE LINE OF ra_project_trkorrs.
 
     lp_alert0_text = 'Log couldn''t be read or TP not released'(w16).
     lp_alert1_text = 'Transport not released'(w19).
@@ -1405,7 +1405,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "constructor
 
   METHOD execute.
-    DATA: lp_cancelled TYPE abap_bool.
+    DATA lp_cancelled TYPE abap_bool.
     IF process_type = 1.
       me->get_data( EXPORTING im_trkorr_range = trkorr_range ).
       me->get_additional_tp_info( CHANGING ch_table = me->main_list ).
@@ -1483,9 +1483,9 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "refresh_import_queues
 
   METHOD: flag_for_process.
-    DATA: ra_trkorr TYPE RANGE OF trkorr.
-    DATA: ls_trkorr LIKE LINE OF ra_trkorr.
-    DATA: ls_row      TYPE int4.
+    DATA ra_trkorr TYPE RANGE OF trkorr.
+    DATA ls_trkorr LIKE LINE OF ra_trkorr.
+    DATA ls_row      TYPE int4.
     IF rows IS INITIAL AND cell IS INITIAL.
       MESSAGE i000(db) WITH 'Please select records or put the cursor on a row'(m10).
       EXIT.
@@ -1517,26 +1517,26 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "flag_for_process
 
   METHOD: check_for_conflicts.
-    DATA: ls_ddic_conflict_info TYPE ty_request_details.
-    DATA: ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request,
-          st_stms_wbo_requests TYPE stms_wbo_request.
-    DATA: lp_counter           TYPE i.
-    DATA: lp_tabix             TYPE sytabix.
-    DATA: lp_return            TYPE c.
-    DATA: lp_exit              TYPE abap_bool.
-    DATA: ls_main              TYPE ty_request_details.
-    DATA: ls_line_temp         TYPE ty_request_details.
-    DATA: lt_newer_transports  TYPE tt_request_details.
-    DATA: lt_older_transports  TYPE tt_request_details.
-    DATA: ls_newer_line        TYPE ty_request_details.
-    DATA: ls_older_line        TYPE ty_request_details.
-    DATA: lp_domnam            TYPE char10.
-    DATA: lp_highest_lvl       TYPE icon_d.
-    DATA: lp_highest_rank      TYPE numc4.
-    DATA: lp_highest_text      TYPE text74.
-    DATA: lp_highest_col       TYPE lvc_t_scol.
-    DATA: lp_target            TYPE tmssysnam.
-    DATA: lp_obj_name          TYPE trobj_name.
+    DATA ls_ddic_conflict_info TYPE ty_request_details.
+    DATA ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
+    DATA st_stms_wbo_requests TYPE stms_wbo_request.
+    DATA lp_counter           TYPE i.
+    DATA lp_tabix             TYPE sytabix.
+    DATA lp_return            TYPE c.
+    DATA lp_exit              TYPE abap_bool.
+    DATA ls_main              TYPE ty_request_details.
+    DATA ls_line_temp         TYPE ty_request_details.
+    DATA lt_newer_transports  TYPE tt_request_details.
+    DATA lt_older_transports  TYPE tt_request_details.
+    DATA ls_newer_line        TYPE ty_request_details.
+    DATA ls_older_line        TYPE ty_request_details.
+    DATA lp_domnam            TYPE char10.
+    DATA lp_highest_lvl       TYPE icon_d.
+    DATA lp_highest_rank      TYPE numc4.
+    DATA lp_highest_text      TYPE text74.
+    DATA lp_highest_col       TYPE lvc_t_scol.
+    DATA lp_target            TYPE tmssysnam.
+    DATA lp_obj_name          TYPE trobj_name.
     REFRESH: me->conflicts.
     CLEAR:   me->conflict_line,
              me->total.
@@ -1923,30 +1923,30 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   checking procedure. This is the only place where the user has a
 *   complete overview of the tables that have been found...
 *   Declaration for ALV Columns
-    DATA: lr_columns_table       TYPE REF TO cl_salv_columns_table.
-    DATA: lr_column_table        TYPE REF TO cl_salv_column_table.
-    DATA: lt_t_column_ref        TYPE salv_t_column_ref.
-    DATA: ls_reference           TYPE salv_s_ddic_reference.
-    DATA: ls_s_column_ref        TYPE salv_s_column_ref.
-    DATA: st_colo                TYPE lvc_s_colo.
-    DATA: lr_events              TYPE REF TO cl_salv_events_table.
+    DATA lr_columns_table       TYPE REF TO cl_salv_columns_table.
+    DATA lr_column_table        TYPE REF TO cl_salv_column_table.
+    DATA lt_t_column_ref        TYPE salv_t_column_ref.
+    DATA ls_reference           TYPE salv_s_ddic_reference.
+    DATA ls_s_column_ref        TYPE salv_s_column_ref.
+    DATA st_colo                TYPE lvc_s_colo.
+    DATA lr_events              TYPE REF TO cl_salv_events_table.
 *   Declaration for Global Display Settings
-    DATA: lr_display_settings    TYPE REF TO cl_salv_display_settings.
+    DATA lr_display_settings    TYPE REF TO cl_salv_display_settings.
 *   Declaration for Table Selection settings
-    DATA: lr_selections          TYPE REF TO cl_salv_selections.
-    DATA: lp_title               TYPE lvc_title.
-    DATA: lp_tp_prefix           TYPE char5.
-    DATA: lp_xstart              TYPE i VALUE 26.
-    DATA: lp_xend                TYPE i.
-    DATA: lp_ystart              TYPE i VALUE 7.
-    DATA: lp_yend                TYPE i.
-    DATA: lp_cw_tabname          TYPE lvc_outlen.  "Length
-    DATA: lp_cw_counter          TYPE lvc_outlen.  "Length
-    DATA: lp_cw_ddtext           TYPE lvc_outlen.  "Length
+    DATA lr_selections          TYPE REF TO cl_salv_selections.
+    DATA lp_title               TYPE lvc_title.
+    DATA lp_tp_prefix           TYPE char5.
+    DATA lp_xstart              TYPE i VALUE 26.
+    DATA lp_xend                TYPE i.
+    DATA lp_ystart              TYPE i VALUE 7.
+    DATA lp_yend                TYPE i.
+    DATA lp_cw_tabname          TYPE lvc_outlen.  "Length
+    DATA lp_cw_counter          TYPE lvc_outlen.  "Length
+    DATA lp_cw_ddtext           TYPE lvc_outlen.  "Length
 *   Texts
-    DATA: lp_short_text       TYPE char10.
-    DATA: lp_medium_text      TYPE char20.
-    DATA: lp_long_text        TYPE char40.
+    DATA lp_short_text       TYPE char10.
+    DATA lp_medium_text      TYPE char20.
+    DATA lp_long_text        TYPE char40.
 
     lp_title = 'Select the tables for which '(t06) &&
                ' the keys must be checked'(t07).
@@ -2084,10 +2084,10 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "build_table_keys_popup
 
   METHOD: add_table_keys_to_list .
-    DATA: lp_counter          TYPE sy-tabix.
-    DATA: lp_total(10)        TYPE n.
-    DATA: lt_keys             TYPE tt_request_details.
-    DATA: ls_keys             TYPE ty_request_details.
+    DATA lp_counter          TYPE sy-tabix.
+    DATA lp_total(10)        TYPE n.
+    DATA lt_keys             TYPE tt_request_details.
+    DATA ls_keys             TYPE ty_request_details.
 *   Only if the option to check for table keys is switched ON, on the
 *   selection screen:
     CHECK: check_tabkeys = abap_true.
@@ -2132,14 +2132,14 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "add_table_keys_to_list
 
   METHOD progress_indicator.
-    DATA: lp_gprogtext         TYPE char1024.
-    DATA: lp_gprogperc(4)      TYPE p DECIMALS 0.
-    DATA: lp_gproggui          TYPE i.
-    DATA: lp_step              TYPE i VALUE 1.
-    DATA: lp_difference        TYPE i.
-    DATA: lp_string            TYPE string.
-    DATA: lp_total             TYPE numc10.
-    DATA: lp_counter_reset     TYPE i.
+    DATA lp_gprogtext         TYPE char1024.
+    DATA lp_gprogperc(4)      TYPE p DECIMALS 0.
+    DATA lp_gproggui          TYPE i.
+    DATA lp_step              TYPE i VALUE 1.
+    DATA lp_difference        TYPE i.
+    DATA lp_string            TYPE string.
+    DATA lp_total             TYPE numc10.
+    DATA lp_counter_reset     TYPE i.
 *   IM_TOTAL cannot be changed, and we need to remove the leading
 *   zero's. That is why intermediate parameter lp_TOTAL was added
     lp_total = im_total.
@@ -2193,9 +2193,9 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "progress_indicator
 
   METHOD get_main_transports.
-    DATA: ta_main_list_vrsd  TYPE tt_request_details.
-    DATA: st_main_list_vrsd  TYPE ty_request_details.
-    DATA: lp_return          TYPE c.
+    DATA ta_main_list_vrsd  TYPE tt_request_details.
+    DATA st_main_list_vrsd  TYPE ty_request_details.
+    DATA lp_return          TYPE c.
     FIELD-SYMBOLS: <l_main_list> TYPE ty_request_details.
     REFRESH: ta_main_list_vrsd.
     CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
@@ -2371,11 +2371,11 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "get_tp_info
 
   METHOD get_added_objects.
-    DATA: lp_tabix          TYPE sytabix,
-          ls_main           TYPE ty_request_details,
-          ls_main_list_vrsd TYPE ty_request_details,
-          lt_main_list_vrsd TYPE tt_request_details,
-          ls_added          TYPE ty_request_details.
+    DATA lp_tabix          TYPE sytabix.
+    DATA ls_main           TYPE ty_request_details.
+    DATA ls_main_list_vrsd TYPE ty_request_details.
+    DATA lt_main_list_vrsd TYPE tt_request_details.
+    DATA ls_added          TYPE ty_request_details.
     FIELD-SYMBOLS: <l_main_list> TYPE ty_request_details.
     REFRESH: ex_to_add.
     REFRESH: lt_main_list_vrsd.
@@ -2480,17 +2480,17 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "get_added_objects
 
   METHOD get_additional_tp_info.
-    DATA: lt_tr_cofilines      TYPE tr_cofilines.
-    DATA: ls_tstrfcofil        TYPE tstrfcofil.
-    DATA: ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
-    DATA: lp_retcode           TYPE strw_int4.
-    DATA: st_stms_wbo_requests TYPE stms_wbo_request.
-    DATA: st_systems           TYPE ctslg_system.
-    DATA: lp_counter           TYPE i.
-    DATA: lp_index             TYPE sytabix.
-    DATA: lp_indexinc          TYPE sytabix.
-    DATA: lp_trkorr            TYPE trkorr.
-    DATA: ls_main_backup       TYPE ty_request_details.
+    DATA lt_tr_cofilines      TYPE tr_cofilines.
+    DATA ls_tstrfcofil        TYPE tstrfcofil.
+    DATA ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
+    DATA lp_retcode           TYPE strw_int4.
+    DATA st_stms_wbo_requests TYPE stms_wbo_request.
+    DATA st_systems           TYPE ctslg_system.
+    DATA lp_counter           TYPE i.
+    DATA lp_index             TYPE sytabix.
+    DATA lp_indexinc          TYPE sytabix.
+    DATA lp_trkorr            TYPE trkorr.
+    DATA ls_main_backup       TYPE ty_request_details.
     CLEAR: lp_counter,
            me->total.
 *   The CHECKED_BY field is always going to be filled. If it is empty,
@@ -2754,12 +2754,12 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "add_to_list
 
   METHOD build_conflict_popup.
-    DATA: lr_events          TYPE REF TO cl_salv_events_table.
-    DATA: ls_conflict        TYPE ty_request_details.
-    DATA: lp_xend            TYPE i.
-    DATA: lp_yend            TYPE i.
-    DATA: lp_xstart          TYPE i VALUE 50.
-    DATA: lp_ystart          TYPE i VALUE 7.
+    DATA lr_events          TYPE REF TO cl_salv_events_table.
+    DATA ls_conflict        TYPE ty_request_details.
+    DATA lp_xend            TYPE i.
+    DATA lp_yend            TYPE i.
+    DATA lp_xstart          TYPE i VALUE 50.
+    DATA lp_ystart          TYPE i VALUE 7.
 *   Prevent the conflicts popup to be build multiple times
     CHECK rf_conflicts IS INITIAL.
 *   Because we are going to only display the popup, the main list
@@ -2826,9 +2826,9 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "build_conflict_popup
 
   METHOD delete_tp_from_list.
-    DATA: ra_trkorr TYPE RANGE OF trkorr.
-    DATA: ls_trkorr LIKE LINE  OF ra_trkorr.
-    DATA: ls_row TYPE int4.
+    DATA ra_trkorr TYPE RANGE OF trkorr.
+    DATA ls_trkorr LIKE LINE  OF ra_trkorr.
+    DATA ls_row TYPE int4.
 * If row(s) are selected, use the table
 * Add transports to range
     ls_trkorr-sign   = 'I'.
@@ -2845,7 +2845,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "delete_tp_from_list
 
   METHOD flag_same_objects.
-    DATA: lt_main_list_copy TYPE tt_request_details.
+    DATA lt_main_list_copy TYPE tt_request_details.
 *   Only relevant if there is a check to be done
     CHECK me->check_flag = abap_true.
 *   Set check flag for all transports that are going to be refreshed
@@ -2874,9 +2874,9 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "flag_same_objects
 
   METHOD mark_all_tp_records.
-    DATA: ra_trkorr TYPE RANGE OF trkorr.
-    DATA: ls_trkorr LIKE LINE  OF ra_trkorr.
-    DATA: ls_row    TYPE int4.
+    DATA ra_trkorr TYPE RANGE OF trkorr.
+    DATA ls_trkorr LIKE LINE  OF ra_trkorr.
+    DATA ls_row    TYPE int4.
 * Add transports to range
     ls_trkorr-sign   = 'I'.
     ls_trkorr-option = 'EQ'.
@@ -2916,10 +2916,10 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "clear_flags
 
   METHOD get_filename.
-    DATA: lp_window_title TYPE string,
-          lp_rc           TYPE i,
-          lp_desktop      TYPE string,
-          lt_filetable    TYPE filetable.
+    DATA lp_window_title TYPE string.
+    DATA lp_rc           TYPE i.
+    DATA lp_desktop      TYPE string.
+    DATA lt_filetable    TYPE filetable.
 * Finding desktop
     CALL METHOD cl_gui_frontend_services=>get_desktop_directory
       CHANGING
@@ -2964,17 +2964,17 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "get_filename
 
   METHOD main_to_tab_delimited.
-    DATA: lp_string             TYPE string.
-    DATA: lp_type               TYPE char01.
-    DATA: lp_com                TYPE i.
+    DATA lp_string             TYPE string.
+    DATA lp_type               TYPE char01.
+    DATA lp_com                TYPE i.
     FIELD-SYMBOLS: <l_fs>       TYPE any.
 
 *   Determine the number of fields in the structure
-    DATA: lr_tabledescr         TYPE REF TO cl_abap_tabledescr,
-          lr_typedescr          TYPE REF TO cl_abap_typedescr,
-          lr_structdescr        TYPE REF TO cl_abap_structdescr,
-          lt_abap_component_tab TYPE abap_component_tab,
-          ls_abap_component     TYPE abap_componentdescr.
+    DATA lr_tabledescr         TYPE REF TO cl_abap_tabledescr.
+    DATA lr_typedescr          TYPE REF TO cl_abap_typedescr.
+    DATA lr_structdescr        TYPE REF TO cl_abap_structdescr.
+    DATA lt_abap_component_tab TYPE abap_component_tab.
+    DATA ls_abap_component     TYPE abap_componentdescr.
 
     TRY.
         lr_typedescr = cl_abap_tabledescr=>describe_by_data( p_data = me->main_list ).
@@ -3031,7 +3031,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "display_transport
 
   METHOD display_user.
-    DATA: lp_return   TYPE bapiret2.
+    DATA lp_return   TYPE bapiret2.
     CALL FUNCTION 'BAPI_USER_DISPLAY'
       EXPORTING
         username = im_user
@@ -3045,7 +3045,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "display_user
 
   METHOD display_docu.
-    DATA: lp_dokl_object TYPE doku_obj.
+    DATA lp_dokl_object TYPE doku_obj.
     MOVE: im_trkorr  TO lp_dokl_object.
     me->docu_call( EXPORTING im_object  = lp_dokl_object
                              im_id      = 'TA' ).
@@ -3055,7 +3055,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD refresh_alv.
 *   Declaration for Top of List settings
-    DATA: lr_form_element TYPE REF TO cl_salv_form_element.
+    DATA lr_form_element TYPE REF TO cl_salv_form_element.
 
     me->top_of_page( IMPORTING ex_form_element = lr_form_element ).
     rf_table->set_top_of_list( lr_form_element ).
@@ -3069,21 +3069,21 @@ CLASS lcl_ztct IMPLEMENTATION.
              field TYPE fieldname,
              value TYPE string,
            END OF lty_upl_line.
-    DATA: lt_upl_line       TYPE TABLE OF lty_upl_line.
-    DATA: ls_upl_line       TYPE lty_upl_line.
-    DATA: lt_main_upl       TYPE tt_request_details.
-    DATA: ls_main_line_upl  TYPE ty_request_details.
-    DATA: lp_record         TYPE string.
-    DATA: ls_main           TYPE ty_request_details.
-    DATA: lp_type           TYPE char01.
-    DATA: lp_com            TYPE i.
+    DATA lt_upl_line       TYPE TABLE OF lty_upl_line.
+    DATA ls_upl_line       TYPE lty_upl_line.
+    DATA lt_main_upl       TYPE tt_request_details.
+    DATA ls_main_line_upl  TYPE ty_request_details.
+    DATA lp_record         TYPE string.
+    DATA ls_main           TYPE ty_request_details.
+    DATA lp_type           TYPE char01.
+    DATA lp_com            TYPE i.
     FIELD-SYMBOLS: <l_fs>   TYPE any.
 *   Determine the number of fields in the structure
-    DATA: l_o_tabledescr         TYPE REF TO cl_abap_tabledescr.
-    DATA: l_o_typedescr          TYPE REF TO cl_abap_typedescr.
-    DATA: l_o_structdescr        TYPE REF TO cl_abap_structdescr.
-    DATA: l_s_abap_compdescr_tab TYPE abap_compdescr.
-    DATA: ls_component           TYPE abap_compdescr.
+    DATA l_o_tabledescr         TYPE REF TO cl_abap_tabledescr.
+    DATA l_o_typedescr          TYPE REF TO cl_abap_typedescr.
+    DATA l_o_structdescr        TYPE REF TO cl_abap_structdescr.
+    DATA l_s_abap_compdescr_tab TYPE abap_compdescr.
+    DATA ls_component           TYPE abap_compdescr.
     TRY.
         l_o_typedescr = cl_abap_tabledescr=>describe_by_data( p_data = me->main_list ).
         l_o_tabledescr ?= l_o_typedescr.
@@ -3204,8 +3204,8 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "tab_delimited_to_main
 
   METHOD gui_upload.
-    DATA: lt_tab_delimited TYPE table_of_strings.
-    DATA: lt_temp_table    TYPE table_of_strings.
+    DATA lt_tab_delimited TYPE table_of_strings.
+    DATA lt_temp_table    TYPE table_of_strings.
     CALL METHOD cl_gui_frontend_services=>gui_upload
       EXPORTING
         filename                = im_filename
@@ -3285,7 +3285,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "gui_upload
 
   METHOD check_if_in_list.
-    DATA: lp_tabix   TYPE i.
+    DATA lp_tabix   TYPE i.
     CLEAR: ex_line.
 * This subroutine checks if the conflicting transport/object is found
 * further down in the list (in a later transport):
@@ -3308,7 +3308,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   an entry in a table, it should not be checked if the table was
 *   changed, but if it's the same entry that was changed... This perform
 *   check the key entries.
-    DATA:  ls_e071k TYPE e071k.
+    DATA  ls_e071k TYPE e071k.
     CLEAR: ex_tabkey,
            ex_return.
 *   The check on object (if the same) can either be done on key level (for
@@ -3346,7 +3346,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "check_if_same_object
 
   METHOD check_documentation.
-    DATA: ls_doktl  TYPE doktl.      "Documentation - text lines
+    DATA ls_doktl  TYPE doktl.      "Documentation - text lines
     MOVE: im_trkorr TO tp_dokl_object.
     SELECT * FROM  doktl
              UP TO 1 ROWS
@@ -3406,8 +3406,8 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD set_color.
 *   Color Structure of columns
-    DATA: ta_scol                     TYPE lvc_t_scol.
-    DATA: st_scol                     TYPE lvc_s_scol.
+    DATA ta_scol                     TYPE lvc_t_scol.
+    DATA st_scol                     TYPE lvc_s_scol.
     FIELD-SYMBOLS: <fs_main> TYPE ty_request_details.
     LOOP AT me->main_list ASSIGNING <fs_main>.
 *     Init
@@ -3558,25 +3558,25 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD alv_set_properties.
 *   Declaration for ALV Columns
-    DATA: lr_columns_table       TYPE REF TO cl_salv_columns_table.
-    DATA: lt_t_column_ref        TYPE salv_t_column_ref.
-    DATA: lr_functions_list      TYPE REF TO cl_salv_functions_list.
+    DATA lr_columns_table       TYPE REF TO cl_salv_columns_table.
+    DATA lt_t_column_ref        TYPE salv_t_column_ref.
+    DATA lr_functions_list      TYPE REF TO cl_salv_functions_list.
 *   Declaration for Top of List settings
-    DATA: lr_form_element        TYPE REF TO cl_salv_form_element.
+    DATA lr_form_element        TYPE REF TO cl_salv_form_element.
 *   Declaration for Layout Settings
-    DATA: lr_layout              TYPE REF TO cl_salv_layout.
-    DATA: ls_layout_key          TYPE salv_s_layout_key.
+    DATA lr_layout              TYPE REF TO cl_salv_layout.
+    DATA ls_layout_key          TYPE salv_s_layout_key.
 *   Declaration for Aggregate Function Settings
-    DATA: lr_aggregations        TYPE REF TO cl_salv_aggregations.
+    DATA lr_aggregations        TYPE REF TO cl_salv_aggregations.
 *   Declaration for Sort Function Settings
-    DATA: lr_sorts               TYPE REF TO cl_salv_sorts.
+    DATA lr_sorts               TYPE REF TO cl_salv_sorts.
 *   Declaration for Table Selection settings
-    DATA: lr_selections          TYPE REF TO cl_salv_selections.
+    DATA lr_selections          TYPE REF TO cl_salv_selections.
 *   Declaration for Global Display Settings
-    DATA: lr_display_settings    TYPE REF TO cl_salv_display_settings.
-    DATA: lp_version             TYPE char10.
-    DATA: lp_title               TYPE lvc_title.
-    DATA: lp_class               TYPE xuclass.
+    DATA lr_display_settings    TYPE REF TO cl_salv_display_settings.
+    DATA lp_version             TYPE char10.
+    DATA lp_title               TYPE lvc_title.
+    DATA lp_class               TYPE xuclass.
 
     FIELD-SYMBOLS: <table>       TYPE REF TO cl_salv_table.
     ASSIGN im_table TO <table>.
@@ -3735,10 +3735,10 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD alv_set_tooltips.
 *   Fill the symbols, colors in to table and set tooltips
-    DATA: tooltips TYPE REF TO cl_salv_tooltips.
-    DATA: settings TYPE REF TO cl_salv_functional_settings.
-    DATA: value    TYPE char128.
-    DATA: lp_text  TYPE lvc_tip.
+    DATA tooltips TYPE REF TO cl_salv_tooltips.
+    DATA settings TYPE REF TO cl_salv_functional_settings.
+    DATA value    TYPE char128.
+    DATA lp_text  TYPE lvc_tip.
     FIELD-SYMBOLS: <outtab> TYPE ty_request_details.
     FREE settings.
     FREE tooltips.
@@ -3806,27 +3806,27 @@ CLASS lcl_ztct IMPLEMENTATION.
              high   TYPE fieldname,
            END OF lty_field_ran.
 
-    DATA: ls_reference        TYPE salv_s_ddic_reference.
-    DATA: ls_s_column_ref     TYPE salv_s_column_ref.
-    DATA: lr_column_table     TYPE REF TO cl_salv_column_table.
-    DATA: st_colo             TYPE lvc_s_colo.
+    DATA ls_reference        TYPE salv_s_ddic_reference.
+    DATA ls_s_column_ref     TYPE salv_s_column_ref.
+    DATA lr_column_table     TYPE REF TO cl_salv_column_table.
+    DATA st_colo             TYPE lvc_s_colo.
 *   Declaration for Aggregate Function Settings
-    DATA: lr_aggregations     TYPE REF TO cl_salv_aggregations.
+    DATA lr_aggregations     TYPE REF TO cl_salv_aggregations.
 *   Remove some columns for the XLS output
-    DATA: lra_fieldname       TYPE RANGE OF lty_field_ran.
-    DATA: ls_fieldname        TYPE lty_field_ran.
-    DATA: lp_return           TYPE abap_bool.
+    DATA lra_fieldname       TYPE RANGE OF lty_field_ran.
+    DATA ls_fieldname        TYPE lty_field_ran.
+    DATA lp_return           TYPE abap_bool.
 *   Hide columns when empty
-    DATA: lra_hide_when_empty TYPE RANGE OF lty_field_ran.
-    DATA: ls_hide_when_empty  TYPE lty_field_ran.
+    DATA lra_hide_when_empty TYPE RANGE OF lty_field_ran.
+    DATA ls_hide_when_empty  TYPE lty_field_ran.
 *   Texts
-    DATA: lp_short_text       TYPE char10.
-    DATA: lp_medium_text      TYPE char20.
-    DATA: lp_long_text        TYPE char40.
+    DATA lp_short_text       TYPE char10.
+    DATA lp_medium_text      TYPE char20.
+    DATA lp_long_text        TYPE char40.
 
-    DATA: lp_sys_s TYPE REF TO data.
-    DATA: lp_sys_m TYPE REF TO data.
-    DATA: lp_sys_l TYPE REF TO data.
+    DATA lp_sys_s TYPE REF TO data.
+    DATA lp_sys_m TYPE REF TO data.
+    DATA lp_sys_l TYPE REF TO data.
     FIELD-SYMBOLS: <text_s> TYPE scrtext_s.
     FIELD-SYMBOLS: <text_m> TYPE scrtext_m.
     FIELD-SYMBOLS: <text_l> TYPE scrtext_l.
@@ -4091,7 +4091,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "column_settings
 
   METHOD is_empty_column.
-    DATA: ls_line TYPE ty_request_details.
+    DATA ls_line TYPE ty_request_details.
     FIELD-SYMBOLS: <column> TYPE any.
     re_is_empty = abap_true.
     LOOP AT im_table INTO ls_line.
@@ -4105,7 +4105,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD docu_call.
 
-    DATA: lv_langu TYPE ddlanguage.
+    DATA lv_langu TYPE ddlanguage.
 
 * Get used language for existing documentation
     SELECT SINGLE langu
@@ -4140,7 +4140,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 * largest value is used as column width. This column width is then used
 * in the fielddif table for function "STC1_POPUP_WITH_TABLE_CONTROL".
 * This is done to downsize the width of the column as much as possible.
-    DATA: lp_value TYPE i.
+    DATA lp_value TYPE i.
 *    CLEAR: ex_colwidth.
     IF NOT im_field IS INITIAL.
       lp_value = strlen( im_field ).
@@ -4182,10 +4182,10 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD get_tps_for_same_object.
 
-    DATA: lt_aggr_tp_list_of_objects TYPE tt_request_details.
-    DATA: ls_tp_same_object          TYPE ty_request_details.
-    DATA: lp_index                   TYPE sytabix.
-    DATA: lp_return                  TYPE sysubrc.
+    DATA lt_aggr_tp_list_of_objects TYPE tt_request_details.
+    DATA ls_tp_same_object          TYPE ty_request_details.
+    DATA lp_index                   TYPE sytabix.
+    DATA lp_return                  TYPE sysubrc.
 
     REFRESH: ex_newer.
     REFRESH: ex_older.
@@ -4333,16 +4333,16 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "get_tps_for_same_object
 
   METHOD handle_error.
-    DATA: lp_msg TYPE string.
+    DATA lp_msg TYPE string.
     lp_msg = rf_oref->get_text( ).
     CONCATENATE 'ERROR:'(038) lp_msg INTO lp_msg SEPARATED BY space.
     MESSAGE lp_msg TYPE 'E'.
   ENDMETHOD.                    "handle_error
 
   METHOD check_colwidth.
-    DATA: ls_component TYPE abap_compdescr.
-    DATA: lp_as4text   TYPE as4text.
-    DATA: lp_len       TYPE i.
+    DATA ls_component TYPE abap_compdescr.
+    DATA lp_as4text   TYPE as4text.
+    DATA lp_len       TYPE i.
     SELECT SINGLE scrtext_s
                   FROM dd04t INTO lp_as4text
                   WHERE rollname   = im_name
@@ -4387,15 +4387,15 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "sort_main_list
 
   METHOD top_of_page.
-    DATA: lr_logo             TYPE REF TO cl_salv_form_layout_logo.
-    DATA: lp_head             TYPE char50.
-    DATA: lp_file_in          TYPE localfile.               "#EC NEEDED
-    DATA: lp_file_out         TYPE localfile.
-    DATA: lp_records_found(5) TYPE n.
-    DATA: lp_picture          TYPE bds_typeid VALUE 'LOGO_MEDIQ_ALV_129X45'.
-    DATA: lr_rows             TYPE REF TO cl_salv_form_layout_grid.
-    DATA: lr_rows_flow        TYPE REF TO cl_salv_form_layout_flow.
-    DATA: lr_row              TYPE REF TO cl_salv_form_layout_flow.
+    DATA lr_logo             TYPE REF TO cl_salv_form_layout_logo.
+    DATA lp_head             TYPE char50.
+    DATA lp_file_in          TYPE localfile.                "#EC NEEDED
+    DATA lp_file_out         TYPE localfile.
+    DATA lp_records_found(5) TYPE n.
+    DATA lp_picture          TYPE bds_typeid VALUE 'LOGO_MEDIQ_ALV_129X45'.
+    DATA lr_rows             TYPE REF TO cl_salv_form_layout_grid.
+    DATA lr_rows_flow        TYPE REF TO cl_salv_form_layout_flow.
+    DATA lr_row              TYPE REF TO cl_salv_form_layout_flow.
     CREATE OBJECT lr_rows_flow.
     lr_rows = lr_rows_flow->create_grid( ).
     lr_rows->create_grid( row     = 4
@@ -4467,10 +4467,10 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "top_of_page
 
   METHOD version_check.
-    DATA: lversno_list    TYPE STANDARD TABLE OF  vrsn,
-          version_list    TYPE STANDARD TABLE OF  vrsd,
-          ls_version_list TYPE vrsd,
-          lp_destination  TYPE rfcdest.
+    DATA lversno_list    TYPE STANDARD TABLE OF  vrsn.
+    DATA version_list    TYPE STANDARD TABLE OF  vrsd.
+    DATA ls_version_list TYPE vrsd.
+    DATA lp_destination  TYPE rfcdest.
     FIELD-SYMBOLS: <l_main_list> TYPE ty_request_details.
     DELETE ADJACENT DUPLICATES FROM me->main_list COMPARING object obj_name.
 *   Delete tables
@@ -4539,14 +4539,14 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "version_check
 
   METHOD display_excel.
-    DATA: ls_main_list_xls TYPE me->ty_request_details.
-    DATA: lt_main_list_xls TYPE me->tt_request_details.
-    DATA: lp_variant       TYPE disvariant.
-    DATA: lp_return        TYPE c.
-    DATA: lp_highest_lvl   TYPE icon_d.
-    DATA: lp_highest_rank  TYPE numc4.
-    DATA: lp_highest_text  TYPE text74.
-    DATA: lp_highest_col   TYPE lvc_t_scol.
+    DATA ls_main_list_xls TYPE me->ty_request_details.
+    DATA lt_main_list_xls TYPE me->tt_request_details.
+    DATA lp_variant       TYPE disvariant.
+    DATA lp_return        TYPE c.
+    DATA lp_highest_lvl   TYPE icon_d.
+    DATA lp_highest_rank  TYPE numc4.
+    DATA lp_highest_text  TYPE text74.
+    DATA lp_highest_col   TYPE lvc_t_scol.
 
     FIELD-SYMBOLS: <l_main_list> TYPE ty_request_details.
 
@@ -4653,59 +4653,59 @@ CLASS lcl_ztct IMPLEMENTATION.
              low    TYPE fieldname,
              high   TYPE fieldname,
            END OF lty_field_ran.
-    DATA: ls_reference      TYPE salv_s_ddic_reference.
-    DATA: ls_s_column_ref   TYPE salv_s_column_ref.
-    DATA: lr_column_table   TYPE REF TO cl_salv_column_table.
+    DATA ls_reference           TYPE salv_s_ddic_reference.
+    DATA ls_s_column_ref        TYPE salv_s_column_ref.
+    DATA lr_column_table        TYPE REF TO cl_salv_column_table.
 *   Declaration for Aggregate Function Settings
-    DATA: lr_aggregations   TYPE REF TO cl_salv_aggregations.
-    DATA: ls_table          TYPE me->ty_request_details.
-    DATA: lp_popup_width    TYPE lvc_outlen.  "Length
-    DATA: lp_cw_columns     TYPE lvc_outlen.  "Length
-    DATA: lp_cw_korrnum     TYPE lvc_outlen.  "Length
-    DATA: lp_cw_tr_descr    TYPE lvc_outlen.  "Length
-    DATA: lp_cw_object      TYPE lvc_outlen.  "Length
-    DATA: lp_cw_obj_name    TYPE lvc_outlen.  "Length
-    DATA: lp_cw_tabkey      TYPE lvc_outlen.  "Length
-    DATA: lp_cw_author      TYPE lvc_outlen.  "Length
-    DATA: lp_cw_reimport    TYPE lvc_outlen.  "Length
-    DATA: lp_cw_warning_lvl TYPE lvc_outlen.  "Length
-    DATA: lp_cw_date        TYPE lvc_outlen.  "Length
-    DATA: lp_cw_time        TYPE lvc_outlen.  "Length
-    DATA: lp_cw_keyobject   TYPE lvc_outlen.  "Length
-    DATA: lp_cw_keyobjname  TYPE lvc_outlen.  "Length
-    DATA: lr_table_des      TYPE REF TO cl_abap_structdescr.
-    DATA: lr_type_des       TYPE REF TO cl_abap_typedescr.
-    DATA: lt_details        TYPE abap_compdescr_tab.
-    DATA: ls_details        TYPE abap_compdescr.
-    DATA: lp_field          TYPE string.
-    DATA: lp_length         TYPE i.
-    DATA: lp_data_type      TYPE string.
-    DATA: lp_bool           TYPE abap_bool.
+    DATA lr_aggregations        TYPE REF TO cl_salv_aggregations.
+    DATA ls_table               TYPE me->ty_request_details.
+    DATA lp_popup_width         TYPE lvc_outlen.  "Length
+    DATA lp_cw_columns          TYPE lvc_outlen.  "Length
+    DATA lp_cw_korrnum          TYPE lvc_outlen.  "Length
+    DATA lp_cw_tr_descr         TYPE lvc_outlen.  "Length
+    DATA lp_cw_object           TYPE lvc_outlen.  "Length
+    DATA lp_cw_obj_name         TYPE lvc_outlen.  "Length
+    DATA lp_cw_tabkey           TYPE lvc_outlen.  "Length
+    DATA lp_cw_author           TYPE lvc_outlen.  "Length
+    DATA lp_cw_reimport         TYPE lvc_outlen.  "Length
+    DATA lp_cw_warning_lvl      TYPE lvc_outlen.  "Length
+    DATA lp_cw_date             TYPE lvc_outlen.  "Length
+    DATA lp_cw_time             TYPE lvc_outlen.  "Length
+    DATA lp_cw_keyobject        TYPE lvc_outlen.  "Length
+    DATA lp_cw_keyobjname       TYPE lvc_outlen.  "Length
+    DATA lr_table_des           TYPE REF TO cl_abap_structdescr.
+    DATA lr_type_des            TYPE REF TO cl_abap_typedescr.
+    DATA lt_details             TYPE abap_compdescr_tab.
+    DATA ls_details             TYPE abap_compdescr.
+    DATA lp_field               TYPE string.
+    DATA lp_length              TYPE i.
+    DATA lp_data_type           TYPE string.
+    DATA lp_bool                TYPE abap_bool.
 *   Declaration for ALV Columns
-    DATA: lr_columns_table    TYPE REF TO cl_salv_columns_table.
-    DATA: lt_t_column_ref     TYPE salv_t_column_ref.
+    DATA lr_columns_table       TYPE REF TO cl_salv_columns_table.
+    DATA lt_t_column_ref        TYPE salv_t_column_ref.
 *   Declaration for Sort Function Settings
-    DATA: lr_sorts            TYPE REF TO cl_salv_sorts.
+    DATA lr_sorts               TYPE REF TO cl_salv_sorts.
 *   Declaration for Table Selection settings
-    DATA: lr_selections       TYPE REF TO cl_salv_selections.
+    DATA lr_selections          TYPE REF TO cl_salv_selections.
 *   Declaration for Global Display Settings
-    DATA: lr_display_settings TYPE REF TO cl_salv_display_settings.
+    DATA lr_display_settings    TYPE REF TO cl_salv_display_settings.
 *   Declarations for Title
-    DATA: lp_version          TYPE char10.
-    DATA: lp_title            TYPE lvc_title.
-    DATA: l_o_tabledescr         TYPE REF TO cl_abap_tabledescr,
-          l_o_typedescr          TYPE REF TO cl_abap_typedescr,
-          l_o_structdescr        TYPE REF TO cl_abap_structdescr,
-          l_s_abap_compdescr_tab TYPE abap_compdescr.
+    DATA lp_version             TYPE char10.
+    DATA lp_title               TYPE lvc_title.
+    DATA l_o_tabledescr         TYPE REF TO cl_abap_tabledescr.
+    DATA l_o_typedescr          TYPE REF TO cl_abap_typedescr.
+    DATA l_o_structdescr        TYPE REF TO cl_abap_structdescr.
+    DATA l_s_abap_compdescr_tab TYPE abap_compdescr.
 *   Texts
-    DATA: lp_short_text       TYPE char10.
-    DATA: lp_medium_text      TYPE char20.
-    DATA: lp_long_text        TYPE char40.
+    DATA lp_short_text          TYPE char10.
+    DATA lp_medium_text         TYPE char20.
+    DATA lp_long_text           TYPE char40.
 
-    FIELD-SYMBOLS: <l_type> TYPE any.
+    FIELD-SYMBOLS: <l_type>     TYPE any.
 *   To remove some columns from the output
-    DATA: lra_fieldname TYPE RANGE OF lty_field_ran.
-    DATA: ls_fieldname  TYPE lty_field_ran.
+    DATA lra_fieldname          TYPE RANGE OF lty_field_ran.
+    DATA ls_fieldname           TYPE lty_field_ran.
 *   Individual Column Properties.
 *   Build range for all columns to be removed
     ls_fieldname-option = 'EQ'.
@@ -5070,9 +5070,9 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.   "set_ddic_objects
 
   METHOD do_ddic_check.
-    DATA: ls_ddic_conflict_info TYPE ty_request_details.
-    DATA: ls_main              TYPE ty_request_details.
-    DATA: lp_obj_name          TYPE trobj_name.
+    DATA ls_ddic_conflict_info TYPE ty_request_details.
+    DATA ls_main              TYPE ty_request_details.
+    DATA lp_obj_name          TYPE trobj_name.
 *  Check if the object exists in the where_used list for data
 *  dictionary elements that do not yet exist in production.
 *  If it is found in the where_used list, then the object MUST
@@ -5128,30 +5128,30 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "do_ddic_check
 
   METHOD set_where_used.
-    DATA: ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request,
-          st_stms_wbo_requests TYPE stms_wbo_request.
-    DATA: st_systems           TYPE ctslg_system.
-    DATA: lp_scope             TYPE seu_obj.
-    DATA: lp_answer            TYPE char1.
-    DATA: lt_trkorrs           TYPE trkorrs.
-    DATA: lp_ddic_object       TYPE string.
-    DATA: ls_ddic_object       TYPE string.
-    DATA: lp_index             TYPE syindex.
-    DATA: lp_counter           TYPE i.
-    DATA: lp_total(10)         TYPE n.
-    DATA: lp_deleted           TYPE abap_bool.
-    DATA: lp_obj_name          TYPE trobj_name.
+    DATA ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
+    DATA st_stms_wbo_requests TYPE stms_wbo_request.
+    DATA st_systems           TYPE ctslg_system.
+    DATA lp_scope             TYPE seu_obj.
+    DATA lp_answer            TYPE char1.
+    DATA lt_trkorrs           TYPE trkorrs.
+    DATA lp_ddic_object       TYPE string.
+    DATA ls_ddic_object       TYPE string.
+    DATA lp_index             TYPE syindex.
+    DATA lp_counter           TYPE i.
+    DATA lp_total(10)         TYPE n.
+    DATA lp_deleted           TYPE abap_bool.
+    DATA lp_obj_name          TYPE trobj_name.
 
     REFRESH: ddic_e071.
 * Get all object types
 *--select values for pgmid/object/text from database--------------------
-    DATA: lt_object_table  TYPE tr_object_texts.
-    DATA: ls_object        TYPE ko100.
-    DATA: lt_objrangtab    TYPE objrangtab.
-    DATA: ls_objtyprang    TYPE objtyprang.
-    DATA: lt_objtype       TYPE TABLE OF versobjtyp.
-    DATA: ls_objtype       TYPE versobjtyp.
-    DATA: lp_chars         TYPE string VALUE '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
+    DATA lt_object_table  TYPE tr_object_texts.
+    DATA ls_object        TYPE ko100.
+    DATA lt_objrangtab    TYPE objrangtab.
+    DATA ls_objtyprang    TYPE objtyprang.
+    DATA lt_objtype       TYPE TABLE OF versobjtyp.
+    DATA ls_objtype       TYPE versobjtyp.
+    DATA lp_chars         TYPE string VALUE '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
 
 * Get all object types that have been transported before
     SELECT DISTINCT object FROM e071 INTO TABLE lt_objtype.
@@ -5288,8 +5288,8 @@ CLASS lcl_ztct IMPLEMENTATION.
       EXPORTING
         text = 'Retrieving Where Used list'(052).
 * Build the WHERE_USED list for all remaining objects
-    DATA: ls_objects     TYPE string.
-    DATA: where_used_sub TYPE sci_findlst.
+    DATA ls_objects     TYPE string.
+    DATA where_used_sub TYPE sci_findlst.
     REFRESH: where_used.
     LOOP AT ddic_objects INTO ls_objects.
       REFRESH: ddic_objects_sub.
@@ -5319,7 +5319,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDLOOP.
 * Remove all entries from the where used list that are not existing
 * in tables DD01L, DD02L or DD04L
-    DATA: lp_string TYPE string.
+    DATA lp_string TYPE string.
     LOOP AT where_used INTO where_used_line.
 * DD01L (Domains)
       SELECT SINGLE domname
@@ -5344,9 +5344,9 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.                    "set_where_used
 
   METHOD get_import_datetime_qas.
-    DATA: ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request,
-          st_stms_wbo_requests TYPE stms_wbo_request.
-    DATA: st_systems           TYPE ctslg_system.
+    DATA ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
+    DATA st_stms_wbo_requests TYPE stms_wbo_request.
+    DATA st_systems           TYPE ctslg_system.
 *   Get the last date the object was imported
     CALL FUNCTION 'TR_READ_GLOBAL_INFO_OF_REQUEST'
       EXPORTING
@@ -5382,25 +5382,25 @@ CLASS lcl_ztct IMPLEMENTATION.
           diffjjjj TYPE p.
 
     WRITE:  im_currdate+0(4) TO dat-jjjj,
-            im_currdate+4(2) TO  dat-mm,
-            im_currdate+6(2) TO  dat-tt.
-    diffjjjj =   ( dat-mm + ( - im_backmonths ) - 1 ) DIV 12.
-    newmm    =   ( dat-mm + ( - im_backmonths ) - 1 ) MOD 12 + 1.
+            im_currdate+4(2) TO dat-mm,
+            im_currdate+6(2) TO dat-tt.
+    diffjjjj = ( dat-mm + ( - im_backmonths ) - 1 ) DIV 12.
+    newmm    = ( dat-mm + ( - im_backmonths ) - 1 ) MOD 12 + 1.
     dat-jjjj = dat-jjjj +  diffjjjj.
 
     IF newmm < 10.
-      WRITE '0' TO  dat-mm+0(1).
-      WRITE newmm TO  dat-mm+1(1).
+      WRITE '0'   TO dat-mm+0(1).
+      WRITE newmm TO dat-mm+1(1).
     ELSE.
-      WRITE newmm TO  dat-mm.
+      WRITE newmm TO dat-mm.
     ENDIF.
     IF dat-tt > '28'.
-      hdat-tt = '01'.
-      newmm   = ( dat-mm  )  MOD 12 + 1.
+      hdat-tt   = '01'.
+      newmm     = ( dat-mm  )  MOD 12 + 1.
       hdat-jjjj = dat-jjjj + ( (  dat-mm ) DIV 12 ).
 
       IF newmm < 10.
-        WRITE '0' TO hdat-mm+0(1).
+        WRITE '0'   TO hdat-mm+0(1).
         WRITE newmm TO hdat-mm+1(1).
       ELSE.
         WRITE newmm TO hdat-mm.
@@ -5460,16 +5460,16 @@ START-OF-SELECTION.
     SELECT a~trkorr
            INTO st_trkorr_range-low
            FROM  e070 AS a JOIN e071 AS b
-             ON  a~trkorr = b~trkorr
-           WHERE a~trkorr     IN so_korr
-           AND   a~as4user    IN so_user
-           AND   a~as4date    IN so_date
-           AND   b~obj_name   IN so_exobj
-           AND   strkorr      = ''
-           AND   a~trkorr     LIKE tp_prefix
-           AND   a~trkorr     IN ra_project_trkorrs
-           AND   ( pgmid = 'LIMU' OR
-                   pgmid = 'R3TR' ).
+           ON    a~trkorr   = b~trkorr
+           WHERE a~trkorr   IN so_korr
+           AND   a~as4user  IN so_user
+           AND   a~as4date  IN so_date
+           AND   b~obj_name IN so_exobj
+           AND   strkorr    = ''
+           AND   a~trkorr   LIKE tp_prefix
+           AND   a~trkorr   IN ra_project_trkorrs
+           AND   ( pgmid    = 'LIMU' OR
+                   pgmid    = 'R3TR' ).
       APPEND st_trkorr_range TO ta_trkorr_range.
     ENDSELECT.
 *   Read transport description:
@@ -5478,7 +5478,7 @@ START-OF-SELECTION.
 *       Check if the description contains the search string
         SELECT SINGLE as4text
                       FROM e07t INTO tp_transport_descr
-                      WHERE  trkorr = st_trkorr_range-low. "#EC CI_SEL_NESTED
+                      WHERE trkorr = st_trkorr_range-low. "#EC CI_SEL_NESTED
         IF pa_str CS '*'.
           IF tp_transport_descr NP pa_str.
             DELETE ta_trkorr_range INDEX sy-tabix.
@@ -5491,9 +5491,7 @@ START-OF-SELECTION.
           ENDIF.
         ENDIF.
 *       Check if the project is in the selection range
-        SELECT reference
-               FROM e070a
-               UP TO 1 ROWS
+        SELECT reference FROM e070a UP TO 1 ROWS
                INTO  tp_project_reference
                WHERE trkorr = st_trkorr_range-low
                AND   attribute = 'SAP_CTS_PROJECT'.  "#EC CI_SEL_NESTED
