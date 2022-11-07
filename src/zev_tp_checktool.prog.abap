@@ -18,11 +18,11 @@ REPORT  zev_tp_checktool.
 *--------------------------------------------------------------------*
 *  Use of ABAPGIT is recommended. SAPLINK is no longer maintained    *
 *--------------------------------------------------------------------*
-TYPE-POOLS: ctslg. "Types for Function Group TR_LOG_OVERVIEW
-TYPE-POOLS: icon.  "Assignment: Icon Names in List of ASCII Codes
-TYPE-POOLS: slis.  "Global types for generic list modules
-TYPE-POOLS: stms.  "Transport Management System: Global Types
-TYPE-POOLS: abap.
+TYPE-POOLS ctslg. "Types for Function Group TR_LOG_OVERVIEW
+TYPE-POOLS icon.  "Assignment: Icon Names in List of ASCII Codes
+TYPE-POOLS slis.  "Global types for generic list modules
+TYPE-POOLS stms.  "Transport Management System: Global Types
+TYPE-POOLS abap.
 
 * Class for handling Events
 CLASS: lcl_eventhandler_ztct DEFINITION DEFERRED.
@@ -43,41 +43,41 @@ CONSTANTS:
   co_langu  TYPE ddlanguage   VALUE 'E'.
 
 
-DATA  ra_project_trkorrs     TYPE RANGE OF ctsproject-trkorr.
-DATA  st_project_trkorrs     LIKE LINE  OF ra_project_trkorrs.
-DATA  ra_systems             TYPE RANGE OF tmscsys-sysnam.
-DATA  st_systems             LIKE LINE  OF ra_systems.
+DATA ra_project_trkorrs     TYPE RANGE OF ctsproject-trkorr.
+DATA st_project_trkorrs     LIKE LINE  OF ra_project_trkorrs.
+DATA ra_systems             TYPE RANGE OF tmscsys-sysnam.
+DATA st_systems             LIKE LINE  OF ra_systems.
 
 * Global data declarations:
-DATA  tp_prefix              TYPE char5.
-DATA  ta_sapsystems          TYPE TABLE OF tmscsys.
-DATA  st_sapsystems          TYPE tmscsys.
-DATA  st_tcesyst             TYPE tcesyst.
-DATA  st_smp_dyntxt          TYPE smp_dyntxt.
-DATA  tp_dokl_object         TYPE doku_obj. "To check existence of doc
+DATA tp_prefix              TYPE char5.
+DATA ta_sapsystems          TYPE TABLE OF tmscsys.
+DATA st_sapsystems          TYPE tmscsys.
+DATA st_tcesyst             TYPE tcesyst.
+DATA st_smp_dyntxt          TYPE smp_dyntxt.
+DATA tp_dokl_object         TYPE doku_obj. "To check existence of doc
 
-DATA  ta_trkorr_range        TYPE RANGE OF e070-trkorr.
-DATA  st_trkorr_range        LIKE LINE OF ta_trkorr_range.
-DATA  ta_project_range       TYPE RANGE OF ctsproject-trkorr.
-DATA  ta_date_range          TYPE RANGE OF as4date.
-DATA  ta_excluded_objects    TYPE RANGE OF trobj_name.
-DATA  tp_transport_descr     TYPE as4text.
-DATA  tp_project_reference   TYPE trvalue.
+DATA ta_trkorr_range        TYPE RANGE OF e070-trkorr.
+DATA st_trkorr_range        LIKE LINE OF ta_trkorr_range.
+DATA ta_project_range       TYPE RANGE OF ctsproject-trkorr.
+DATA ta_date_range          TYPE RANGE OF as4date.
+DATA ta_excluded_objects    TYPE RANGE OF trobj_name.
+DATA tp_transport_descr     TYPE as4text.
+DATA tp_project_reference   TYPE trvalue.
 * Process type is used to identify if a list is build (1),
 * uploaded (2) or the program is used for version checking (3)
-DATA  tp_process_type        TYPE i.
+DATA tp_process_type        TYPE i.
 * Date from for transport collection (passed to class)
-DATA  tp_date_from           TYPE as4date.
+DATA tp_date_from           TYPE as4date.
 * To determine transport track on selection screen
-DATA  ta_prev_systems        TYPE tmscsyss.
-DATA  st_prev_system         TYPE tmscsys.
-DATA  ta_system_track        TYPE tcesys.
-DATA  st_system_track        TYPE sysname.
-DATA  ta_targets             TYPE trsysclis.
-DATA  st_target              TYPE trsyscli.
-DATA  tp_sysname             TYPE sysname.
-DATA  tp_index               TYPE sytabix.
-DATA  tp_msg                 TYPE string.
+DATA ta_prev_systems        TYPE tmscsyss.
+DATA st_prev_system         TYPE tmscsys.
+DATA ta_system_track        TYPE tcesys.
+DATA st_system_track        TYPE sysname.
+DATA ta_targets             TYPE trsysclis.
+DATA st_target              TYPE trsyscli.
+DATA tp_sysname             TYPE sysname.
+DATA tp_index               TYPE sytabix.
+DATA tp_msg                 TYPE string.
 
 *--------------------------------------------------------------------*
 * Data - ALV
