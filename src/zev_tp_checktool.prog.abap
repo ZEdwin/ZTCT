@@ -138,49 +138,49 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     TYPES: ra_date                    TYPE RANGE OF as4date.
     DATA:  ls_excluded_objects        LIKE LINE  OF ta_excluded_objects.
     TYPES: BEGIN OF ty_request_details,
-             trkorr                   TYPE trkorr,
-             checked                  TYPE icon_l4,
-             info                     TYPE icon_l4,
-             tr_descr                 TYPE as4text,
-             dev                      TYPE icon_l4,
-             qas                      TYPE icon_l4,
-             retcode                  TYPE char04,
-             prd                      TYPE icon_l4,
-             warning_lvl              TYPE icon_d,
+             trkorr         TYPE trkorr,
+             checked        TYPE icon_l4,
+             info           TYPE icon_l4,
+             tr_descr       TYPE as4text,
+             dev            TYPE icon_l4,
+             qas            TYPE icon_l4,
+             retcode        TYPE char04,
+             prd            TYPE icon_l4,
+             warning_lvl    TYPE icon_d,
 *            Warning_rank: The higher the number,
 *            the more serious the error
-             warning_rank             TYPE numc4,
-             warning_txt              TYPE text74,
-             pgmid                    TYPE pgmid,
-             object                   TYPE trobjtype,
-             obj_name                 TYPE trobj_name,
-             objkey                   TYPE trobj_name,
-             keyobject                TYPE trobjtype,
-             keyobjname               TYPE tabname,
-             tabkey                   TYPE tabkey,
-             checked_by               TYPE syuname,
-             as4date                  TYPE as4date,
-             as4time                  TYPE as4time,
-             as4user                  TYPE as4user,
-             status_text              TYPE char20,
-             trfunction_txt           TYPE val_text,
-             project                  TYPE cts_id,
-             project_descr            TYPE as4text,
-             objfunc                  TYPE objfunc,
-             flag                     TYPE flag,
-             trstatus                 TYPE trstatus,
-             trfunction               TYPE trfunction,
-             re_import                TYPE char20.
-    TYPES:   t_color                  TYPE lvc_t_scol,
+             warning_rank   TYPE numc4,
+             warning_txt    TYPE text74,
+             pgmid          TYPE pgmid,
+             object         TYPE trobjtype,
+             obj_name       TYPE trobj_name,
+             objkey         TYPE trobj_name,
+             keyobject      TYPE trobjtype,
+             keyobjname     TYPE tabname,
+             tabkey         TYPE tabkey,
+             checked_by     TYPE syuname,
+             as4date        TYPE as4date,
+             as4time        TYPE as4time,
+             as4user        TYPE as4user,
+             status_text    TYPE char20,
+             trfunction_txt TYPE val_text,
+             project        TYPE cts_id,
+             project_descr  TYPE as4text,
+             objfunc        TYPE objfunc,
+             flag           TYPE flag,
+             trstatus       TYPE trstatus,
+             trfunction     TYPE trfunction,
+             re_import      TYPE char20.
+    TYPES:   t_color TYPE lvc_t_scol,
              END OF  ty_request_details.
 
     TYPES: tt_request_details         TYPE STANDARD TABLE OF ty_request_details
                                       WITH DEFAULT KEY.
 
     TYPES: BEGIN OF lty_tables_with_keys,
-             tabname                  TYPE trobj_name,
-             ddtext                   TYPE as4text,
-             counter                  TYPE i, "lvc_outlen,
+             tabname TYPE trobj_name,
+             ddtext  TYPE as4text,
+             counter TYPE i, "lvc_outlen,
            END OF lty_tables_with_keys.
     DATA: table_keys                  TYPE TABLE OF lty_tables_with_keys.
     DATA: table_keys_line             TYPE lty_tables_with_keys.
@@ -208,12 +208,12 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     METHODS: constructor.
     METHODS: execute.
     METHODS: refresh_alv.
-    METHODS: docu_call                   IMPORTING im_object                  TYPE doku_obj
-                                                   im_id                      TYPE dokhl-id
-                                                   im_display                 TYPE abap_bool OPTIONAL
-                                                   im_displ_mode              TYPE c OPTIONAL.
-    METHODS: get_tp_prefix               IMPORTING im_dev                     TYPE sysname OPTIONAL
-                                         RETURNING VALUE(re_tp_prefix)        TYPE char5.
+    METHODS: docu_call                   IMPORTING im_object     TYPE doku_obj
+                                                   im_id         TYPE dokhl-id
+                                                   im_display    TYPE abap_bool OPTIONAL
+                                                   im_displ_mode TYPE c OPTIONAL.
+    METHODS: get_tp_prefix               IMPORTING im_dev              TYPE sysname OPTIONAL
+                                         RETURNING VALUE(re_tp_prefix) TYPE char5.
     METHODS: get_filename                EXPORTING ex_file                    TYPE string.
     METHODS: set_check_flag              IMPORTING im_check_flag              TYPE abap_bool OPTIONAL.
     METHODS: set_check_ddic              IMPORTING im_check_ddic              TYPE abap_bool OPTIONAL.
@@ -230,13 +230,13 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     METHODS: set_process_type            IMPORTING im_process_type            TYPE i.
     METHODS: set_skiplive                IMPORTING im_skiplive                TYPE abap_bool OPTIONAL.
     METHODS: set_filename                IMPORTING im_filename                TYPE string OPTIONAL.
-    METHODS: set_systems                 IMPORTING im_dev_system              TYPE sysname
-                                                   im_qas_system              TYPE sysname
-                                                   im_prd_system              TYPE sysname.
+    METHODS: set_systems                 IMPORTING im_dev_system TYPE sysname
+                                                   im_qas_system TYPE sysname
+                                                   im_prd_system TYPE sysname.
     METHODS: set_building_conflict_popup IMPORTING im_building_conflict_popup TYPE abap_bool OPTIONAL.
-    METHODS: go_back_months              IMPORTING im_backmonths              TYPE numc3
-                                                   im_currdate                TYPE sydatum
-                                         RETURNING VALUE(re_date)             TYPE sydatum.
+    METHODS: go_back_months              IMPORTING im_backmonths  TYPE numc3
+                                                   im_currdate    TYPE sydatum
+                                         RETURNING VALUE(re_date) TYPE sydatum.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_tms_mgr_buffer,
@@ -341,82 +341,82 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
 
     METHODS: refresh_import_queues.
     METHODS: handle_error                IMPORTING rf_oref                    TYPE REF TO cx_root.
-    METHODS: flag_for_process            IMPORTING rows                       TYPE salv_t_row
-                                                   cell                       TYPE salv_s_cell.
+    METHODS: flag_for_process            IMPORTING rows TYPE salv_t_row
+                                                   cell TYPE salv_s_cell.
     METHODS: get_main_transports         IMPORTING im_trkorr_range            TYPE gtabkey_trkorrt.
-    METHODS: get_tp_info                 IMPORTING im_trkorr                  TYPE trkorr
-                                                   im_obj_name                TYPE trobj_name
-                                         RETURNING VALUE(re_line)             TYPE ty_request_details.
-    METHODS: get_added_objects           IMPORTING im_to_add                  TYPE ra_trkorr
-                                         EXPORTING ex_to_add                  TYPE tt_request_details.
-    METHODS: add_to_list                 IMPORTING im_to_add                  TYPE tt_request_details
-                                         EXPORTING ex_main                    TYPE tt_request_details.
-    METHODS: build_conflict_popup        IMPORTING rows                       TYPE salv_t_row
-                                                   cell                       TYPE salv_s_cell.
-    METHODS: delete_tp_from_list         IMPORTING rows                       TYPE salv_t_row
-                                                   cell                       TYPE salv_s_cell.
+    METHODS: get_tp_info                 IMPORTING im_trkorr      TYPE trkorr
+                                                   im_obj_name    TYPE trobj_name
+                                         RETURNING VALUE(re_line) TYPE ty_request_details.
+    METHODS: get_added_objects           IMPORTING im_to_add TYPE ra_trkorr
+                                         EXPORTING ex_to_add TYPE tt_request_details.
+    METHODS: add_to_list                 IMPORTING im_to_add TYPE tt_request_details
+                                         EXPORTING ex_main   TYPE tt_request_details.
+    METHODS: build_conflict_popup        IMPORTING rows TYPE salv_t_row
+                                                   cell TYPE salv_s_cell.
+    METHODS: delete_tp_from_list         IMPORTING rows TYPE salv_t_row
+                                                   cell TYPE salv_s_cell.
     METHODS: flag_same_objects           EXPORTING ex_main_list               TYPE tt_request_details.
-    METHODS: mark_all_tp_records         IMPORTING im_cell                    TYPE salv_s_cell
-                                         CHANGING  im_rows                    TYPE salv_t_row.
-    METHODS: main_to_tab_delimited       IMPORTING im_main_list               TYPE tt_request_details
-                                         EXPORTING ex_tab_delimited           TYPE table_of_strings.
-    METHODS: tab_delimited_to_main       IMPORTING im_tab_delimited           TYPE table_of_strings
-                                         EXPORTING ex_main_list               TYPE tt_request_details.
+    METHODS: mark_all_tp_records         IMPORTING im_cell TYPE salv_s_cell
+                                         CHANGING  im_rows TYPE salv_t_row.
+    METHODS: main_to_tab_delimited       IMPORTING im_main_list     TYPE tt_request_details
+                                         EXPORTING ex_tab_delimited TYPE table_of_strings.
+    METHODS: tab_delimited_to_main       IMPORTING im_tab_delimited TYPE table_of_strings
+                                         EXPORTING ex_main_list     TYPE tt_request_details.
     METHODS: display_transport           IMPORTING im_trkorr                  TYPE trkorr.
     METHODS: display_user                IMPORTING im_user                    TYPE syuname.
     METHODS: display_docu                IMPORTING im_trkorr                  TYPE trkorr.
-    METHODS: check_if_in_list            IMPORTING im_line                    TYPE ty_request_details
-                                                   im_tabix                   TYPE sytabix
-                                         EXPORTING ex_line                    TYPE ty_request_details.
-    METHODS: check_documentation         IMPORTING im_trkorr                  TYPE trkorr
-                                         CHANGING  ch_table                   TYPE tt_request_details.
+    METHODS: check_if_in_list            IMPORTING im_line  TYPE ty_request_details
+                                                   im_tabix TYPE sytabix
+                                         EXPORTING ex_line  TYPE ty_request_details.
+    METHODS: check_documentation         IMPORTING im_trkorr TYPE trkorr
+                                         CHANGING  ch_table  TYPE tt_request_details.
     METHODS: clear_flags.
-    METHODS: column_settings             IMPORTING im_column_ref              TYPE salv_t_column_ref
-                                                   im_rf_columns_table        TYPE REF TO cl_salv_columns_table
-                                                   im_table                   TYPE REF TO cl_salv_table.
-    METHODS: is_empty_column             IMPORTING im_column                  TYPE lvc_fname
-                                                   im_table                   TYPE tt_request_details
-                                         RETURNING VALUE(re_is_empty)         TYPE abap_bool.
+    METHODS: column_settings             IMPORTING im_column_ref       TYPE salv_t_column_ref
+                                                   im_rf_columns_table TYPE REF TO cl_salv_columns_table
+                                                   im_table            TYPE REF TO cl_salv_table.
+    METHODS: is_empty_column             IMPORTING im_column          TYPE lvc_fname
+                                                   im_table           TYPE tt_request_details
+                                         RETURNING VALUE(re_is_empty) TYPE abap_bool.
 *    METHODS: refresh_alv.
     METHODS: display_excel               IMPORTING im_table                   TYPE tt_request_details.
     METHODS: set_tp_prefix               IMPORTING im_dev                     TYPE sysname OPTIONAL.
     METHODS: top_of_page                 EXPORTING ex_form_element            TYPE REF TO cl_salv_form_element.
-    METHODS: check_if_same_object        IMPORTING im_line                    TYPE ty_request_details
-                                                   im_newer_older             TYPE ty_request_details
-                                         EXPORTING ex_tabkey                  TYPE trobj_name
-                                                   ex_return                  TYPE c.
+    METHODS: check_if_same_object        IMPORTING im_line        TYPE ty_request_details
+                                                   im_newer_older TYPE ty_request_details
+                                         EXPORTING ex_tabkey      TYPE trobj_name
+                                                   ex_return      TYPE c.
     METHODS: sort_main_list.
-    METHODS: determine_warning_text      IMPORTING im_highest_rank            TYPE numc4
-                                         EXPORTING ex_highest_text            TYPE text74.
-    METHODS: get_tps_for_same_object     IMPORTING im_line                    TYPE ty_request_details
-                                         EXPORTING ex_newer                   TYPE tt_request_details
-                                                   ex_older                   TYPE tt_request_details.
-    METHODS: progress_indicator          IMPORTING im_counter                 TYPE sytabix
-                                                   im_object                  TYPE trobj_name
-                                                   im_total                   TYPE numc10
-                                                   im_text                    TYPE itex132
-                                                   im_flag                    TYPE c.
-    METHODS: alv_xls_init                EXPORTING ex_rf_table                TYPE REF TO cl_salv_table
-                                         CHANGING  ch_table                   TYPE table.
+    METHODS: determine_warning_text      IMPORTING im_highest_rank TYPE numc4
+                                         EXPORTING ex_highest_text TYPE text74.
+    METHODS: get_tps_for_same_object     IMPORTING im_line  TYPE ty_request_details
+                                         EXPORTING ex_newer TYPE tt_request_details
+                                                   ex_older TYPE tt_request_details.
+    METHODS: progress_indicator          IMPORTING im_counter TYPE sytabix
+                                                   im_object  TYPE trobj_name
+                                                   im_total   TYPE numc10
+                                                   im_text    TYPE itex132
+                                                   im_flag    TYPE c.
+    METHODS: alv_xls_init                EXPORTING ex_rf_table TYPE REF TO cl_salv_table
+                                         CHANGING  ch_table    TYPE table.
     METHODS: alv_xls_output.
     METHODS: prepare_ddic_check.
     METHODS: set_ddic_objects.
     METHODS: do_ddic_check               CHANGING  ch_main_list               TYPE tt_request_details.
-    METHODS: set_properties_conflicts    IMPORTING im_table                   TYPE tt_request_details
-                                         EXPORTING ex_xend                    TYPE i.
+    METHODS: set_properties_conflicts    IMPORTING im_table TYPE tt_request_details
+                                         EXPORTING ex_xend  TYPE i.
     METHODS: get_data                    IMPORTING im_trkorr_range            TYPE gtabkey_trkorrt.
     METHODS: check_for_conflicts         CHANGING  ch_main_list               TYPE tt_request_details.
     METHODS: build_table_keys_popup.
     METHODS: add_table_keys_to_list      EXPORTING table                      TYPE tt_request_details.
     METHODS: get_additional_tp_info      CHANGING  ch_table                   TYPE tt_request_details.
-    METHODS: gui_upload                  IMPORTING im_filename                TYPE string
-                                         EXPORTING ex_tab_delimited           TYPE table_of_strings
-                                                   ex_cancelled               TYPE abap_bool.
-    METHODS: determine_col_width         IMPORTING im_field                   TYPE any
-                                         CHANGING  ex_colwidth                TYPE lvc_outlen.
-    METHODS: check_colwidth              IMPORTING im_name                    TYPE abap_compname
-                                                   im_colwidth                TYPE lvc_outlen
-                                         RETURNING VALUE(re_colwidth)         TYPE lvc_outlen.
+    METHODS: gui_upload                  IMPORTING im_filename      TYPE string
+                                         EXPORTING ex_tab_delimited TYPE table_of_strings
+                                                   ex_cancelled     TYPE abap_bool.
+    METHODS: determine_col_width         IMPORTING im_field    TYPE any
+                                         CHANGING  ex_colwidth TYPE lvc_outlen.
+    METHODS: check_colwidth              IMPORTING im_name            TYPE abap_compname
+                                                   im_colwidth        TYPE lvc_outlen
+                                         RETURNING VALUE(re_colwidth) TYPE lvc_outlen.
     METHODS: remove_tp_in_prd.
     METHODS: version_check.
     METHODS: alv_init.
@@ -425,10 +425,10 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     METHODS: alv_set_tooltips            IMPORTING im_table                   TYPE REF TO cl_salv_table.
     METHODS: alv_output.
     METHODS: set_where_used.
-    METHODS: get_import_datetime_qas     IMPORTING im_trkorr                  TYPE trkorr
-                                         EXPORTING ex_as4time                 TYPE as4time
-                                                   ex_as4date                 TYPE as4date
-                                                   ex_return                  TYPE sysubrc.
+    METHODS: get_import_datetime_qas     IMPORTING im_trkorr  TYPE trkorr
+                                         EXPORTING ex_as4time TYPE as4time
+                                                   ex_as4date TYPE as4date
+                                                   ex_return  TYPE sysubrc.
 ENDCLASS.                    "lcl_ztct DEFINITION
 
 *--------------------------------------------------------------------*
@@ -2067,8 +2067,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                           report   = 'SAPLKKBL' ).
 *       Determine the size of the popup window:
         lp_xend = lp_xend + lp_xstart + 5.
-        DESCRIBE TABLE table_keys LINES lp_yend.
-        lp_yend = lp_yend + lp_ystart.
+        lp_yend = lines( table_keys ) + lp_ystart.
         IF lp_yend > 30.
           lp_yend = 30.
         ENDIF.
@@ -2122,15 +2121,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM lt_keys.
 *   Add the entries for the table keys, and remove the root objects.
     CLEAR: lp_counter.
-    DESCRIBE TABLE lt_keys LINES lp_total.
     LOOP AT lt_keys INTO ls_keys.
-**     Show the progress indicator
-*      lp_counter = lp_counter + 1.
-*      me->progress_indicator( EXPORTING im_counter = lp_counter
-*                                        im_object  = ls_keys-obj_name
-*                                        im_total   = lp_total
-*                                        im_text    = 'Determining table keys'(006)
-*                                        im_flag    = ' ' ).
       DELETE table WHERE objfunc  = 'K'
                    AND   trkorr   = ls_keys-trkorr
                    AND   object   = ls_keys-object
@@ -2688,20 +2679,16 @@ CLASS lcl_ztct IMPLEMENTATION.
                 WHEN me->qas_system.
                   me->main_list_line-qas = co_okay. "Green - Exists
 *                 Get the latest date/time stamp
-                  DESCRIBE TABLE st_systems-steps LINES tp_lines.
                   READ TABLE st_systems-steps INTO st_steps
-                                              INDEX tp_lines.
+                                              INDEX lines( st_systems-steps ).
                   CHECK st_steps-stepid <> '<'.
-
-                  DESCRIBE TABLE st_steps-actions LINES tp_lines.
                   READ TABLE st_steps-actions INTO st_actions
-                                              INDEX tp_lines.
+                                              INDEX lines( st_steps-actions ).
                   MOVE st_actions-time TO me->main_list_line-as4time.
                   MOVE st_actions-date TO me->main_list_line-as4date.
                 WHEN me->prd_system.
-                  DESCRIBE TABLE st_systems-steps LINES tp_lines.
-                  READ TABLE st_systems-steps INTO st_steps
-                                              INDEX tp_lines.
+                  READ TABLE st_systems-steps INTO  st_steps
+                                              INDEX lines( st_systems-steps ).
                   CHECK st_steps-stepid <> '<'.
                   me->main_list_line-prd = co_okay. "Green - Exists
                 WHEN OTHERS.
@@ -2820,7 +2807,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                          report   = 'SAPLKKBL' ).
 *       Determine the size of the popup window:
         lp_xend = lp_xend + lp_xstart + 5.
-        DESCRIBE TABLE me->conflicts LINES lp_yend.
+        lp_yend = lines( me->conflicts ).
         IF lp_yend < 5.
           lp_yend = 5.
         ENDIF.
@@ -3176,8 +3163,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Now move the lines of the uploaded list to the main list and
 *   if another file is added to the main list (&ADD_FILE), then
 *   Automatically RE-Check the objects in the existing main list
-    DESCRIBE TABLE lt_main_upl LINES me->total.
-
+    me->total = lines( lt_main_upl ).
     LOOP AT lt_main_upl INTO ls_main.
       me->progress_indicator( EXPORTING im_counter = sy-tabix
                                         im_object  = ''
@@ -3263,7 +3249,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     Now convert the tab delimited file to the main list field order:
       me->tab_delimited_to_main( EXPORTING im_tab_delimited = lt_tab_delimited
                                  IMPORTING ex_main_list     = me->main_list ).
-      DESCRIBE TABLE me->main_list LINES me->total.
+      me->total = lines( me->main_list ).
 *     Always reset the Check flag when uploading. Reason is that
 *     when combining multiple ZTCT files, these SHOULD be corrected
 *     already. First ythe user collects and combines ALL the files.
@@ -4462,9 +4448,9 @@ CLASS lcl_ztct IMPLEMENTATION.
             ).
     CASE sy-ucomm.
       WHEN '&PREP_XLS'.
-        DESCRIBE TABLE me->main_list_xls LINES lp_records_found.
+        lp_records_found = lines( me->main_list_xls ).
       WHEN OTHERS.
-        DESCRIBE TABLE me->main_list LINES lp_records_found.
+        lp_records_found = lines( me->main_list ).
     ENDCASE.
     lr_row->create_text(
             text      = ' '
@@ -4473,7 +4459,6 @@ CLASS lcl_ztct IMPLEMENTATION.
             text      = lp_records_found
             tooltip   = lp_records_found
             ).
-*    lr_row = lr_rows->add_row( ).
 *   Create logo layout, set grid content on left and logo image on right
     CREATE OBJECT lr_logo.
     lr_logo->set_left_content( lr_rows_flow ).
@@ -5182,7 +5167,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 * Now find ALL transports for the DDIC objects with Program ID R3TR,
 * for the object types found
     CLEAR: lp_counter.
-    DESCRIBE TABLE ddic_objects LINES lp_total.
+    lp_total = lines( ddic_objects ).
     LOOP AT ddic_objects INTO ls_ddic_object.
       lp_counter = lp_counter + 1.
       lp_obj_name = ls_ddic_object.
@@ -5266,9 +5251,8 @@ CLASS lcl_ztct IMPLEMENTATION.
 *           For each environment, set the status icon:
             CASE st_systems-systemid.
               WHEN me->prd_system.
-                DESCRIBE TABLE st_systems-steps LINES tp_lines.
-                READ TABLE st_systems-steps INTO st_steps
-                                            INDEX tp_lines.
+                READ TABLE st_systems-steps INTO  st_steps
+                                            INDEX lines( st_systems-steps ).
                 CHECK st_steps-stepid <> '<'.
 *               Transported to production, check not required on this
 *               object. Delete all records for this object (not only
@@ -5285,7 +5269,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *       Only add counter if the line was not deleted...
         lp_counter = lp_counter + 1.
       ENDIF.
-      DESCRIBE TABLE ddic_e071 LINES lp_total.
+      lp_total = lines( ddic_e071 ).
       me->progress_indicator( EXPORTING im_counter = lp_counter
                                         im_object  = ddic_e071_line-obj_name
                                         im_total   = lp_total
@@ -5371,13 +5355,11 @@ CLASS lcl_ztct IMPLEMENTATION.
         es_cofile = st_request-cofile.
     LOOP AT st_request-cofile-systems INTO  st_systems
                                       WHERE systemid = me->qas_system.
-*               Get the latest import date:
-      DESCRIBE TABLE st_systems-steps LINES tp_lines.
+*     Get the latest import date:
       READ TABLE st_systems-steps INTO st_steps
-                                  INDEX tp_lines.
-      DESCRIBE TABLE st_steps-actions LINES tp_lines.
+                                  INDEX lines( st_systems-steps ).
       READ TABLE st_steps-actions INTO st_actions
-                                  INDEX tp_lines.
+                                  INDEX lines( st_steps-actions ).
       MOVE st_actions-time TO ex_as4time.
       MOVE st_actions-date TO ex_as4date.
     ENDLOOP.
