@@ -2447,18 +2447,6 @@
     </item>
     <item>
      <ID>I</ID>
-     <KEY>C61</KEY>
-     <ENTRY>Show</ENTRY>
-     <LENGTH>4</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>C62</KEY>
-     <ENTRY>Hide</ENTRY>
-     <LENGTH>4</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
      <KEY>H01</KEY>
      <ENTRY>If there is a warning icon in column `Warning`, double-clicking on the icon will display a list of objects that should be checked</ENTRY>
      <LENGTH>132</LENGTH>
@@ -2686,12 +2674,6 @@
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PA_CHECK</KEY>
-     <ENTRY>Check ON</ENTRY>
-     <LENGTH>16</LENGTH>
-    </item>
-    <item>
-     <ID>S</ID>
      <KEY>PA_CHKKY</KEY>
      <ENTRY>Check table keys</ENTRY>
      <LENGTH>24</LENGTH>
@@ -2701,24 +2683,6 @@
      <KEY>PA_FILE</KEY>
      <ENTRY>File name</ENTRY>
      <LENGTH>17</LENGTH>
-    </item>
-    <item>
-     <ID>S</ID>
-     <KEY>PA_ICON</KEY>
-     <ENTRY>Show</ENTRY>
-     <LENGTH>12</LENGTH>
-    </item>
-    <item>
-     <ID>S</ID>
-     <KEY>PA_NOCHK</KEY>
-     <ENTRY>Check OFF</ENTRY>
-     <LENGTH>17</LENGTH>
-    </item>
-    <item>
-     <ID>S</ID>
-     <KEY>PA_NOICN</KEY>
-     <ENTRY>Hide</ENTRY>
-     <LENGTH>12</LENGTH>
     </item>
     <item>
      <ID>S</ID>

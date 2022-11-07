@@ -1,59 +1,23 @@
 REPORT  zev_tp_checktool.
-*&******************************************************************&*
-*& Report   : ZEV_TP_CHECKTOOL                                      &*
-*& Version  : 1.00                                                  &*
-*&------------------------------------------------------------------&*
-*&                                                                  &*
-*& Copyright (c) 2012, E.Vleeshouwers                               &*
-*& All rights reserved.                                             &*
-*&                                                                  &*
-*& Redistribution and use in source and binary forms, with or       &*
-*& without modification, are permitted provided that the following  &*
-*& conditions are met:                                              &*
-*&                                                                  &*
-*& 1. Redistributions of source code must retain the above          &*
-*&    copyright notice, this list of conditions and the following   &*
-*&    disclaimer.                                                   &*
-*&                                                                  &*
-*& 2. Redistributions in binary form must reproduce the above       &*
-*&    copyright notice, this list of conditions and the following   &*
-*&    disclaimer in the documentation and/or other materials        &*
-*&    provided with the distribution.                               &*
-*&                                                                  &*
-*& 3. Neither the name of the copyright holder nor the names of its &*
-*&    contributors may be used to endorse or promote products       &*
-*&    derived from this software without specific prior written     &*
-*&    permission.                                                   &*
-*&                                                                  &*
-*& THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND           &*
-*& CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,      &*
-*& INCLUDING, BUT NOT  LIMITED TO, THE IMPLIED WARRANTIES OF        &*
-*& MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE         &*
-*& DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR            &*
-*& CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,     &*
-*& SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,         &*
-*& BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; &*
-*& LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER &*
-*& CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,      &*
-*& STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)    &*
-*& ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF      &*
-*& ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                       &*
-*&                                                                  &*
-*&------------------------------------------------------------------&*
-*& Program Details                                                  &*
-*&------------------------------------------------------------------&*
-*& Title    : Transport checking tool (on object level)             &*
-*& Purpose  : Check transport objects before moving to production   &*
-*&------------------------------------------------------------------&*
-* SOURCE: https://github.com/ZEdwin/ZTCT
-* BLOG (SCN):
-* http://scn.sap.com/community/abap/blog/2013/05/31/transport-
-* checking-tool-object-level
 *--------------------------------------------------------------------*
-* INSTALLATION
+*  Report   : ZEV_TP_CHECKTOOL                                       *
 *--------------------------------------------------------------------*
-* Use of ABAPGIT is recommended. SAPLINK is no longer maintained
-*&=------------------------------------------------------------------&*
+*  Copyright (c) 2012, E.Vleeshouwers                                *
+*--------------------------------------------------------------------*
+*  Program Details                                                   *
+*--------------------------------------------------------------------*
+*  Title    : Transport checking tool (on object level)              *
+*  Purpose  : Check transport objects before moving to production    *
+*--------------------------------------------------------------------*
+*  SOURCE: https://github.com/ZEdwin/ZTCT                            *
+*  BLOG (SCN):                                                       *
+*  http://scn.sap.com/community/abap/blog/2013/05/31/transport-      *
+*  checking-tool-object-level                                        *
+*--------------------------------------------------------------------*
+*  INSTALLATION                                                      *
+*--------------------------------------------------------------------*
+*  Use of ABAPGIT is recommended. SAPLINK is no longer maintained    *
+*--------------------------------------------------------------------*
 TYPE-POOLS: ctslg. "Types for Function Group TR_LOG_OVERVIEW
 TYPE-POOLS: icon.  "Assignment: Icon Names in List of ASCII Codes
 TYPE-POOLS: slis.  "Global types for generic list modules
@@ -169,109 +133,110 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
 
   PUBLIC SECTION.
 
-    TYPES: ra_trkorr                 TYPE RANGE OF trkorr.
-    TYPES: ra_excluded_objects       TYPE RANGE OF trobj_name.
-    TYPES: ra_date                   TYPE RANGE OF as4date.
-    DATA:  ls_excluded_objects       LIKE LINE  OF ta_excluded_objects.
+    TYPES: ra_trkorr                  TYPE RANGE OF trkorr.
+    TYPES: ra_excluded_objects        TYPE RANGE OF trobj_name.
+    TYPES: ra_date                    TYPE RANGE OF as4date.
+    DATA:  ls_excluded_objects        LIKE LINE  OF ta_excluded_objects.
     TYPES: BEGIN OF ty_request_details,
-             trkorr         TYPE trkorr,
-             checked        TYPE icon_l4,
-             info           TYPE icon_l4,
-             tr_descr       TYPE as4text,
-             dev            TYPE icon_l4,
-             qas            TYPE icon_l4,
-             retcode        TYPE char04,
-             prd            TYPE icon_l4,
-             warning_lvl    TYPE icon_d,
+             trkorr                   TYPE trkorr,
+             checked                  TYPE icon_l4,
+             info                     TYPE icon_l4,
+             tr_descr                 TYPE as4text,
+             dev                      TYPE icon_l4,
+             qas                      TYPE icon_l4,
+             retcode                  TYPE char04,
+             prd                      TYPE icon_l4,
+             warning_lvl              TYPE icon_d,
 *            Warning_rank: The higher the number,
 *            the more serious the error
-             warning_rank   TYPE numc4,
-             warning_txt    TYPE text74,
-             pgmid          TYPE pgmid,
-             object         TYPE trobjtype,
-             obj_name       TYPE trobj_name,
-             objkey         TYPE trobj_name,
-             keyobject      TYPE trobjtype,
-             keyobjname     TYPE tabname,
-             tabkey         TYPE tabkey,
-             checked_by     TYPE syuname,
-             as4date        TYPE as4date,
-             as4time        TYPE as4time,
-             as4user        TYPE as4user,
-             status_text    TYPE char20,
-             trfunction_txt TYPE val_text,
-             project        TYPE cts_id,
-             project_descr  TYPE as4text,
-             objfunc        TYPE objfunc,
-             flag           TYPE flag,
-             trstatus       TYPE trstatus,
-             trfunction     TYPE trfunction,
-             re_import      TYPE char20.
-    TYPES:   t_color TYPE lvc_t_scol,
+             warning_rank             TYPE numc4,
+             warning_txt              TYPE text74,
+             pgmid                    TYPE pgmid,
+             object                   TYPE trobjtype,
+             obj_name                 TYPE trobj_name,
+             objkey                   TYPE trobj_name,
+             keyobject                TYPE trobjtype,
+             keyobjname               TYPE tabname,
+             tabkey                   TYPE tabkey,
+             checked_by               TYPE syuname,
+             as4date                  TYPE as4date,
+             as4time                  TYPE as4time,
+             as4user                  TYPE as4user,
+             status_text              TYPE char20,
+             trfunction_txt           TYPE val_text,
+             project                  TYPE cts_id,
+             project_descr            TYPE as4text,
+             objfunc                  TYPE objfunc,
+             flag                     TYPE flag,
+             trstatus                 TYPE trstatus,
+             trfunction               TYPE trfunction,
+             re_import                TYPE char20.
+    TYPES:   t_color                  TYPE lvc_t_scol,
              END OF  ty_request_details.
 
-    TYPES: tt_request_details TYPE STANDARD TABLE OF ty_request_details
-                              WITH DEFAULT KEY.
+    TYPES: tt_request_details         TYPE STANDARD TABLE OF ty_request_details
+                                      WITH DEFAULT KEY.
 
     TYPES: BEGIN OF lty_tables_with_keys,
-             tabname TYPE trobj_name,
-             ddtext  TYPE as4text,
-             counter TYPE i, "lvc_outlen,
+             tabname                  TYPE trobj_name,
+             ddtext                   TYPE as4text,
+             counter                  TYPE i, "lvc_outlen,
            END OF lty_tables_with_keys.
-    DATA: table_keys      TYPE TABLE OF lty_tables_with_keys.
-    DATA: table_keys_line TYPE lty_tables_with_keys.
+    DATA: table_keys                  TYPE TABLE OF lty_tables_with_keys.
+    DATA: table_keys_line             TYPE lty_tables_with_keys.
 
     CONSTANTS:
-      co_info                 TYPE icon_d VALUE '@0S@'. "ICON_INFORMATION
+      co_info                         TYPE  icon_d
+                                      VALUE '@0S@'. "ICON_INFORMATION
 
 *   Attributes
-    DATA:  main_list          TYPE tt_request_details.
-    DATA:  main_list_line     TYPE ty_request_details.
-    DATA:  main_list_xls      TYPE tt_request_details.
-    DATA:  main_list_line_xls TYPE ty_request_details.
-    DATA:  conflicts          TYPE tt_request_details.
-    DATA:  st_request         TYPE ctslg_request_info.
-    DATA:  st_steps           TYPE ctslg_step.
-    DATA:  st_actions         TYPE ctslg_action.
-    DATA:  tp_tabkey          TYPE trobj_name.
-    DATA:  tp_lines           TYPE i.
-    DATA:  tp_tab             TYPE char1
-                                   VALUE cl_abap_char_utilities=>horizontal_tab.
-    DATA: lp_save_restriction TYPE salv_de_layout_restriction.
+    DATA:  main_list                  TYPE  tt_request_details.
+    DATA:  main_list_line             TYPE  ty_request_details.
+    DATA:  main_list_xls              TYPE  tt_request_details.
+    DATA:  main_list_line_xls         TYPE  ty_request_details.
+    DATA:  conflicts                  TYPE  tt_request_details.
+    DATA:  st_request                 TYPE  ctslg_request_info.
+    DATA:  st_steps                   TYPE  ctslg_step.
+    DATA:  st_actions                 TYPE  ctslg_action.
+    DATA:  tp_tabkey                  TYPE  trobj_name.
+    DATA:  tp_lines                   TYPE  i.
+    DATA:  tp_tab                     TYPE  char1
+                                      VALUE cl_abap_char_utilities=>horizontal_tab.
+    DATA: lp_save_restriction         TYPE  salv_de_layout_restriction.
 
 *   Methods
     METHODS: constructor.
     METHODS: execute.
     METHODS: refresh_alv.
-    METHODS: docu_call                IMPORTING im_object     TYPE doku_obj
-                                                im_id         TYPE dokhl-id
-                                                im_display    TYPE abap_bool OPTIONAL
-                                                im_displ_mode TYPE c         OPTIONAL.
-    METHODS: get_tp_prefix            IMPORTING im_dev              TYPE sysname   OPTIONAL
-                                      RETURNING VALUE(re_tp_prefix) TYPE char5.
-    METHODS: get_filename             EXPORTING ex_file             TYPE string.
-    METHODS: set_check_flag           IMPORTING im_check_flag       TYPE abap_bool OPTIONAL.
-    METHODS: set_check_ddic           IMPORTING im_check_ddic       TYPE abap_bool OPTIONAL.
-    METHODS: set_check_tabkeys        IMPORTING im_check_tabkeys    TYPE abap_bool OPTIONAL.
-    METHODS: set_clear_checked        IMPORTING im_clear_checked    TYPE abap_bool OPTIONAL.
-    METHODS: set_buffer_chk      IMPORTING im_buffer_chk  TYPE abap_bool OPTIONAL.
-    METHODS: set_buffer_remove_tp     IMPORTING im_buffer_remove_tp TYPE abap_bool OPTIONAL.
-    METHODS: set_trkorr_range         IMPORTING im_trkorr_range     TYPE ra_trkorr OPTIONAL.
-    METHODS: set_project_range        IMPORTING im_project_range    TYPE ra_trkorr OPTIONAL.
-    METHODS: set_date_range           IMPORTING im_date_range       TYPE ra_date   OPTIONAL.
-    METHODS: set_excluded_objects     IMPORTING im_excluded_objects TYPE ra_excluded_objects OPTIONAL.
-    METHODS: set_search_string        IMPORTING im_search_string    TYPE as4text   OPTIONAL.
-    METHODS: set_user_layout          IMPORTING im_user_layout      TYPE abap_bool OPTIONAL.
-    METHODS: set_process_type         IMPORTING im_process_type     TYPE i.
-    METHODS: set_skiplive             IMPORTING im_skiplive         TYPE abap_bool OPTIONAL.
-    METHODS: set_filename             IMPORTING im_filename         TYPE string OPTIONAL.
-    METHODS: set_systems              IMPORTING im_dev_system TYPE sysname
-                                                im_qas_system TYPE sysname
-                                                im_prd_system TYPE sysname.
+    METHODS: docu_call                   IMPORTING im_object                  TYPE doku_obj
+                                                   im_id                      TYPE dokhl-id
+                                                   im_display                 TYPE abap_bool OPTIONAL
+                                                   im_displ_mode              TYPE c OPTIONAL.
+    METHODS: get_tp_prefix               IMPORTING im_dev                     TYPE sysname OPTIONAL
+                                         RETURNING VALUE(re_tp_prefix)        TYPE char5.
+    METHODS: get_filename                EXPORTING ex_file                    TYPE string.
+    METHODS: set_check_flag              IMPORTING im_check_flag              TYPE abap_bool OPTIONAL.
+    METHODS: set_check_ddic              IMPORTING im_check_ddic              TYPE abap_bool OPTIONAL.
+    METHODS: set_check_tabkeys           IMPORTING im_check_tabkeys           TYPE abap_bool OPTIONAL.
+    METHODS: set_clear_checked           IMPORTING im_clear_checked           TYPE abap_bool OPTIONAL.
+    METHODS: set_buffer_chk              IMPORTING im_buffer_chk              TYPE abap_bool OPTIONAL.
+    METHODS: set_buffer_remove_tp        IMPORTING im_buffer_remove_tp        TYPE abap_bool OPTIONAL.
+    METHODS: set_trkorr_range            IMPORTING im_trkorr_range            TYPE ra_trkorr OPTIONAL.
+    METHODS: set_project_range           IMPORTING im_project_range           TYPE ra_trkorr OPTIONAL.
+    METHODS: set_date_range              IMPORTING im_date_range              TYPE ra_date OPTIONAL.
+    METHODS: set_excluded_objects        IMPORTING im_excluded_objects        TYPE ra_excluded_objects OPTIONAL.
+    METHODS: set_search_string           IMPORTING im_search_string           TYPE as4text OPTIONAL.
+    METHODS: set_user_layout             IMPORTING im_user_layout             TYPE abap_bool OPTIONAL.
+    METHODS: set_process_type            IMPORTING im_process_type            TYPE i.
+    METHODS: set_skiplive                IMPORTING im_skiplive                TYPE abap_bool OPTIONAL.
+    METHODS: set_filename                IMPORTING im_filename                TYPE string OPTIONAL.
+    METHODS: set_systems                 IMPORTING im_dev_system              TYPE sysname
+                                                   im_qas_system              TYPE sysname
+                                                   im_prd_system              TYPE sysname.
     METHODS: set_building_conflict_popup IMPORTING im_building_conflict_popup TYPE abap_bool OPTIONAL.
-    METHODS: go_back_months           IMPORTING im_backmonths	 TYPE numc3
-                                                im_currdate    TYPE sydatum
-                                      RETURNING VALUE(re_date) TYPE sydatum.
+    METHODS: go_back_months              IMPORTING im_backmonths              TYPE numc3
+                                                   im_currdate                TYPE sydatum
+                                         RETURNING VALUE(re_date)             TYPE sydatum.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_tms_mgr_buffer,
@@ -375,96 +340,95 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     DATA:  building_conflict_popup    TYPE flag.
 
     METHODS: refresh_import_queues.
-    METHODS: handle_error             IMPORTING rf_oref TYPE REF TO cx_root.
-    METHODS: flag_for_process         IMPORTING rows TYPE salv_t_row
-                                                cell TYPE salv_s_cell.
-    METHODS: get_main_transports      IMPORTING im_trkorr_range TYPE gtabkey_trkorrt.
-    METHODS: get_tp_info              IMPORTING im_trkorr      TYPE trkorr
-                                                im_obj_name    TYPE trobj_name
-                                      RETURNING VALUE(re_line) TYPE ty_request_details.
-    METHODS: get_added_objects        IMPORTING im_to_add TYPE ra_trkorr
-                                      EXPORTING ex_to_add TYPE tt_request_details.
-    METHODS: add_to_list              IMPORTING im_to_add TYPE tt_request_details
-                                      EXPORTING ex_main   TYPE tt_request_details.
-    METHODS: build_conflict_popup     IMPORTING rows TYPE salv_t_row
-                                                cell TYPE salv_s_cell.
-    METHODS: delete_tp_from_list      IMPORTING rows TYPE salv_t_row
-                                                cell TYPE salv_s_cell.
-    METHODS: flag_same_objects        EXPORTING ex_main_list        TYPE tt_request_details.
-    METHODS: mark_all_tp_records      IMPORTING im_cell TYPE salv_s_cell
-                                      CHANGING  im_rows TYPE salv_t_row.
-    METHODS: main_to_tab_delimited    IMPORTING im_main_list     TYPE tt_request_details
-                                      EXPORTING ex_tab_delimited TYPE table_of_strings.
-    METHODS: tab_delimited_to_main    IMPORTING im_tab_delimited TYPE table_of_strings
-                                      EXPORTING ex_main_list     TYPE tt_request_details.
-    METHODS: display_transport        IMPORTING im_trkorr           TYPE trkorr.
-    METHODS: display_user             IMPORTING im_user             TYPE syuname.
-    METHODS: display_docu             IMPORTING im_trkorr           TYPE trkorr.
-    METHODS: check_if_in_list         IMPORTING im_line  TYPE ty_request_details
-                                                im_tabix TYPE sytabix
-                                      EXPORTING ex_line  TYPE ty_request_details.
-    METHODS: check_documentation      IMPORTING im_trkorr TYPE trkorr
-                                      CHANGING  ch_table  TYPE tt_request_details.
-*    METHODS: docu_call                IMPORTING im_object           TYPE doku_obj.
+    METHODS: handle_error                IMPORTING rf_oref                    TYPE REF TO cx_root.
+    METHODS: flag_for_process            IMPORTING rows                       TYPE salv_t_row
+                                                   cell                       TYPE salv_s_cell.
+    METHODS: get_main_transports         IMPORTING im_trkorr_range            TYPE gtabkey_trkorrt.
+    METHODS: get_tp_info                 IMPORTING im_trkorr                  TYPE trkorr
+                                                   im_obj_name                TYPE trobj_name
+                                         RETURNING VALUE(re_line)             TYPE ty_request_details.
+    METHODS: get_added_objects           IMPORTING im_to_add                  TYPE ra_trkorr
+                                         EXPORTING ex_to_add                  TYPE tt_request_details.
+    METHODS: add_to_list                 IMPORTING im_to_add                  TYPE tt_request_details
+                                         EXPORTING ex_main                    TYPE tt_request_details.
+    METHODS: build_conflict_popup        IMPORTING rows                       TYPE salv_t_row
+                                                   cell                       TYPE salv_s_cell.
+    METHODS: delete_tp_from_list         IMPORTING rows                       TYPE salv_t_row
+                                                   cell                       TYPE salv_s_cell.
+    METHODS: flag_same_objects           EXPORTING ex_main_list               TYPE tt_request_details.
+    METHODS: mark_all_tp_records         IMPORTING im_cell                    TYPE salv_s_cell
+                                         CHANGING  im_rows                    TYPE salv_t_row.
+    METHODS: main_to_tab_delimited       IMPORTING im_main_list               TYPE tt_request_details
+                                         EXPORTING ex_tab_delimited           TYPE table_of_strings.
+    METHODS: tab_delimited_to_main       IMPORTING im_tab_delimited           TYPE table_of_strings
+                                         EXPORTING ex_main_list               TYPE tt_request_details.
+    METHODS: display_transport           IMPORTING im_trkorr                  TYPE trkorr.
+    METHODS: display_user                IMPORTING im_user                    TYPE syuname.
+    METHODS: display_docu                IMPORTING im_trkorr                  TYPE trkorr.
+    METHODS: check_if_in_list            IMPORTING im_line                    TYPE ty_request_details
+                                                   im_tabix                   TYPE sytabix
+                                         EXPORTING ex_line                    TYPE ty_request_details.
+    METHODS: check_documentation         IMPORTING im_trkorr                  TYPE trkorr
+                                         CHANGING  ch_table                   TYPE tt_request_details.
     METHODS: clear_flags.
-    METHODS: column_settings          IMPORTING im_column_ref       TYPE salv_t_column_ref
-                                                im_rf_columns_table TYPE REF TO cl_salv_columns_table
-                                                im_table            TYPE REF TO cl_salv_table.
-    METHODS: is_empty_column          IMPORTING im_column          TYPE lvc_fname
-                                                im_table           TYPE tt_request_details
-                                      RETURNING VALUE(re_is_empty) TYPE abap_bool.
+    METHODS: column_settings             IMPORTING im_column_ref              TYPE salv_t_column_ref
+                                                   im_rf_columns_table        TYPE REF TO cl_salv_columns_table
+                                                   im_table                   TYPE REF TO cl_salv_table.
+    METHODS: is_empty_column             IMPORTING im_column                  TYPE lvc_fname
+                                                   im_table                   TYPE tt_request_details
+                                         RETURNING VALUE(re_is_empty)         TYPE abap_bool.
 *    METHODS: refresh_alv.
-    METHODS: display_excel            IMPORTING im_table            TYPE tt_request_details.
-    METHODS: set_tp_prefix            IMPORTING im_dev              TYPE sysname OPTIONAL.
-    METHODS: top_of_page              EXPORTING ex_form_element     TYPE REF TO cl_salv_form_element.
-    METHODS: check_if_same_object     IMPORTING im_line        TYPE ty_request_details
-                                                im_newer_older TYPE ty_request_details
-                                      EXPORTING ex_tabkey      TYPE trobj_name
-                                                ex_return      TYPE c.
+    METHODS: display_excel               IMPORTING im_table                   TYPE tt_request_details.
+    METHODS: set_tp_prefix               IMPORTING im_dev                     TYPE sysname OPTIONAL.
+    METHODS: top_of_page                 EXPORTING ex_form_element            TYPE REF TO cl_salv_form_element.
+    METHODS: check_if_same_object        IMPORTING im_line                    TYPE ty_request_details
+                                                   im_newer_older             TYPE ty_request_details
+                                         EXPORTING ex_tabkey                  TYPE trobj_name
+                                                   ex_return                  TYPE c.
     METHODS: sort_main_list.
-    METHODS: determine_warning_text   IMPORTING im_highest_rank TYPE numc4
-                                      EXPORTING ex_highest_text TYPE text74.
-    METHODS: get_tps_for_same_object  IMPORTING im_line  TYPE ty_request_details
-                                      EXPORTING ex_newer TYPE tt_request_details
-                                                ex_older TYPE tt_request_details.
-    METHODS: progress_indicator       IMPORTING im_counter TYPE sytabix
-                                                im_object  TYPE trobj_name
-                                                im_total   TYPE numc10
-                                                im_text    TYPE itex132
-                                                im_flag    TYPE c.
-    METHODS: alv_xls_init             EXPORTING ex_rf_table TYPE REF TO cl_salv_table
-                                      CHANGING  ch_table    TYPE table.
+    METHODS: determine_warning_text      IMPORTING im_highest_rank            TYPE numc4
+                                         EXPORTING ex_highest_text            TYPE text74.
+    METHODS: get_tps_for_same_object     IMPORTING im_line                    TYPE ty_request_details
+                                         EXPORTING ex_newer                   TYPE tt_request_details
+                                                   ex_older                   TYPE tt_request_details.
+    METHODS: progress_indicator          IMPORTING im_counter                 TYPE sytabix
+                                                   im_object                  TYPE trobj_name
+                                                   im_total                   TYPE numc10
+                                                   im_text                    TYPE itex132
+                                                   im_flag                    TYPE c.
+    METHODS: alv_xls_init                EXPORTING ex_rf_table                TYPE REF TO cl_salv_table
+                                         CHANGING  ch_table                   TYPE table.
     METHODS: alv_xls_output.
     METHODS: prepare_ddic_check.
     METHODS: set_ddic_objects.
-    METHODS: do_ddic_check            CHANGING  ch_main_list        TYPE tt_request_details.
-    METHODS: set_properties_conflicts IMPORTING im_table TYPE tt_request_details
-                                      EXPORTING ex_xend  TYPE i.
-    METHODS: get_data                 IMPORTING im_trkorr_range     TYPE gtabkey_trkorrt.
-    METHODS: check_for_conflicts      CHANGING  ch_main_list        TYPE tt_request_details.
+    METHODS: do_ddic_check               CHANGING  ch_main_list               TYPE tt_request_details.
+    METHODS: set_properties_conflicts    IMPORTING im_table                   TYPE tt_request_details
+                                         EXPORTING ex_xend                    TYPE i.
+    METHODS: get_data                    IMPORTING im_trkorr_range            TYPE gtabkey_trkorrt.
+    METHODS: check_for_conflicts         CHANGING  ch_main_list               TYPE tt_request_details.
     METHODS: build_table_keys_popup.
-    METHODS: add_table_keys_to_list   EXPORTING table               TYPE tt_request_details.
-    METHODS: get_additional_tp_info   CHANGING  ch_table            TYPE tt_request_details.
-    METHODS: gui_upload               IMPORTING im_filename      TYPE string
-                                      EXPORTING ex_tab_delimited TYPE table_of_strings
-                                                ex_cancelled     TYPE abap_bool.
-    METHODS: determine_col_width      IMPORTING im_field    TYPE any
-                                      CHANGING  ex_colwidth TYPE lvc_outlen.
-    METHODS: check_colwidth           IMPORTING im_name            TYPE abap_compname
-                                                im_colwidth        TYPE lvc_outlen
-                                      RETURNING VALUE(re_colwidth) TYPE lvc_outlen.
+    METHODS: add_table_keys_to_list      EXPORTING table                      TYPE tt_request_details.
+    METHODS: get_additional_tp_info      CHANGING  ch_table                   TYPE tt_request_details.
+    METHODS: gui_upload                  IMPORTING im_filename                TYPE string
+                                         EXPORTING ex_tab_delimited           TYPE table_of_strings
+                                                   ex_cancelled               TYPE abap_bool.
+    METHODS: determine_col_width         IMPORTING im_field                   TYPE any
+                                         CHANGING  ex_colwidth                TYPE lvc_outlen.
+    METHODS: check_colwidth              IMPORTING im_name                    TYPE abap_compname
+                                                   im_colwidth                TYPE lvc_outlen
+                                         RETURNING VALUE(re_colwidth)         TYPE lvc_outlen.
     METHODS: remove_tp_in_prd.
     METHODS: version_check.
     METHODS: alv_init.
     METHODS: set_color.
-    METHODS: alv_set_properties       IMPORTING im_table            TYPE REF TO cl_salv_table.
-    METHODS: alv_set_tooltips         IMPORTING im_table            TYPE REF TO cl_salv_table.
+    METHODS: alv_set_properties          IMPORTING im_table                   TYPE REF TO cl_salv_table.
+    METHODS: alv_set_tooltips            IMPORTING im_table                   TYPE REF TO cl_salv_table.
     METHODS: alv_output.
     METHODS: set_where_used.
-    METHODS: get_import_datetime_qas  IMPORTING im_trkorr  TYPE trkorr
-                                      EXPORTING ex_as4time TYPE as4time
-                                                ex_as4date TYPE as4date
-                                                ex_return  TYPE sysubrc.
+    METHODS: get_import_datetime_qas     IMPORTING im_trkorr                  TYPE trkorr
+                                         EXPORTING ex_as4time                 TYPE as4time
+                                                   ex_as4date                 TYPE as4date
+                                                   ex_return                  TYPE sysubrc.
 ENDCLASS.                    "lcl_ztct DEFINITION
 
 *--------------------------------------------------------------------*
@@ -545,7 +509,7 @@ SELECTION-SCREEN: BEGIN OF BLOCK box4 WITH FRAME TITLE tp_b40.
 *SELECTION-SCREEN: SKIP 1.
 SELECTION-SCREEN: BEGIN OF LINE.
 PARAMETERS:       pa_noprd AS CHECKBOX DEFAULT 'X'.
-* C41 - Use User specific layout
+* C40 - Do not select transports already in production
 SELECTION-SCREEN: COMMENT 4(63) tp_c40.
 SELECTION-SCREEN: END OF LINE.
 
@@ -575,7 +539,6 @@ SELECTION-SCREEN: PUSHBUTTON 65(4) i_ckey USER-COMMAND ckey
                                           MODIF ID chk
                                           VISIBLE LENGTH 2. "#EC NEEDED
 SELECTION-SCREEN: END OF LINE.
-*PARAMETERS:       pa_kdate TYPE as4date MODIF ID key.
 SELECTION-SCREEN: BEGIN OF LINE.
 PARAMETERS:       pa_chd AS CHECKBOX DEFAULT ' ' MODIF ID upl.
 * C44  - Reset 'Checked' field
@@ -598,61 +561,6 @@ SELECT-OPTIONS:   so_exobj FOR e071-obj_name NO INTERVALS
                                              MODIF ID chk.
 SELECTION-SCREEN: END OF BLOCK box5.
 
-* B60 - Overview of used Icons
-*---------------------------------------
-SELECTION-SCREEN: BEGIN OF BLOCK box6 WITH FRAME TITLE tp_b60.
-SELECTION-SCREEN: BEGIN OF LINE.
-PARAMETERS:       pa_icon RADIOBUTTON GROUP ico USER-COMMAND ico
-                                               .
-* C61 - Show
-SELECTION-SCREEN: COMMENT 4(6) tp_c61.
-PARAMETERS:       pa_noicn RADIOBUTTON GROUP ico DEFAULT 'X'
-                                                .
-* C62 - Hide
-SELECTION-SCREEN: COMMENT 14(4) tp_c62.
-SELECTION-SCREEN: END OF LINE.
-SELECTION-SCREEN: BEGIN OF LINE.
-SELECTION-SCREEN: PUSHBUTTON 1(4) p_error USER-COMMAND error
-                                          MODIF ID ico.     "#EC NEEDED
-* W01 - Transporting to Production will overwrite a newer version!
-SELECTION-SCREEN: COMMENT 8(74) tp_w01  MODIF ID ico.
-SELECTION-SCREEN: END OF LINE.
-SELECTION-SCREEN: BEGIN OF LINE.
-SELECTION-SCREEN: PUSHBUTTON 1(4) p_ddic USER-COMMAND ddic
-                                          MODIF ID ico.     "#EC NEEDED
-*W18 - Transport already in Production, but selected for re-import by
-*      the user
-SELECTION-SCREEN: COMMENT 8(74) tp_w05  MODIF ID ico.
-SELECTION-SCREEN: END OF LINE.
-SELECTION-SCREEN: BEGIN OF LINE.
-SELECTION-SCREEN: PUSHBUTTON 1(4) p_warn  USER-COMMAND warn
-                                          MODIF ID ico.     "#EC NEEDED
-* W17 - Previous transport not transported
-SELECTION-SCREEN: COMMENT 8(74) tp_w17  MODIF ID ico.
-SELECTION-SCREEN: END OF LINE.
-SELECTION-SCREEN: BEGIN OF LINE.
-SELECTION-SCREEN: PUSHBUTTON 1(4) p_info  USER-COMMAND info
-                                          MODIF ID ico.     "#EC NEEDED
-*W23 - There is a newer version in Acceptance. Check if it should be
-*      moved too
-SELECTION-SCREEN: COMMENT 8(74) tp_w23  MODIF ID ico.
-SELECTION-SCREEN: END OF LINE.
-SELECTION-SCREEN: BEGIN OF LINE.
-SELECTION-SCREEN: PUSHBUTTON 1(4) p_hint  USER-COMMAND hint
-                                          MODIF ID ico.     "#EC NEEDED
-*W04 - Previous or newer transport not transported, but is also in the
-*      list
-SELECTION-SCREEN: COMMENT 8(74) tp_w04  MODIF ID ico.
-SELECTION-SCREEN: END OF LINE.
-SELECTION-SCREEN: BEGIN OF LINE.
-SELECTION-SCREEN: PUSHBUTTON 1(4) p_added USER-COMMAND added
-                                          MODIF ID ico.     "#EC NEEDED
-*W18 - Transport already in Production, but selected for re-import by
-*      the user
-SELECTION-SCREEN: COMMENT 8(74) tp_w18  MODIF ID ico.
-SELECTION-SCREEN: END OF LINE.
-SELECTION-SCREEN: END OF BLOCK box6.
-
 *--------------------------------------------------------------------*
 * Initialize
 *--------------------------------------------------------------------*
@@ -669,13 +577,7 @@ INITIALIZATION.
     ENDTRY.
   ENDIF.
 
-  MOVE: icon_terminated_position       TO i_name,
-        icon_defect                    TO p_error,
-        icon_wf_workitem_error         TO p_ddic,
-        icon_led_yellow                TO p_warn,
-        icon_information               TO p_info,
-        icon_hint                      TO p_hint,
-        icon_scrap                     TO p_added.
+  MOVE: icon_terminated_position       TO i_name.
 
   MOVE: 'Clear'(025)                   TO i_date.
   IF so_date IS INITIAL.
@@ -698,7 +600,7 @@ INITIALIZATION.
   tp_b30 = 'Transport Track'(b30).
   tp_b40 = 'Check options'(b40).
   tp_b50 = 'Exclude from check'(b50).
-  tp_b60 = 'Overview of used Icons'(b60).
+*  tp_b60 = 'Overview of used Icons'(b60).
   tp_c21 = 'User'(c21).
   tp_c22 = 'File name'(c22).
   tp_c31 = 'Route'(c31).
@@ -709,22 +611,11 @@ INITIALIZATION.
   tp_c43 = 'Check table keys'(c43).
   tp_c44 = 'Reset `Checked` field'(c44).
   tp_c45 = 'Remove transports not in buffer'(c45).
-*  tp_c46 = 'Check ON'(c46).
-*  tp_c47 = 'Check OFF'(c47).
   tp_c51 = 'Objects in the range will not be taken into account ' &
            'when checking the'(c51).
   tp_c52 = 'transports. Useful to exclude common customizing tables ' &
            '(like SWOTICE for'(c52).
   tp_c53 = 'workflow or the tables for Pricing procedures).'(c53).
-  tp_c61 = 'Show'(c61).
-  tp_c62 = 'Hide'(c62).
-*  tp_w01 = 'Newer version in production!'(w01).
-  tp_w01 = 'Newer version in target environment!'(w01).
-  tp_w05 = 'Object missing in list and target environment!'(w05).
-  tp_w17 = 'Previous transport not transported'(w17).
-  tp_w23 = 'Newer version in test environment'(w23).
-  tp_w04 = 'Conflicts are dealt with'(w04).
-  tp_w18 = 'Marked for re-import to target environment'(w18).
 
   WRITE icon_information AS ICON TO i_buff.
   WRITE icon_information AS ICON TO i_ckey.
@@ -907,13 +798,13 @@ AT SELECTION-SCREEN OUTPUT.
           screen-active = '0'.
         ENDIF.
         MODIFY SCREEN.
-      WHEN 'ICO'.
-        IF pa_icon = 'X'.
-          screen-active = '1'.
-        ELSE.
-          screen-active = '0'.
-        ENDIF.
-        MODIFY SCREEN.
+*      WHEN 'ICO'.
+*        IF pa_icon = 'X'.
+*          screen-active = '1'.
+*        ELSE.
+*          screen-active = '0'.
+*        ENDIF.
+*        MODIFY SCREEN.
       WHEN 'GRY'.
         screen-input = '0'.
         MODIFY SCREEN.
