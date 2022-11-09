@@ -18,10 +18,15 @@ REPORT zev_tp_checktool.
 *--------------------------------------------------------------------*
 *  Use of ABAPGIT is recommended. SAPLINK is no longer maintained    *
 *--------------------------------------------------------------------*
-TYPE-POOLS ctslg. "Types for Function Group TR_LOG_OVERVIEW
-TYPE-POOLS icon.  "Assignment: Icon Names in List of ASCII Codes
-TYPE-POOLS slis.  "Global types for generic list modules
-TYPE-POOLS stms.  "Transport Management System: Global Types
+* Types for Function Group TR_LOG_OVERVIEW
+TYPE-POOLS ctslg.
+* Assignment: Icon Names in List of ASCII Codes
+TYPE-POOLS icon.
+* Global types for generic list modules
+TYPE-POOLS slis.
+* Transport Management System: Global Types
+TYPE-POOLS stms.
+* ABAP Language Type-Pool
 TYPE-POOLS abap.
 
 * Class for handling Events
@@ -32,8 +37,6 @@ CLASS lcl_ztct              DEFINITION DEFERRED.
 DATA e070       TYPE e070.
 * CTS: Object Entries Requests/Task
 DATA e071       TYPE e071.
-* Version management: directory table
-DATA vrsd       TYPE vrsd.
 * Assignm. of CTS Proj. to Ext. Proj.
 DATA ctsproject TYPE ctsproject.
 
@@ -44,65 +47,55 @@ DATA ctsproject TYPE ctsproject.
 TABLES sscrfields.
 
 CONSTANTS:
-  co_months TYPE numc3      VALUE '012',
   co_langu  TYPE ddlanguage VALUE 'E'.
 
-DATA ra_project_trkorrs     TYPE RANGE OF ctsproject-trkorr.
-DATA st_project_trkorrs     LIKE LINE  OF ra_project_trkorrs.
-DATA ra_systems             TYPE RANGE OF tmscsys-sysnam.
-DATA st_systems             LIKE LINE  OF ra_systems.
+DATA ra_project_trkorrs     TYPE RANGE OF ctsproject-trkorr ##NEEDED.
+DATA st_project_trkorrs     LIKE LINE  OF ra_project_trkorrs ##NEEDED.
+DATA ra_systems             TYPE RANGE OF tmscsys-sysnam ##NEEDED.
+DATA st_systems             LIKE LINE  OF ra_systems ##NEEDED.
 
 * Global data declarations:
-DATA tp_prefix              TYPE char5.
-DATA ta_sapsystems          TYPE TABLE OF tmscsys.
-DATA st_sapsystems          TYPE tmscsys.
-DATA st_tcesyst             TYPE tcesyst.
-DATA st_smp_dyntxt          TYPE smp_dyntxt.
+DATA tp_prefix              TYPE char5 ##NEEDED.
+DATA ta_sapsystems          TYPE TABLE OF tmscsys ##NEEDED.
+DATA st_sapsystems          TYPE tmscsys ##NEEDED.
+DATA st_tcesyst             TYPE tcesyst ##NEEDED.
+DATA st_smp_dyntxt          TYPE smp_dyntxt ##NEEDED.
 * To check existence of documentation
-DATA tp_dokl_object         TYPE doku_obj.
+DATA tp_dokl_object         TYPE doku_obj ##NEEDED.
 
-DATA ta_trkorr_range        TYPE RANGE OF e070-trkorr.
-DATA st_trkorr_range        LIKE LINE OF ta_trkorr_range.
-DATA ta_project_range       TYPE RANGE OF ctsproject-trkorr.
-DATA ta_date_range          TYPE RANGE OF as4date.
-DATA ta_excluded_objects    TYPE RANGE OF trobj_name.
-DATA tp_transport_descr     TYPE as4text.
-DATA tp_project_reference   TYPE trvalue.
+DATA ta_trkorr_range        TYPE RANGE OF e070-trkorr ##NEEDED.
+DATA st_trkorr_range        LIKE LINE OF ta_trkorr_range ##NEEDED.
+DATA ta_project_range       TYPE RANGE OF ctsproject-trkorr ##NEEDED.
+DATA ta_excluded_objects    TYPE RANGE OF trobj_name ##NEEDED.
+DATA tp_transport_descr     TYPE as4text ##NEEDED.
+DATA tp_project_reference   TYPE trvalue ##NEEDED.
 * Process type is used to identify if a list is build (1),
 * uploaded (2) or the program is used for version checking (3)
-DATA tp_process_type        TYPE i.
-* Date from for transport collection (passed to class)
-DATA tp_date_from           TYPE as4date.
-* To determine transport track on selection screen
-DATA ta_prev_systems        TYPE tmscsyss.
-DATA st_prev_system         TYPE tmscsys.
-DATA ta_system_track        TYPE tcesys.
-DATA st_system_track        TYPE sysname.
-DATA ta_targets             TYPE trsysclis.
-DATA st_target              TYPE trsyscli.
-DATA tp_sysname             TYPE sysname.
-DATA tp_index               TYPE sytabix.
-DATA tp_msg                 TYPE string.
+DATA tp_process_type        TYPE i ##NEEDED.
+DATA ta_targets             TYPE trsysclis ##NEEDED.
+DATA st_target              TYPE trsyscli ##NEEDED.
+DATA tp_sysname             TYPE sysname ##NEEDED.
+DATA tp_msg                 TYPE string ##NEEDED.
 
 *--------------------------------------------------------------------*
 * Data - ALV
 *--------------------------------------------------------------------*
 * Declaration for ALV Grid
-DATA rf_table                TYPE REF TO cl_salv_table.
-DATA rf_table_xls            TYPE REF TO cl_salv_table.
-DATA rf_conflicts            TYPE REF TO cl_salv_table.
-DATA rf_table_keys           TYPE REF TO cl_salv_table.
-DATA rf_handle_events        TYPE REF TO lcl_eventhandler_ztct.
-DATA rf_events_table         TYPE REF TO cl_salv_events_table.
+DATA rf_table                TYPE REF TO cl_salv_table ##NEEDED.
+DATA rf_table_xls            TYPE REF TO cl_salv_table ##NEEDED.
+DATA rf_conflicts            TYPE REF TO cl_salv_table ##NEEDED.
+DATA rf_table_keys           TYPE REF TO cl_salv_table ##NEEDED.
+DATA rf_handle_events        TYPE REF TO lcl_eventhandler_ztct ##NEEDED.
+DATA rf_events_table         TYPE REF TO cl_salv_events_table ##NEEDED.
 
 * Exception handling
-DATA rf_root                 TYPE REF TO cx_root.
-DATA rf_ztct                 TYPE REF TO lcl_ztct.
+DATA rf_root                 TYPE REF TO cx_root ##NEEDED.
+DATA rf_ztct                 TYPE REF TO lcl_ztct ##NEEDED.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_eventhandler_ztct DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_eventhandler_ztct DEFINITION FRIENDS lcl_ztct.
+CLASS lcl_eventhandler_ztct DEFINITION FINAL FRIENDS lcl_ztct.
 
   PUBLIC SECTION.
     CLASS-DATA:
@@ -134,13 +127,12 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 *       CLASS lcl_ztct DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
+CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
 
   PUBLIC SECTION.
 
     TYPES ra_trkorr                  TYPE RANGE OF trkorr.
     TYPES ra_excluded_objects        TYPE RANGE OF trobj_name.
-    TYPES ra_date                    TYPE RANGE OF as4date.
     DATA  ls_excluded_objects        LIKE LINE OF  ta_excluded_objects.
     TYPES: BEGIN OF ty_request_details,
              trkorr         TYPE trkorr,
@@ -204,7 +196,6 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     DATA st_steps                   TYPE  ctslg_step.
     DATA st_actions                 TYPE  ctslg_action.
     DATA tp_tabkey                  TYPE  trobj_name.
-    DATA tp_lines                   TYPE  i.
     DATA tp_tab                     TYPE  char1
                                     VALUE cl_abap_char_utilities=>horizontal_tab.
     DATA lp_save_restriction        TYPE  salv_de_layout_restriction.
@@ -221,14 +212,12 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
                                         RETURNING VALUE(re_tp_prefix) TYPE char5.
     METHODS get_filename                EXPORTING ex_file                    TYPE string.
     METHODS set_check_flag              IMPORTING im_check_flag              TYPE abap_bool OPTIONAL.
-    METHODS set_check_ddic              IMPORTING im_check_ddic              TYPE abap_bool OPTIONAL.
     METHODS set_check_tabkeys           IMPORTING im_check_tabkeys           TYPE abap_bool OPTIONAL.
     METHODS set_clear_checked           IMPORTING im_clear_checked           TYPE abap_bool OPTIONAL.
     METHODS set_buffer_chk              IMPORTING im_buffer_chk              TYPE abap_bool OPTIONAL.
     METHODS set_buffer_remove_tp        IMPORTING im_buffer_remove_tp        TYPE abap_bool OPTIONAL.
     METHODS set_trkorr_range            IMPORTING im_trkorr_range            TYPE ra_trkorr OPTIONAL.
     METHODS set_project_range           IMPORTING im_project_range           TYPE ra_trkorr OPTIONAL.
-    METHODS set_date_range              IMPORTING im_date_range              TYPE ra_date OPTIONAL.
     METHODS set_excluded_objects        IMPORTING im_excluded_objects        TYPE ra_excluded_objects OPTIONAL.
     METHODS set_search_string           IMPORTING im_search_string           TYPE as4text OPTIONAL.
     METHODS set_user_layout             IMPORTING im_user_layout             TYPE abap_bool OPTIONAL.
@@ -262,8 +251,6 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
            END OF ty_ddic_e071.
     TYPES tt_ddic_e071 TYPE STANDARD TABLE OF ty_ddic_e071.
 
-    DATA  ta_ddic_e071 TYPE tt_ddic_e071.
-
     CONSTANTS:
 *     ICON_LED_RED
       co_error   TYPE icon_d         VALUE '@F1@',
@@ -288,8 +275,6 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
 *     ICON_LED_INACTIVE
       co_inact   TYPE icon_d         VALUE '@BZ@'.
     CONSTANTS:
-*     ICON_LED_GREEN
-      co_okay_rank    TYPE i         VALUE 0,
 *     ICON_FAILURE
       co_alert0_rank  TYPE i         VALUE 25,
 *     ICON_FAILURE
@@ -299,13 +284,9 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
 *     ICON_FAILURE
       co_alert3_rank  TYPE i         VALUE 28,
 *     ICON_HINT
-      co_hint1_rank   TYPE i         VALUE 10,
-*     ICON_HINT
       co_hint2_rank   TYPE i         VALUE 12,
 *     ICON_HINT
       co_hint3_rank   TYPE i         VALUE 14,
-*     ICON_HINT
-      co_hint4_rank   TYPE i         VALUE 16,
 *     ICON_INFORMATION
       co_info_rank    TYPE i         VALUE 20,
 *     ICON_LED_YELLOW
@@ -356,7 +337,6 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     DATA  buffer_remove_tp           TYPE abap_bool.
     DATA  trkorr_range               TYPE ra_trkorr.
     DATA  project_range              TYPE ra_trkorr.
-    DATA  date_range                 TYPE ra_date.
     DATA  excluded_objects           TYPE ra_excluded_objects.
     DATA  search_string              TYPE as4text.
     DATA  user_layout                TYPE abap_bool.
@@ -366,54 +346,52 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
     DATA  dev_system                 TYPE sysname.
     DATA  qas_system                 TYPE sysname.
     DATA  prd_system                 TYPE sysname.
-    DATA  tooltips                   TYPE REF TO cl_salv_tooltips.
+    DATA  systems_range              TYPE RANGE OF tmscsys-sysnam.
     DATA  building_conflict_popup    TYPE flag.
 
     METHODS refresh_import_queues.
-    METHODS handle_error                IMPORTING rf_oref                    TYPE REF TO cx_root.
+    METHODS handle_error                IMPORTING rf_oref TYPE REF TO cx_root.
     METHODS flag_for_process            IMPORTING rows TYPE salv_t_row
                                                   cell TYPE salv_s_cell.
-    METHODS get_main_transports         IMPORTING im_trkorr_range            TYPE gtabkey_trkorrt.
-    METHODS get_tp_info                 IMPORTING im_trkorr      TYPE trkorr
-                                                  im_obj_name    TYPE trobj_name
+    METHODS get_main_transports         IMPORTING im_trkorr_range TYPE gtabkey_trkorrt.
+    METHODS get_tp_info                 IMPORTING im_trkorr TYPE trkorr
+                                                  im_obj_name TYPE trobj_name
                                         RETURNING VALUE(re_line) TYPE ty_request_details.
     METHODS get_added_objects           IMPORTING im_to_add TYPE ra_trkorr
                                         EXPORTING ex_to_add TYPE tt_request_details.
     METHODS add_to_list                 IMPORTING im_to_add TYPE tt_request_details
-                                        EXPORTING ex_main   TYPE tt_request_details.
+                                        EXPORTING ex_main TYPE tt_request_details.
     METHODS build_conflict_popup        IMPORTING rows TYPE salv_t_row
                                                   cell TYPE salv_s_cell.
-    METHODS delete_tp_from_list         IMPORTING rows TYPE salv_t_row
-                                                  cell TYPE salv_s_cell.
-    METHODS flag_same_objects           EXPORTING ex_main_list               TYPE tt_request_details.
+    METHODS delete_tp_from_list         IMPORTING rows TYPE salv_t_row.
+    METHODS flag_same_objects           EXPORTING ex_main_list TYPE tt_request_details.
     METHODS mark_all_tp_records         IMPORTING im_cell TYPE salv_s_cell
                                         CHANGING  im_rows TYPE salv_t_row.
-    METHODS main_to_tab_delimited       IMPORTING im_main_list     TYPE tt_request_details
+    METHODS main_to_tab_delimited       IMPORTING im_main_list TYPE tt_request_details
                                         EXPORTING ex_tab_delimited TYPE table_of_strings.
-    METHODS tab_delimited_to_main       IMPORTING im_tab_delimited TYPE table_of_strings
-                                        EXPORTING ex_main_list     TYPE tt_request_details.
-    METHODS display_transport           IMPORTING im_trkorr                  TYPE trkorr.
-    METHODS display_user                IMPORTING im_user                    TYPE syuname.
-    METHODS display_docu                IMPORTING im_trkorr                  TYPE trkorr.
-    METHODS check_if_in_list            IMPORTING im_line  TYPE ty_request_details
+    METHODS tab_delimited_to_main       IMPORTING im_tab_delimited TYPE table_of_strings.
+    METHODS display_transport           IMPORTING im_trkorr TYPE trkorr.
+    METHODS display_user                IMPORTING im_user TYPE syuname.
+    METHODS display_docu                IMPORTING im_trkorr TYPE trkorr.
+    METHODS check_if_in_list            IMPORTING im_line TYPE ty_request_details
                                                   im_tabix TYPE sytabix
-                                        EXPORTING ex_line  TYPE ty_request_details.
+                                        EXPORTING ex_line TYPE ty_request_details.
     METHODS check_documentation         IMPORTING im_trkorr TYPE trkorr
-                                        CHANGING  ch_table  TYPE tt_request_details.
+                                        CHANGING  ch_table TYPE tt_request_details.
     METHODS clear_flags.
-    METHODS column_settings             IMPORTING im_column_ref       TYPE salv_t_column_ref
+    METHODS column_settings             IMPORTING im_column_ref TYPE salv_t_column_ref
                                                   im_rf_columns_table TYPE REF TO cl_salv_columns_table
-                                                  im_table            TYPE REF TO cl_salv_table.
-    METHODS is_empty_column             IMPORTING im_column          TYPE lvc_fname
-                                                  im_table           TYPE tt_request_details
+                                                  im_table TYPE REF TO cl_salv_table.
+    METHODS is_empty_column             IMPORTING im_column TYPE lvc_fname
+                                                  im_table TYPE tt_request_details
                                         RETURNING VALUE(re_is_empty) TYPE abap_bool.
-    METHODS display_excel               IMPORTING im_table                   TYPE tt_request_details.
-    METHODS set_tp_prefix               IMPORTING im_dev                     TYPE sysname OPTIONAL.
-    METHODS top_of_page                 EXPORTING ex_form_element            TYPE REF TO cl_salv_form_element.
-    METHODS check_if_same_object        IMPORTING im_line        TYPE ty_request_details
+    METHODS display_excel               IMPORTING im_table TYPE tt_request_details.
+    METHODS set_tp_prefix               IMPORTING im_dev TYPE sysname OPTIONAL.
+    METHODS top_of_page                 EXPORTING ex_form_element TYPE REF TO cl_salv_form_element.
+    METHODS check_if_same_object        IMPORTING im_line TYPE ty_request_details
                                                   im_newer_older TYPE ty_request_details
-                                        EXPORTING ex_tabkey      TYPE trobj_name
-                                                  ex_return      TYPE c.
+                                        EXPORTING ex_tabkey TYPE trobj_name
+                                                  ex_return TYPE c.
     METHODS sort_main_list.
     METHODS determine_warning_text      IMPORTING im_highest_rank TYPE numc4
                                         EXPORTING ex_highest_text TYPE text74.
@@ -421,40 +399,38 @@ CLASS lcl_ztct DEFINITION FRIENDS lcl_eventhandler_ztct.
                                         EXPORTING ex_newer TYPE tt_request_details
                                                   ex_older TYPE tt_request_details.
     METHODS progress_indicator          IMPORTING im_counter TYPE sytabix
-                                                  im_object  TYPE trobj_name
-                                                  im_total   TYPE numc10
-                                                  im_text    TYPE itex132
-                                                  im_flag    TYPE c.
+                                                  im_object TYPE trobj_name
+                                                  im_total TYPE numc10
+                                                  im_text TYPE itex132
+                                                  im_flag TYPE c.
     METHODS alv_xls_init                EXPORTING ex_rf_table TYPE REF TO cl_salv_table
-                                        CHANGING  ch_table    TYPE table.
+                                        CHANGING  ch_table TYPE STANDARD TABLE.
     METHODS alv_xls_output.
     METHODS prepare_ddic_check.
     METHODS set_ddic_objects.
-    METHODS do_ddic_check               CHANGING  ch_main_list               TYPE tt_request_details.
+    METHODS do_ddic_check               CHANGING  ch_main_list TYPE tt_request_details.
     METHODS set_properties_conflicts    IMPORTING im_table TYPE tt_request_details
                                         EXPORTING ex_xend  TYPE i.
-    METHODS get_data                    IMPORTING im_trkorr_range            TYPE gtabkey_trkorrt.
-    METHODS check_for_conflicts         CHANGING  ch_main_list               TYPE tt_request_details.
+    METHODS get_data                    IMPORTING im_trkorr_range TYPE gtabkey_trkorrt.
+    METHODS check_for_conflicts         CHANGING  ch_main_list TYPE tt_request_details.
     METHODS build_table_keys_popup.
-    METHODS add_table_keys_to_list      EXPORTING table                      TYPE tt_request_details.
-    METHODS get_additional_tp_info      CHANGING  ch_table                   TYPE tt_request_details.
-    METHODS gui_upload                  IMPORTING im_filename      TYPE string
-                                        EXPORTING ex_tab_delimited TYPE table_of_strings
-                                                  ex_cancelled     TYPE abap_bool.
-    METHODS determine_col_width         IMPORTING im_field    TYPE any
+    METHODS add_table_keys_to_list      CHANGING table TYPE tt_request_details.
+    METHODS get_additional_tp_info      CHANGING  ch_table TYPE tt_request_details.
+    METHODS gui_upload                  IMPORTING im_filename TYPE string
+                                        EXPORTING ex_cancelled TYPE abap_bool.
+    METHODS determine_col_width         IMPORTING im_field TYPE any
                                         CHANGING  ex_colwidth TYPE lvc_outlen.
-    METHODS check_colwidth              IMPORTING im_name            TYPE abap_compname
-                                                  im_colwidth        TYPE lvc_outlen
+    METHODS check_colwidth              IMPORTING im_name TYPE abap_compname
+                                                  im_colwidth TYPE lvc_outlen
                                         RETURNING VALUE(re_colwidth) TYPE lvc_outlen.
     METHODS remove_tp_in_prd.
-    METHODS version_check.
     METHODS alv_init.
     METHODS set_color.
-    METHODS alv_set_properties          IMPORTING im_table                   TYPE REF TO cl_salv_table.
-    METHODS alv_set_tooltips            IMPORTING im_table                   TYPE REF TO cl_salv_table.
+    METHODS alv_set_properties          IMPORTING im_table TYPE REF TO cl_salv_table.
+    METHODS alv_set_tooltips            IMPORTING im_table TYPE REF TO cl_salv_table.
     METHODS alv_output.
     METHODS set_where_used.
-    METHODS get_import_datetime_qas     IMPORTING im_trkorr  TYPE trkorr
+    METHODS get_import_datetime_qas     IMPORTING im_trkorr TYPE trkorr
                                         EXPORTING ex_as4time TYPE as4time
                                                   ex_as4date TYPE as4date
                                                   ex_return  TYPE sysubrc.
@@ -513,7 +489,7 @@ SELECTION-SCREEN: BEGIN OF LINE.
 * C31 - Route
 SELECTION-SCREEN: COMMENT 1(20) tp_c31.
 SELECTION-SCREEN: POSITION POS_LOW.
-PARAMETERS:       pa_dev TYPE sysname DEFAULT 'DEV'.
+PARAMETERS:       pa_dev TYPE sysname DEFAULT 'DEV' ##SEL_WRONG.
 * C32 - -->
 SELECTION-SCREEN: COMMENT 45(3) tp_c32.
 SELECTION-SCREEN: POSITION 51.
@@ -537,7 +513,7 @@ SELECTION-SCREEN: BEGIN OF BLOCK box4 WITH FRAME TITLE tp_b40.
 *SELECTION-SCREEN: END OF LINE.
 *SELECTION-SCREEN: SKIP 1.
 SELECTION-SCREEN: BEGIN OF LINE.
-PARAMETERS:       pa_noprd AS CHECKBOX DEFAULT 'X'.
+PARAMETERS:       pa_noprd AS CHECKBOX DEFAULT 'X' ##SEL_WRONG.
 * C40 - Do not select transports already in production
 SELECTION-SCREEN: COMMENT 4(63) tp_c40.
 SELECTION-SCREEN: END OF LINE.
@@ -549,10 +525,10 @@ SELECTION-SCREEN: COMMENT 4(63) tp_c41.
 SELECTION-SCREEN: END OF LINE.
 
 SELECTION-SCREEN: BEGIN OF LINE.
-PARAMETERS:       pa_buff AS CHECKBOX DEFAULT 'X' USER-COMMAND buf.
+PARAMETERS:       pa_buff AS CHECKBOX DEFAULT 'X' USER-COMMAND buf ##SEL_WRONG.
 * C42 - Check transport buffer
 SELECTION-SCREEN: COMMENT 4(22) tp_c42.
-PARAMETERS:       pa_buffd AS CHECKBOX DEFAULT 'X' MODIF ID buf.
+PARAMETERS:       pa_buffd AS CHECKBOX DEFAULT 'X' MODIF ID buf ##SEL_WRONG.
 SELECTION-SCREEN: COMMENT 29(35) tp_c45 MODIF ID buf.
 SELECTION-SCREEN: PUSHBUTTON (4) i_buff USER-COMMAND buff
                                           MODIF ID buf
@@ -599,7 +575,7 @@ INITIALIZATION.
   IF rf_ztct IS NOT BOUND.
     TRY .
         CREATE OBJECT rf_ztct.
-      CATCH cx_root INTO rf_root.
+      CATCH cx_root INTO rf_root ##CATCH_ALL.
         tp_msg = rf_root->get_text( ).
         CONCATENATE 'ERROR:'(038) tp_msg INTO tp_msg SEPARATED BY space.
         MESSAGE tp_msg TYPE 'E'.
@@ -756,29 +732,32 @@ AT SELECTION-SCREEN.
   ENDCASE.
 
 AT SELECTION-SCREEN ON pa_dev.
-  SELECT SINGLE * FROM tcesyst INTO st_tcesyst WHERE sysname = pa_dev.
+  SELECT SINGLE * FROM tcesyst INTO st_tcesyst
+                  WHERE sysname = pa_dev ##WARN_OK.
   IF sy-subrc <> 0.
     MESSAGE e000(db) DISPLAY LIKE 'E'
-                  WITH 'System' pa_dev 'does not exist...'.
+                     WITH 'System'(057) pa_dev 'does not exist...'(058).
   ENDIF.
 
 AT SELECTION-SCREEN ON pa_qas.
-  SELECT SINGLE * FROM tcesyst INTO st_tcesyst WHERE sysname = pa_qas.
+  SELECT SINGLE * FROM tcesyst INTO st_tcesyst
+                  WHERE sysname = pa_qas ##WARN_OK.
   IF sy-subrc <> 0.
     MESSAGE e000(db) DISPLAY LIKE 'E'
-                  WITH 'System' pa_qas 'does not exist...'.
+                     WITH 'System'(057) pa_qas 'does not exist...'(058).
   ENDIF.
 
 AT SELECTION-SCREEN ON pa_prd.
-  SELECT SINGLE * FROM tcesyst INTO st_tcesyst WHERE sysname = pa_prd.
+  SELECT SINGLE * FROM tcesyst INTO st_tcesyst
+                  WHERE sysname = pa_prd ##WARN_OK.
   IF sy-subrc <> 0.
     MESSAGE e000(db) DISPLAY LIKE 'E'
-                  WITH 'System' pa_prd 'does not exist...'.
+                     WITH 'System'(057) pa_prd 'does not exist...'(058).
   ENDIF.
 
 AT SELECTION-SCREEN OUTPUT.
 * This commented out code can be used to add a function on the toolbar:
-  st_smp_dyntxt-text       = 'Information'(027).
+  st_smp_dyntxt-text       = 'Information'(027) ##TEXT_DUP.
   st_smp_dyntxt-icon_id    = rf_ztct->co_info.
   st_smp_dyntxt-icon_text  = 'Info'(024).
   st_smp_dyntxt-quickinfo  = 'General Info'(028).
@@ -860,16 +839,15 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     DATA st_transports_to_add LIKE LINE OF ra_transports_to_add.
     DATA ta_excluded_objects  TYPE RANGE OF trobj_name.
     DATA ls_excluded_objects  LIKE LINE  OF ta_excluded_objects.
-* Global data declarations:
+*   Global data declarations:
     DATA lp_title            TYPE string.
     DATA lp_filename         TYPE string.
-    DATA lp_file             TYPE localfile.
     DATA lt_fields           TYPE lty_field.
     DATA ls_fields           TYPE sval.
     DATA lp_tabix            TYPE sytabix.
     DATA lr_selections       TYPE REF TO cl_salv_selections.
     DATA lp_localfile        TYPE string.
-    DATA lp_filelength       TYPE i.
+    DATA lp_filelength       TYPE i ##NEEDED.
     DATA ls_row              TYPE int4.
     DATA lp_row_found        TYPE abap_bool.
     DATA lp_return           TYPE c.
@@ -878,7 +856,6 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     DATA ls_cell             TYPE salv_s_cell.
     DATA lp_path             TYPE string.
     DATA lp_fullpath         TYPE string.
-    DATA lp_result           TYPE i.
     DATA lp_desktop          TYPE string.
     DATA lp_timestamp        TYPE tzntstmps.
     DATA lp_default_filename TYPE string.
@@ -889,393 +866,384 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
 
 *   Which popup are we displaying? Conflicts or Table keys?
     IF rf_conflicts IS BOUND.
-      ASSIGN rf_conflicts TO <rf_ref_table>.
+      ASSIGN rf_conflicts TO <rf_ref_table>.              "#EC CI_SUBRC
     ELSEIF rf_table_keys IS BOUND.
-      ASSIGN rf_table_keys TO <rf_ref_table>.
+      ASSIGN rf_table_keys TO <rf_ref_table>.             "#EC CI_SUBRC
     ELSE.
-      ASSIGN rf_table TO <rf_ref_table>.
+      ASSIGN rf_table TO <rf_ref_table>.                  "#EC CI_SUBRC
     ENDIF.
-
-*   Get current row
-    IF e_salv_function = 'GOON' OR e_salv_function = 'ABR'.
+    IF <rf_ref_table> IS ASSIGNED.
+*     Get current row
       lr_selections = <rf_ref_table>->get_selections(  ).
-      lt_rows = lr_selections->get_selected_rows( ).
-      ls_cell = lr_selections->get_current_cell( ).
-    ELSE.
-      lr_selections = <rf_ref_table>->get_selections(  ).
-      lt_rows = lr_selections->get_selected_rows( ).
-      ls_cell = lr_selections->get_current_cell( ).
-      READ TABLE rf_ztct->main_list INTO  rf_ztct->main_list_line
-                                    INDEX ls_cell-row.
-    ENDIF.
-    CASE e_salv_function.
-      WHEN 'GOON'.
-        IF rf_conflicts IS BOUND.
-          rf_conflicts->close_screen( ).
-*         Move the conflicts to a range. The transports in this range will
-*         be added to the main list:
-          FREE ra_transports_to_add.
-          rf_ztct->set_building_conflict_popup( abap_false ).
-          CLEAR: st_transports_to_add.
-          st_transports_to_add-sign = 'I'.
-          st_transports_to_add-option = 'EQ'.
-*         If row(s) are selected, use the table
-          LOOP AT lt_rows INTO ls_row.
-            READ TABLE rf_ztct->conflicts INTO  rf_ztct->conflict_line
-                                          INDEX ls_row.
-            st_transports_to_add-low = rf_ztct->conflict_line-trkorr.
-            APPEND st_transports_to_add TO ra_transports_to_add.
-          ENDLOOP.
-*         Rows MUST be selected, take the current cell instead
-          IF lt_rows[] IS INITIAL.
-            MESSAGE i000(db) WITH 'No rows selected: No transports will be added'(m06).
-          ENDIF.
-          IF ra_transports_to_add[] IS NOT INITIAL.
-            rf_ztct->get_added_objects( EXPORTING im_to_add = ra_transports_to_add
-                                        IMPORTING ex_to_add = rf_ztct->add_to_main ).
-            rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
-            rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
-                                  IMPORTING ex_main   = rf_ztct->main_list ).
-*         After the transports have been added, check if there are added
-*         transports that are already in prd. If so, make them visible by
-*         changing the prd icon to co_scrap.
-            LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
-                                       WHERE prd    = rf_ztct->co_okay
-                                       AND   trkorr IN ra_transports_to_add.
-              rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
-              MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
+      lt_rows       = lr_selections->get_selected_rows( ).
+      ls_cell       = lr_selections->get_current_cell( ).
+      IF e_salv_function <> 'GOON' AND e_salv_function <> 'ABR'.
+        READ TABLE rf_ztct->main_list INTO  rf_ztct->main_list_line
+                                      INDEX ls_cell-row.  "#EC CI_SUBRC
+      ENDIF.
+      CASE e_salv_function.
+        WHEN 'GOON'.
+          IF rf_conflicts IS BOUND.
+            rf_conflicts->close_screen( ).
+*           Move the conflicts to a range. The transports in this range will
+*           be added to the main list:
+            FREE ra_transports_to_add.
+            rf_ztct->set_building_conflict_popup( abap_false ).
+            CLEAR: st_transports_to_add.
+            st_transports_to_add-sign = 'I'.
+            st_transports_to_add-option = 'EQ'.
+*           If row(s) are selected, use the table
+            LOOP AT lt_rows INTO ls_row.
+              READ TABLE rf_ztct->conflicts INTO  rf_ztct->conflict_line
+                                            INDEX ls_row.
+              st_transports_to_add-low = rf_ztct->conflict_line-trkorr.
+              APPEND st_transports_to_add TO ra_transports_to_add.
             ENDLOOP.
-*         After the transports have been added, we need to check again
-            rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
-            rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-            rf_ztct->refresh_alv( ).
-          ENDIF.
-          FREE rf_conflicts.
-        ELSE.
+*           Rows MUST be selected, take the current cell instead
+            IF lt_rows[] IS INITIAL.
+              MESSAGE i000(db) WITH 'No rows selected: No transports will be added'(m06).
+            ENDIF.
+            IF ra_transports_to_add[] IS NOT INITIAL.
+              rf_ztct->get_added_objects( EXPORTING im_to_add = ra_transports_to_add
+                                          IMPORTING ex_to_add = rf_ztct->add_to_main ).
+              rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
+              rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
+                                    IMPORTING ex_main   = rf_ztct->main_list ).
+*             After the transports have been added, check if there are added
+*             transports that are already in prd. If so, make them visible by
+*             changing the prd icon to co_scrap.
+              LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
+                                         WHERE prd    = rf_ztct->co_okay
+                                         AND   trkorr IN ra_transports_to_add.
+                rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
+                MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
+              ENDLOOP.
+*             After the transports have been added, we need to check again
+              rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
+              rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
+              rf_ztct->refresh_alv( ).
+            ENDIF.
+            FREE rf_conflicts.
+          ELSE.
 * Not in the Conflicts Popup, but in the Table Key popup. Based on the user decision,
 * the tables that do NOT have to be checked, are added to the excluded object list.
 * If no tables are selected, all tables are excluded from the check.
-*         If row(s) are selected, determine the tables to be check from the selected
-*         rows. All rows that weren't selected will be added to the excluded object list.
-          rf_table_keys->close_screen( ).
-          IF lt_rows[] IS NOT INITIAL.
-            LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
-              READ TABLE lt_rows WITH KEY table_line = sy-tabix TRANSPORTING NO FIELDS.
-              IF sy-subrc <> 0.
+*           If row(s) are selected, determine the tables to be check from the selected
+*           rows. All rows that weren't selected will be added to the excluded object list.
+            rf_table_keys->close_screen( ).
+            IF lt_rows[] IS NOT INITIAL.
+              LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
+                READ TABLE lt_rows WITH KEY table_line = sy-tabix TRANSPORTING NO FIELDS.
+                IF sy-subrc <> 0.
+                  ls_excluded_objects-sign   = 'E'.
+                  ls_excluded_objects-option = 'EQ'.
+                  ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
+                  APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
+                ENDIF.
+              ENDLOOP.
+*           If user pressed cancel, then add all tables to the excluded object list
+            ELSE.
+              LOOP AT rf_ztct->table_keys INTO  rf_ztct->table_keys_line.
                 ls_excluded_objects-sign   = 'E'.
                 ls_excluded_objects-option = 'EQ'.
                 ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
                 APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
-              ENDIF.
-            ENDLOOP.
-*         If user pressed cancel, then add all tables to the excluded object list
-          ELSE.
+              ENDLOOP.
+              MESSAGE i000(db) WITH 'No rows selected: Table keys will ' &
+                                    'not be checked'(m07).
+              rf_ztct->check_tabkeys = abap_false.
+            ENDIF.
+            FREE rf_table_keys.
+          ENDIF.
+        WHEN 'ABR'.
+          IF rf_table_keys IS BOUND.
+            rf_table_keys->close_screen( ).
+*           If user pressed cancel (Add all tables, do not check any)
             LOOP AT rf_ztct->table_keys INTO  rf_ztct->table_keys_line.
               ls_excluded_objects-sign   = 'E'.
               ls_excluded_objects-option = 'EQ'.
               ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
-              APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
+              APPEND ls_excluded_objects TO ta_excluded_objects.
             ENDLOOP.
-            MESSAGE i000(db) WITH 'No rows selected: Table keys will ' &
-                                  'not be checked'(m07).
+            MESSAGE i000(db) WITH 'Cancelled: Table keys will ' &
+                                  'not be checked'(m09).
+            FREE rf_table_keys.
             rf_ztct->check_tabkeys = abap_false.
+          ELSE.
+            rf_conflicts->close_screen( ).
+            FREE rf_conflicts.
           ENDIF.
-          FREE rf_table_keys.
-        ENDIF.
-      WHEN 'ABR'.
-        IF rf_table_keys IS BOUND.
-          rf_table_keys->close_screen( ).
-*         If user pressed cancel (Add all tables, do not check any)
-          LOOP AT rf_ztct->table_keys INTO  rf_ztct->table_keys_line.
-            ls_excluded_objects-sign   = 'E'.
-            ls_excluded_objects-option = 'EQ'.
-            ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
-            APPEND ls_excluded_objects TO ta_excluded_objects.
-          ENDLOOP.
-          MESSAGE i000(db) WITH 'Cancelled: Table keys will ' &
-                                'not be checked'(m09).
-          FREE rf_table_keys.
-          rf_ztct->check_tabkeys = abap_false.
-        ELSE.
-          rf_conflicts->close_screen( ).
-          FREE rf_conflicts.
-        ENDIF.
-      WHEN 'RECHECK'.
-        rf_ztct->set_building_conflict_popup( abap_false ).
-        rf_ztct->refresh_import_queues( ).
-        rf_ztct->flag_for_process( rows = lt_rows
-                                   cell = ls_cell ).
-        rf_ztct->add_table_keys_to_list( IMPORTING table = rf_ztct->main_list ).
-        rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->main_list ).
-        rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
-        rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-        rf_ztct->refresh_alv( ).
-      WHEN 'DDIC'.
-        IF rf_ztct->where_used[] IS INITIAL.
-          lp_question = 'This will take approx. 5-15 minutes... Continue?'(041).
-        ELSE.
-          lp_question = 'This has already been done. Do again?'(042).
-        ENDIF.
+        WHEN 'RECHECK'.
+          rf_ztct->set_building_conflict_popup( abap_false ).
+          rf_ztct->refresh_import_queues( ).
+          rf_ztct->flag_for_process( rows = lt_rows
+                                     cell = ls_cell ).
+          rf_ztct->add_table_keys_to_list( CHANGING table = rf_ztct->main_list ).
+          rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->main_list ).
+          rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
+          rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
+          rf_ztct->refresh_alv( ).
+        WHEN 'DDIC'.
+          IF rf_ztct->where_used[] IS INITIAL.
+            lp_question = 'This will take approx. 5-15 minutes... Continue?'(041).
+          ELSE.
+            lp_question = 'This has already been done. Do again?'(042).
+          ENDIF.
 
-        CALL FUNCTION 'POPUP_TO_CONFIRM'
-          EXPORTING
-            titlebar              = 'Runtime Alert'(039)
-            text_question         = lp_question
-            text_button_1         = 'Yes'(037)
-            icon_button_1         = 'ICON_OKAY'
-            text_button_2         = 'No'(043)
-            icon_button_2         = 'ICON_CANCEL'
-            default_button        = '2'
-            display_cancel_button = ' '
-*           START_COLUMN          = 25
-*           START_ROW             = 6
-          IMPORTING
-            answer                = lp_answer
-          EXCEPTIONS
-            text_not_found        = 0
-            OTHERS                = 0.
-        IF sy-subrc <> 0.
-* Implement suitable error handling here
-        ENDIF.
-        IF lp_answer = '1'.
-          rf_ztct->check_ddic = abap_true.
-          rf_ztct->set_ddic_objects( ).
-          rf_ztct->set_where_used( ).
-        ENDIF.
-        rf_ztct->do_ddic_check( CHANGING ch_main_list = rf_ztct->main_list ).
-        rf_ztct->refresh_alv( ).
-        MESSAGE i000(db) WITH 'Data Dictionary check finished...'(m15).
-      WHEN '&ADD'.
-        rf_ztct->set_building_conflict_popup(  ).
-*       Here, we want to give the option to the user to select the
-*       transports to be added. Display a popup with the option to select the
-*       transports to be added with checkboxes.
-        rf_ztct->flag_for_process( rows = lt_rows
-                                   cell = ls_cell ).
-        rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
-        rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-        rf_ztct->build_conflict_popup( rows = lt_rows
-                                       cell = ls_cell ).
-      WHEN '&ADD_TP'.
-        FREE lt_fields.
-        CLEAR   ls_fields.
-        ls_fields-tabname   = 'E070'.
-        ls_fields-fieldname = 'TRKORR'.
-        APPEND ls_fields TO lt_fields.
-        CALL FUNCTION 'POPUP_GET_VALUES_DB_CHECKED'
-          EXPORTING
-            popup_title     = 'Selected transports'(t01)
-          IMPORTING
-            returncode      = lp_return
-          TABLES
-            fields          = lt_fields
-          EXCEPTIONS
-            error_in_fields = 1
-            OTHERS          = 2.
-        CASE sy-subrc.
-          WHEN 1.
-            MESSAGE e000(db) WITH 'ERROR: ERROR_IN_FIELDS'(m08).
-          WHEN 2.
-            MESSAGE e000(db) WITH 'Error occurred'(029).
-        ENDCASE.
-*       Exit if cancelled:
-        CHECK lp_return <> 'A'.
-*       Move the conflicts to a range. The transports in this range will
-*       be added to the main list:
-        FREE  ra_transports_to_add.
-        CLEAR st_transports_to_add.
-        st_transports_to_add-sign = 'I'.
-        st_transports_to_add-option = 'EQ'.
-        READ TABLE lt_fields INTO ls_fields INDEX 1.
-        CHECK ls_fields-value IS NOT INITIAL.
-*       Is it already in the list?
-        READ TABLE rf_ztct->main_list WITH KEY trkorr = ls_fields-value(20)
-                                      TRANSPORTING NO FIELDS.
-        CHECK sy-subrc <> 0.
-*       Add transport number to the internal table to add:
-        st_transports_to_add-low = ls_fields-value.
-        APPEND st_transports_to_add TO ra_transports_to_add.
-        rf_ztct->get_added_objects( EXPORTING im_to_add = ra_transports_to_add
-                                    IMPORTING ex_to_add = rf_ztct->add_to_main ).
-        rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
-        rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
-                              IMPORTING ex_main   = rf_ztct->main_list ).
-*       After the transports have been added, check if there are added
-*       transports that are already in prd. If so, make them visible by
-*       changing the prd icon to co_scrap.
-        LOOP AT rf_ztct->main_list INTO  rf_ztct->main_list_line
-                                   WHERE prd    = rf_ztct->co_okay
-                                   AND   trkorr IN ra_transports_to_add.
-          rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
-          MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
-        ENDLOOP.
-*       Unfortunately, after the transports have been added, we need to
-*       check again...
-        rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
-        rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-        rf_ztct->refresh_alv( ).
-      WHEN '&ADD_FILE'.
-        rf_ztct->clear_flags( ).
-        rf_ztct->get_filename( IMPORTING ex_file = lp_localfile ).
-        MOVE lp_localfile TO lp_filename.
-        rf_ztct->gui_upload( EXPORTING im_filename      = lp_filename
-                             IMPORTING ex_tab_delimited = rf_ztct->tab_delimited ).
-        MOVE 'ZEV_TP_CHECKTOOL_ADD_FILE' TO tp_dokl_object.
-        rf_ztct->docu_call( im_object     = tp_dokl_object
-                            im_id         = 'TX'
-                            im_display    = abap_true
-                            im_displ_mode = '2').
-        rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-        rf_ztct->refresh_alv( ).
-      WHEN '&DEL'.
-*       Mark all records for the selected transport(s)
-        rf_ztct->clear_flags( ).
-        rf_ztct->mark_all_tp_records( EXPORTING im_cell = ls_cell
-                                      CHANGING  im_rows = lt_rows ).
-        rf_ztct->flag_for_process( rows = lt_rows
-                                   cell = ls_cell ).
-        rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
-        rf_ztct->delete_tp_from_list( rows = lt_rows
-                                      cell = ls_cell ).
-        rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-        rf_ztct->refresh_alv( ).
-      WHEN '&IMPORT'.
-*       Re-transport a request (transport already in production)
-        rf_ztct->clear_flags( ).
-        rf_ztct->flag_for_process( rows = lt_rows
-                                   cell = ls_cell ).
-        FREE  ra_transports_to_add.
-        CLEAR st_transports_to_add.
-        st_transports_to_add-sign   = 'I'.
-        st_transports_to_add-option = 'EQ'.
-        LOOP AT rf_ztct->main_list INTO  rf_ztct->main_list_line
-                                   WHERE flag = 'X'
-                                   AND   prd  = rf_ztct->co_okay.
-          st_transports_to_add-low = rf_ztct->main_list_line-trkorr.
+          CALL FUNCTION 'POPUP_TO_CONFIRM'
+            EXPORTING
+              titlebar              = 'Runtime Alert'(039)
+              text_question         = lp_question
+              text_button_1         = 'Yes'(037)
+              icon_button_1         = 'ICON_OKAY'
+              text_button_2         = 'No'(043)
+              icon_button_2         = 'ICON_CANCEL'
+              default_button        = '2'
+              display_cancel_button = ' '
+*             START_COLUMN          = 25
+*             START_ROW             = 6
+            IMPORTING
+              answer                = lp_answer
+            EXCEPTIONS
+              text_not_found        = 1
+              OTHERS                = 2.
+          IF sy-subrc <> 0 ##NEEDED.
+*           Implement suitable error handling here
+          ENDIF.
+          IF lp_answer = '1'.
+            rf_ztct->check_ddic = abap_true.
+            rf_ztct->set_ddic_objects( ).
+            rf_ztct->set_where_used( ).
+          ENDIF.
+          rf_ztct->do_ddic_check( CHANGING ch_main_list = rf_ztct->main_list ).
+          rf_ztct->refresh_alv( ).
+          MESSAGE i000(db) WITH 'Data Dictionary check finished...'(m15).
+        WHEN '&ADD'.
+          rf_ztct->set_building_conflict_popup(  ).
+*         Here, we want to give the option to the user to select the
+*         transports to be added. Display a popup with the option to select the
+*         transports to be added with checkboxes.
+          rf_ztct->flag_for_process( rows = lt_rows
+                                     cell = ls_cell ).
+          rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
+          rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
+          rf_ztct->build_conflict_popup( rows = lt_rows
+                                         cell = ls_cell ).
+        WHEN '&ADD_TP'.
+          FREE lt_fields.
+          CLEAR   ls_fields.
+          ls_fields-tabname   = 'E070'.
+          ls_fields-fieldname = 'TRKORR'.
+          APPEND ls_fields TO lt_fields.
+          CALL FUNCTION 'POPUP_GET_VALUES_DB_CHECKED'
+            EXPORTING
+              popup_title     = 'Selected transports'(t01)
+            IMPORTING
+              returncode      = lp_return
+            TABLES
+              fields          = lt_fields
+            EXCEPTIONS
+              error_in_fields = 1
+              OTHERS          = 2.
+          CASE sy-subrc.
+            WHEN 1.
+              MESSAGE e000(db) WITH 'ERROR: ERROR_IN_FIELDS'(m08).
+            WHEN 2.
+              MESSAGE e000(db) WITH 'Error occurred'(029).
+          ENDCASE.
+*         Exit if cancelled:
+          IF lp_return = 'A'.
+            RETURN.
+          ENDIF.
+*         Move the conflicts to a range. The transports in this range will
+*         be added to the main list:
+          FREE  ra_transports_to_add.
+          CLEAR st_transports_to_add.
+          st_transports_to_add-sign = 'I'.
+          st_transports_to_add-option = 'EQ'.
+          READ TABLE lt_fields INTO ls_fields INDEX 1.    "#EC CI_SUBRC
+          IF ls_fields-value IS INITIAL.
+            RETURN.
+          ENDIF.
+*         Is it already in the list?
+          READ TABLE rf_ztct->main_list WITH KEY trkorr = ls_fields-value(20)
+                                        TRANSPORTING NO FIELDS.
+          IF sy-subrc = 0.
+            RETURN.
+          ENDIF.
+*         Add transport number to the internal table to add:
+          st_transports_to_add-low = ls_fields-value.
           APPEND st_transports_to_add TO ra_transports_to_add.
-        ENDLOOP.
-        IF ra_transports_to_add IS INITIAL.
-          MESSAGE i000(db) WITH 'No records selected that can be re-imported'(m11).
-          EXIT.
-        ENDIF.
-        LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
-                                     WHERE trkorr IN ra_transports_to_add.
-          rf_ztct->main_list_line-flag = 'X'.
-          rf_ztct->main_list_line-prd  = rf_ztct->co_scrap.
-          MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
-        ENDLOOP.
-        rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
-        rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-        rf_ztct->refresh_alv( ).
-      WHEN '&DOC'.
-        MOVE rf_ztct->main_list_line-trkorr TO tp_dokl_object.
-        rf_ztct->docu_call( im_object = tp_dokl_object
-                            im_id     = 'TA' ).
-        rf_ztct->check_documentation( EXPORTING im_trkorr = rf_ztct->main_list_line-trkorr
-                                      CHANGING  ch_table  = rf_ztct->main_list ).
-      WHEN '&PREP_XLS'.
-        CHECK rf_table_xls IS NOT BOUND.
-        rf_ztct->display_excel( im_table = rf_ztct->main_list ).
-      WHEN '&SAVE'.
-*       Build header
-        rf_ztct->main_to_tab_delimited( EXPORTING im_main_list     = rf_ztct->main_list
-                                        IMPORTING ex_tab_delimited = rf_ztct->tab_delimited ).
-* Finding desktop
-        CALL METHOD cl_gui_frontend_services=>get_desktop_directory
-          CHANGING
-            desktop_directory    = lp_desktop
-          EXCEPTIONS
-            cntl_error           = 1
-            error_no_gui         = 2
-            not_supported_by_gui = 3
-            OTHERS               = 4.
-        IF sy-subrc <> 0.
-          MESSAGE e001(00) WITH
-              'Desktop not found'(008).
-        ENDIF.
+          rf_ztct->get_added_objects( EXPORTING im_to_add = ra_transports_to_add
+                                      IMPORTING ex_to_add = rf_ztct->add_to_main ).
+          rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
+          rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
+                                IMPORTING ex_main   = rf_ztct->main_list ).
+*         After the transports have been added, check if there are added
+*         transports that are already in prd. If so, make them visible by
+*         changing the prd icon to co_scrap.
+          LOOP AT rf_ztct->main_list INTO  rf_ztct->main_list_line
+                                     WHERE prd    = rf_ztct->co_okay
+                                     AND   trkorr IN ra_transports_to_add.
+            rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
+            MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
+          ENDLOOP.
+*         Unfortunately, after the transports have been added, we need to
+*         check again...
+          rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
+          rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
+          rf_ztct->refresh_alv( ).
+        WHEN '&ADD_FILE'.
+          rf_ztct->clear_flags( ).
+          rf_ztct->get_filename( IMPORTING ex_file = lp_localfile ).
+          MOVE lp_localfile TO lp_filename.
+          rf_ztct->gui_upload( EXPORTING im_filename      = lp_filename ).
+          MOVE 'ZEV_TP_CHECKTOOL_ADD_FILE' TO tp_dokl_object.
+          rf_ztct->docu_call( im_object     = tp_dokl_object
+                              im_id         = 'TX'
+                              im_display    = abap_true
+                              im_displ_mode = '2').
+          rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
+          rf_ztct->refresh_alv( ).
+        WHEN '&DEL'.
+*         Mark all records for the selected transport(s)
+          rf_ztct->clear_flags( ).
+          rf_ztct->mark_all_tp_records( EXPORTING im_cell = ls_cell
+                                        CHANGING  im_rows = lt_rows ).
+          rf_ztct->flag_for_process( rows = lt_rows
+                                     cell = ls_cell ).
+          rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
+          rf_ztct->delete_tp_from_list( rows = lt_rows ).
+          rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
+          rf_ztct->refresh_alv( ).
+        WHEN '&IMPORT'.
+*         Re-transport a request (transport already in production)
+          rf_ztct->clear_flags( ).
+          rf_ztct->flag_for_process( rows = lt_rows
+                                     cell = ls_cell ).
+          FREE  ra_transports_to_add.
+          CLEAR st_transports_to_add.
+          st_transports_to_add-sign   = 'I'.
+          st_transports_to_add-option = 'EQ'.
+          LOOP AT rf_ztct->main_list INTO  rf_ztct->main_list_line
+                                     WHERE flag = 'X'
+                                     AND   prd  = rf_ztct->co_okay.
+            st_transports_to_add-low = rf_ztct->main_list_line-trkorr.
+            APPEND st_transports_to_add TO ra_transports_to_add.
+          ENDLOOP.
+          IF ra_transports_to_add IS INITIAL.
+            MESSAGE i000(db) WITH 'No records selected that can be re-imported'(m11).
+            RETURN.
+          ENDIF.
+          LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
+                                       WHERE trkorr IN ra_transports_to_add.
+            rf_ztct->main_list_line-flag = 'X'.
+            rf_ztct->main_list_line-prd  = rf_ztct->co_scrap.
+            MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
+          ENDLOOP.
+          rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
+          rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
+          rf_ztct->refresh_alv( ).
+        WHEN '&DOC'.
+          MOVE rf_ztct->main_list_line-trkorr TO tp_dokl_object.
+          rf_ztct->docu_call( im_object = tp_dokl_object
+                              im_id     = 'TA' ).
+          rf_ztct->check_documentation( EXPORTING im_trkorr = rf_ztct->main_list_line-trkorr
+                                        CHANGING  ch_table  = rf_ztct->main_list ).
+        WHEN '&PREP_XLS'.
+          IF rf_table_xls IS BOUND.
+            RETURN.
+          ENDIF.
+          rf_ztct->display_excel( im_table = rf_ztct->main_list ).
+        WHEN '&SAVE'.
+*         Build header
+          rf_ztct->main_to_tab_delimited( EXPORTING im_main_list     = rf_ztct->main_list
+                                          IMPORTING ex_tab_delimited = rf_ztct->tab_delimited ).
+*         Finding desktop
+          CALL METHOD cl_gui_frontend_services=>get_desktop_directory
+            CHANGING
+              desktop_directory    = lp_desktop
+            EXCEPTIONS
+              cntl_error           = 1
+              error_no_gui         = 2
+              not_supported_by_gui = 3
+              OTHERS               = 4.
+          IF sy-subrc <> 0.
+            MESSAGE e001(00) WITH 'Desktop not found'(008) ##MG_MISSING.
+          ENDIF.
 
-        CONVERT DATE sy-datum TIME sy-uzeit
-          INTO TIME STAMP lp_timestamp TIME ZONE sy-zonlo.
-        lp_default_filename = lp_timestamp.
-        CONCATENATE 'ZTCT-' lp_default_filename INTO lp_default_filename.
+          CONVERT DATE sy-datum TIME sy-uzeit
+            INTO TIME STAMP lp_timestamp TIME ZONE sy-zonlo.
+          lp_default_filename = lp_timestamp.
+          CONCATENATE 'ZTCT-' lp_default_filename INTO lp_default_filename.
 
-        lp_title = 'Save Transportlist'(009).
-        CALL METHOD cl_gui_frontend_services=>file_save_dialog
-          EXPORTING
-            window_title         = lp_title
-            default_extension    = 'TXT'
-            default_file_name    = lp_default_filename
-            initial_directory    = lp_desktop
-          CHANGING
-            filename             = lp_filename
-            path                 = lp_path
-            fullpath             = lp_fullpath
-          EXCEPTIONS
-            cntl_error           = 1
-            error_no_gui         = 2
-            not_supported_by_gui = 3
-            OTHERS               = 4.
-        IF sy-subrc <> 0.
-          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-                     WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-        ENDIF.
-
-*       Display save dialog window
-        CALL METHOD cl_gui_frontend_services=>gui_download
-          EXPORTING
-            filename                = lp_fullpath
-            filetype                = 'ASC'
-          IMPORTING
-            filelength              = lp_filelength
-          CHANGING
-            data_tab                = rf_ztct->tab_delimited
-          EXCEPTIONS
-            file_write_error        = 1
-            no_batch                = 2
-            gui_refuse_filetransfer = 3
-            invalid_type            = 4
-            no_authority            = 5
-            unknown_error           = 6
-            header_not_allowed      = 7
-            separator_not_allowed   = 8
-            filesize_not_allowed    = 9
-            header_too_long         = 10
-            dp_error_create         = 11
-            dp_error_send           = 12
-            dp_error_write          = 13
-            unknown_dp_error        = 14
-            access_denied           = 15
-            dp_out_of_memory        = 16
-            disk_full               = 17
-            dp_timeout              = 18
-            file_not_found          = 19
-            dataprovider_exception  = 20
-            control_flush_error     = 21
-            not_supported_by_gui    = 22
-            error_no_gui            = 23
-            OTHERS                  = 24.
-        CASE sy-subrc.
-          WHEN 0.
-          WHEN OTHERS.
+          lp_title = 'Save Transportlist'(009).
+          CALL METHOD cl_gui_frontend_services=>file_save_dialog
+            EXPORTING
+              window_title         = lp_title
+              default_extension    = 'TXT'
+              default_file_name    = lp_default_filename
+              initial_directory    = lp_desktop
+            CHANGING
+              filename             = lp_filename
+              path                 = lp_path
+              fullpath             = lp_fullpath
+            EXCEPTIONS
+              cntl_error           = 1
+              error_no_gui         = 2
+              not_supported_by_gui = 3
+              OTHERS               = 4.
+          IF sy-subrc <> 0.
             MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
                        WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-        ENDCASE.
-      WHEN '&NCONF'.
-        CLEAR: lp_row_found.
-        lp_tabix = ls_cell-row + 1.
-        LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line FROM lp_tabix.
-          IF lp_row_found IS INITIAL AND
-            ( rf_ztct->main_list_line-warning_rank >= rf_ztct->co_info_rank ).
-            ls_cell-row = sy-tabix.
-            ls_cell-columnname = 'WARNING_LVL'.
-            lr_selections->set_current_cell( ls_cell ).
-            lp_row_found = abap_true.
           ENDIF.
-        ENDLOOP.
-        IF lp_row_found IS INITIAL.
-          LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line.
+
+*         Display save dialog window
+          CALL METHOD cl_gui_frontend_services=>gui_download
+            EXPORTING
+              filename                = lp_fullpath
+              filetype                = 'ASC'
+            IMPORTING
+              filelength              = lp_filelength
+            CHANGING
+              data_tab                = rf_ztct->tab_delimited
+            EXCEPTIONS
+              file_write_error        = 1
+              no_batch                = 2
+              gui_refuse_filetransfer = 3
+              invalid_type            = 4
+              no_authority            = 5
+              unknown_error           = 6
+              header_not_allowed      = 7
+              separator_not_allowed   = 8
+              filesize_not_allowed    = 9
+              header_too_long         = 10
+              dp_error_create         = 11
+              dp_error_send           = 12
+              dp_error_write          = 13
+              unknown_dp_error        = 14
+              access_denied           = 15
+              dp_out_of_memory        = 16
+              disk_full               = 17
+              dp_timeout              = 18
+              file_not_found          = 19
+              dataprovider_exception  = 20
+              control_flush_error     = 21
+              not_supported_by_gui    = 22
+              error_no_gui            = 23
+              OTHERS                  = 24.
+          CASE sy-subrc.
+            WHEN 0.
+            WHEN OTHERS.
+              MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                         WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+          ENDCASE.
+        WHEN '&NCONF'.
+          CLEAR: lp_row_found.
+          lp_tabix = ls_cell-row + 1.
+          LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line FROM lp_tabix.
             IF lp_row_found IS INITIAL AND
-             ( rf_ztct->main_list_line-warning_rank >= rf_ztct->co_info_rank ).
+              ( rf_ztct->main_list_line-warning_rank >= rf_ztct->co_info_rank ).
               ls_cell-row = sy-tabix.
               ls_cell-columnname = 'WARNING_LVL'.
               lr_selections->set_current_cell( ls_cell ).
@@ -1283,11 +1251,22 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
             ENDIF.
           ENDLOOP.
           IF lp_row_found IS INITIAL.
-            MESSAGE i000(db) WITH 'No next conflict found'(021).
+            LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line.
+              IF lp_row_found IS INITIAL AND
+               ( rf_ztct->main_list_line-warning_rank >= rf_ztct->co_info_rank ).
+                ls_cell-row = sy-tabix.
+                ls_cell-columnname = 'WARNING_LVL'.
+                lr_selections->set_current_cell( ls_cell ).
+                lp_row_found = abap_true.
+              ENDIF.
+            ENDLOOP.
+            IF lp_row_found IS INITIAL.
+              MESSAGE i000(db) WITH 'No next conflict found'(021).
+            ENDIF.
           ENDIF.
-        ENDIF.
-        rf_ztct->refresh_alv( ).
-    ENDCASE.
+          rf_ztct->refresh_alv( ).
+      ENDCASE.
+    ENDIF.
   ENDMETHOD.
 
   METHOD on_double_click.
@@ -1303,7 +1282,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
 *   Only display the details when the list is the MAIN list (Object level
 *   not when the list is on Header level (XLS)
     IF rf_table_xls IS BOUND.
-      EXIT.
+      RETURN.
     ELSE.
       READ TABLE rf_ztct->main_list     INTO rf_ztct->main_list_line INDEX row.
     ENDIF.
@@ -1330,15 +1309,6 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD on_double_click_popup.
-    DATA lr_selections TYPE REF TO cl_salv_selections.
-*   Selected rows
-    DATA lt_rows       TYPE salv_t_row.
-    DATA ls_cell       TYPE salv_s_cell.
-
-    lr_selections = rf_table->get_selections(  ).
-    lt_rows = lr_selections->get_selected_rows( ).
-    ls_cell = lr_selections->get_current_cell( ).
-
     READ TABLE rf_ztct->conflicts INTO rf_ztct->conflict_line INDEX row.
     CASE column.
       WHEN 'TRKORR'.
@@ -1356,7 +1326,6 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD on_link_click.
-    FIELD-SYMBOLS: <rf_ref_table> TYPE REF TO cl_salv_table.
 *   Which table are we displaying? Object level or Header level (XLS)?
     IF rf_table_xls IS BOUND.
       READ TABLE rf_ztct->main_list_xls INTO rf_ztct->main_list_line INDEX row.
@@ -1406,13 +1375,13 @@ CLASS lcl_ztct IMPLEMENTATION.
     lp_alert1_text = 'Transport not released'(w19).
     lp_alert2_text = 'Release started'(w20).
     lp_alert3_text = 'Transport not in Transport Buffer'(m12).
-    lp_hint1_text  = 'Newer version in Acceptance, but in list'(w22).
+    lp_hint1_text  = 'Newer version in test environment, but in list'(w22).
     lp_hint2_text  = 'Conflicts are dealt with'(w04).
     lp_hint3_text  = 'Couldn''t read log, but object in list'(w21).
     lp_hint4_text  = 'Overwrites version(s), newer version in list'(w11).
     lp_warn_text   = 'Previous transport not transported'(w17).
-    lp_error_text  = 'Newer version in production!'(w01).
-    lp_ddic_text   = 'Uses object not in list or production'(w03).
+    lp_error_text  = 'Newer version in target environment!'(w01).
+    lp_ddic_text   = 'Uses object not in list or target environment'(w03).
     lp_info_text   = 'Newer version in test environment'(w23).
     lp_fail_text   = 'Transport not possible'(w24).
 *   Create a range table containing all project transport numbers.
@@ -1444,7 +1413,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     Table checks not possible for version checking.
       IF process_type = 1.
         build_table_keys_popup( ).
-        add_table_keys_to_list( IMPORTING table = main_list ).
+        add_table_keys_to_list( CHANGING table = main_list ).
       ENDIF.
 * Reason to check data dictionary objects:
 * If objects in the transport list contain DDIC objects that do NOT
@@ -1468,7 +1437,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       gui_upload( EXPORTING im_filename  = filename
                   IMPORTING ex_cancelled = lp_cancelled ).
       IF lp_cancelled = abap_true.
-        EXIT.
+        RETURN.
       ENDIF.
     ENDIF.
     set_color( ).
@@ -1509,12 +1478,10 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD flag_for_process.
-    DATA ra_trkorr TYPE RANGE OF trkorr.
-    DATA ls_trkorr LIKE LINE OF ra_trkorr.
     DATA ls_row    TYPE int4.
     IF rows IS INITIAL AND cell IS INITIAL.
       MESSAGE i000(db) WITH 'Please select records or put the cursor on a row'(m10).
-      EXIT.
+      RETURN.
     ENDIF.
 *   First clear all the flags:
     clear_flags( ).
@@ -1543,7 +1510,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD check_for_conflicts.
-    DATA ls_ddic_conflict_info TYPE ty_request_details.
+    CHECK check_flag = abap_true.
     DATA ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
     DATA st_stms_wbo_requests TYPE stms_wbo_request.
     DATA lp_counter           TYPE i.
@@ -1562,11 +1529,12 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_highest_text      TYPE text74.
     DATA lp_highest_col       TYPE lvc_t_scol.
     DATA lp_target            TYPE tmssysnam.
-    DATA lp_obj_name          TYPE trobj_name.
     FREE  conflicts.
     CLEAR conflict_line.
     CLEAR total.
-    CHECK check_flag = abap_true.
+    IF check_flag = abap_false.
+      RETURN.
+    ENDIF.
     sort_main_list( ).
 *   For each transports, all the objects in the transport will be checked.
 *   If there is a newer version of an object in prd, then a warning will
@@ -1628,7 +1596,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *         Get transport description:
           SELECT SINGLE as4text FROM  e07t
                                 INTO  ls_newer_line-tr_descr
-                                WHERE trkorr = ls_newer_line-trkorr. "#EC CI_SEL_NESTED
+                                WHERE trkorr = ls_newer_line-trkorr ##WARN_OK. "#EC CI_SEL_NESTED
 *         Check if it has been transported to the target system:
           FREE  ta_stms_wbo_requests.
           CLEAR ta_stms_wbo_requests.
@@ -1748,7 +1716,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *         Get transport description:
           SELECT SINGLE as4text FROM  e07t
                                 INTO  ls_older_line-tr_descr
-                                WHERE trkorr = ls_older_line-trkorr. "#EC CI_SEL_NESTED
+                                WHERE trkorr = ls_older_line-trkorr ##WARN_OK. "#EC CI_SEL_NESTED
 *         Check if it has been transported to QAS
           FREE  ta_stms_wbo_requests.
           CLEAR ta_stms_wbo_requests.
@@ -1880,7 +1848,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                lp_highest_rank,
                lp_highest_text,
                lp_highest_col.
-        LOOP AT conflicts INTO conflict_line.    "#EC CI_NESTED
+        LOOP AT conflicts INTO conflict_line.            "#EC CI_NESTED
           IF conflict_line-warning_rank > lp_highest_rank.
             lp_highest_lvl  = conflict_line-warning_lvl.
             lp_highest_rank = conflict_line-warning_rank.
@@ -1929,7 +1897,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         CLEAR lp_domnam.
         SELECT SINGLE domnam INTO  lp_domnam FROM tmsbuffer
                              WHERE trkorr EQ ls_main-trkorr
-                             AND   sysnam EQ prd_system. "#EC CI_SEL_NESTED
+                             AND   sysnam EQ prd_system ##WARN_OK. "#EC CI_SEL_NESTED
         IF sy-subrc EQ 4.
           IF buffer_remove_tp = abap_true.
             DELETE ch_main_list INDEX sy-tabix.
@@ -1953,6 +1921,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD build_table_keys_popup.
+    CHECK check_flag = abap_true.
 *   A popup is displayed with all tables found in the main list, that
 *   have keys. The user has now the option to include them in the
 *   checking procedure. This is the only place where the user has a
@@ -1961,9 +1930,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lr_columns_table       TYPE REF TO cl_salv_columns_table.
     DATA lr_column_table        TYPE REF TO cl_salv_column_table.
     DATA lt_t_column_ref        TYPE salv_t_column_ref.
-    DATA ls_reference           TYPE salv_s_ddic_reference.
     DATA ls_s_column_ref        TYPE salv_s_column_ref.
-    DATA st_colo                TYPE lvc_s_colo.
     DATA lr_events              TYPE REF TO cl_salv_events_table.
 *   Declaration for Global Display Settings
     DATA lr_display_settings    TYPE REF TO cl_salv_display_settings.
@@ -1987,7 +1954,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                ' the keys must be checked'(t07).
 *   Only if the option to check for table keys is switched ON and
 *   checking is active
-    CHECK check_flag = abap_true.
+
 * Determine the transport prefix (if not done already)
     lp_tp_prefix = get_tp_prefix( im_dev = dev_system ).
 *   Fill the internal table to be displayed in the popup:
@@ -2010,13 +1977,15 @@ CLASS lcl_ztct IMPLEMENTATION.
              AND   mastertype =    main_list_line-object
              AND   NOT trkorr IN   project_trkorrs
              AND   trkorr     LIKE lp_tp_prefix
-             AND   objname    IN   excluded_objects.  "#EC CI_SEL_NESTED
+             AND   objname    IN   excluded_objects. "#EC CI_SEL_NESTED
       table_keys_line-tabname  =   main_list_line-obj_name.
       COLLECT table_keys_line INTO table_keys.
     ENDLOOP.
     DELETE table_keys WHERE counter = 0.
-    CHECK  table_keys[] IS NOT INITIAL.
-    SORT   table_keys BY counter DESCENDING.
+    IF table_keys[] IS INITIAL.
+      RETURN.
+    ENDIF.
+    SORT table_keys BY counter DESCENDING.
 
 * Only display the popup if the user selected the option 'Check table keys'
 * on the selection screen. If not, the popup does not need to be displayed,
@@ -2030,7 +1999,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
         APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
       ENDLOOP.
-      EXIT.
+      RETURN.
     ENDIF.
 
 *   Determine total width
@@ -2116,50 +2085,42 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD add_table_keys_to_list .
-    DATA lp_counter          TYPE sy-tabix.
-    DATA lp_total(10)        TYPE n.
-    DATA lt_keys             TYPE tt_request_details.
+    DATA lt_keys_main        TYPE tt_request_details.
+    DATA ls_keys_main        TYPE ty_request_details.
     DATA ls_keys             TYPE ty_request_details.
 *   Only if the option to check for table keys is switched ON, on the
 *   selection screen:
     CHECK: check_tabkeys = abap_true.
 *   Check if keys exist in table E071K. Only do this for the records
 *   that have not been added already (without key object and name)
-*   Remove the entries for which that is the case and add the objects,
+*   Remove the entries for which that is the case and add the objects
 *   with the keys.
 *   s_exobj contains all tables that we do not want to check.
-    LOOP AT table INTO ls_keys WHERE objfunc    = 'K'
-                               AND   keyobject  IS INITIAL
-                               AND   keyobjname IS INITIAL
-                               AND   obj_name   IN excluded_objects.
-* Now read the keys from the database
+    LOOP AT table INTO ls_keys_main WHERE objfunc    = 'K'
+                                    AND   keyobject  IS INITIAL
+                                    AND   keyobjname IS INITIAL
+                                    AND   obj_name   IN excluded_objects.
+      APPEND ls_keys_main TO lt_keys_main.
+      DELETE TABLE table FROM ls_keys_main.
+    ENDLOOP.
+
+    LOOP AT lt_keys_main INTO ls_keys.
       SELECT object objname tabkey
                 FROM e071k
                 INNER JOIN e070 ON e070~trkorr EQ e071k~trkorr
                 INTO (ls_keys-keyobject,
                       ls_keys-keyobjname,
                       ls_keys-tabkey)
-              WHERE   e071k~trkorr     EQ ls_keys-trkorr
+                WHERE e071k~trkorr     EQ     ls_keys-trkorr
                 AND   e071k~trkorr     NOT IN project_trkorrs
-                AND   e071k~trkorr     LIKE prefix
-                AND   e070~trfunction  NE 'T'
-                AND   mastertype =  ls_keys-object
-                AND   mastername =  ls_keys-obj_name
-                AND   objname    IN excluded_objects. "#EC CI_SEL_NESTED
-        APPEND ls_keys TO lt_keys.
+                AND   e071k~trkorr     LIKE   prefix
+                AND   e070~trfunction  NE     'T'
+                AND   e071k~mastertype =      ls_keys-object
+                AND   e071k~mastername =      ls_keys-obj_name(40)
+                AND   e071k~objname    IN     excluded_objects.
+        APPEND ls_keys TO table.
       ENDSELECT.
     ENDLOOP.
-    SORT lt_keys.
-    DELETE ADJACENT DUPLICATES FROM lt_keys.
-*   Add the entries for the table keys, and remove the root objects.
-    CLEAR: lp_counter.
-    LOOP AT lt_keys INTO ls_keys.
-      DELETE table WHERE objfunc  = 'K'
-                   AND   trkorr   = ls_keys-trkorr
-                   AND   object   = ls_keys-object
-                   AND   obj_name = ls_keys-obj_name.
-    ENDLOOP.
-    APPEND LINES OF lt_keys TO table.
 
   ENDMETHOD.
 
@@ -2187,7 +2148,9 @@ CLASS lcl_ztct IMPLEMENTATION.
       ENDIF.
     ENDIF.
 *   Number of selected items on GUI:
-    CHECK lp_step <> 0.
+    IF lp_step = 0.
+      RETURN.
+    ENDIF.
     lp_gproggui = im_counter MOD lp_step.
     IF lp_gproggui = 0.
       WRITE im_counter TO lp_gprogtext LEFT-JUSTIFIED.
@@ -2227,7 +2190,6 @@ CLASS lcl_ztct IMPLEMENTATION.
   METHOD get_main_transports.
     DATA ta_main_list_vrsd  TYPE tt_request_details.
     DATA st_main_list_vrsd  TYPE ty_request_details.
-    DATA lp_return          TYPE c.
     FIELD-SYMBOLS: <l_main_list> TYPE ty_request_details.
     FREE ta_main_list_vrsd.
     CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
@@ -2246,7 +2208,7 @@ CLASS lcl_ztct IMPLEMENTATION.
            AND   strkorr   = ''
            AND   a~trkorr  LIKE prefix
            AND ( pgmid     = 'LIMU' OR
-                 pgmid     = 'R3TR' ).
+                 pgmid     = 'R3TR' ) ##TOO_MANY_ITAB_FIELDS.
 
     IF main_list[] IS NOT INITIAL.
       LOOP AT main_list ASSIGNING <l_main_list>.
@@ -2256,13 +2218,15 @@ CLASS lcl_ztct IMPLEMENTATION.
         SELECT SINGLE  as4text
                  FROM  e07t
                  INTO <l_main_list>-tr_descr
-                 WHERE trkorr = <l_main_list>-trkorr. "#EC CI_SEL_NESTED
+                 WHERE trkorr = <l_main_list>-trkorr ##WARN_OK. "#EC CI_SEL_NESTED
       ENDLOOP.
     ENDIF.
     SORT main_list.
     DELETE ADJACENT DUPLICATES FROM main_list.
 *   Only continue if there are transports to check...
-    CHECK main_list[] IS NOT INITIAL.
+    IF main_list[] IS INITIAL.
+      RETURN.
+    ENDIF.
 *   Check if project is in selection range:
     IF project_range IS NOT INITIAL.
       LOOP AT main_list ASSIGNING <l_main_list>.
@@ -2270,8 +2234,8 @@ CLASS lcl_ztct IMPLEMENTATION.
                FROM e070a
                INTO  <l_main_list>-project
                WHERE trkorr = <l_main_list>-trkorr
-               AND   attribute = 'SAP_CTS_PROJECT'   "#EC CI_SEL_NESTED
-               AND   reference IN project_range.
+               AND   attribute = 'SAP_CTS_PROJECT'
+               AND   reference IN project_range ##WARN_OK.
         IF sy-subrc <> 0.
           DELETE main_list INDEX sy-tabix.
         ENDIF.
@@ -2293,7 +2257,9 @@ CLASS lcl_ztct IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
     ENDIF.
-    CHECK main_list[] IS NOT INITIAL.
+    IF main_list[] IS INITIAL.
+      RETURN.
+    ENDIF.
 *   Also read from the version table VRSD. This table contains all
 *   dependent objects. For example: If from E071 a function group
 *   is retrieved, VRSD will contain all functions too.
@@ -2355,15 +2321,15 @@ CLASS lcl_ztct IMPLEMENTATION.
            ON    a~trkorr   = b~trkorr
            WHERE a~trkorr   = im_trkorr
            AND   strkorr    = ''
-           AND   b~obj_name = im_obj_name.
+           AND   b~obj_name = im_obj_name ##WARN_OK.
 *   Read transport description:
-    SELECT SINGLE  as4text
-             FROM  e07t
-             INTO  re_line-tr_descr
-             WHERE trkorr = im_trkorr.
+    SELECT SINGLE as4text
+                  FROM  e07t
+                  INTO  re_line-tr_descr
+                  WHERE trkorr = im_trkorr ##WARN_OK.
     re_line-checked_by = sy-uname.
-*       First get the descriptions (Status/Type/Project):
-*       Retrieve texts for Status Description
+*   First get the descriptions (Status/Type/Project):
+*   Retrieve texts for Status Description
     SELECT ddtext
            FROM  dd07t
            INTO  re_line-status_text UP TO 1 ROWS
@@ -2371,7 +2337,7 @@ CLASS lcl_ztct IMPLEMENTATION.
            AND   ddlanguage = co_langu
            AND   domvalue_l = re_line-trstatus.      "#EC CI_SEL_NESTED
     ENDSELECT.
-*       Retrieve texts for Description of request/task type
+*   Retrieve texts for Description of request/task type
     SELECT ddtext
            FROM  dd07t
            INTO  re_line-trfunction_txt UP TO 1 ROWS
@@ -2379,7 +2345,7 @@ CLASS lcl_ztct IMPLEMENTATION.
            AND   ddlanguage = co_langu
            AND   domvalue_l = re_line-trfunction.    "#EC CI_SEL_NESTED
     ENDSELECT.
-*       Retrieve the project number (and description):
+*   Retrieve the project number (and description):
     SELECT reference
            FROM  e070a UP TO 1 ROWS
            INTO  re_line-project
@@ -2391,7 +2357,7 @@ CLASS lcl_ztct IMPLEMENTATION.
              WHERE trkorr  = re_line-project.        "#EC CI_SEL_NESTED
       ENDSELECT.
     ENDSELECT.
-*       Retrieve the description of the status
+*   Retrieve the description of the status
     SELECT ddtext
            FROM  dd07t UP TO 1 ROWS
            INTO  re_line-trstatus
@@ -2426,15 +2392,15 @@ CLASS lcl_ztct IMPLEMENTATION.
            AND   ( b~pgmid = 'LIMU' OR
                    b~pgmid = 'R3TR' OR
                    b~pgmid = 'R3OB' OR
-                   b~pgmid = 'LANG').
+                   b~pgmid = 'LANG') ##TOO_MANY_ITAB_FIELDS.
 *   Read transport description:
     IF ex_to_add[] IS NOT INITIAL.
       LOOP AT ex_to_add ASSIGNING <l_main_list>.
         <l_main_list>-flag = abap_true.
-        SELECT SINGLE  as4text
-                 FROM  e07t
-                 INTO <l_main_list>-tr_descr
-                 WHERE trkorr = <l_main_list>-trkorr. "#EC CI_SEL_NESTED
+        SELECT SINGLE as4text
+                      FROM  e07t
+                      INTO <l_main_list>-tr_descr
+                      WHERE trkorr = <l_main_list>-trkorr ##WARN_OK.
       ENDLOOP.
     ENDIF.
 *   Also read from the version table VRSD. This table contains all
@@ -2474,25 +2440,25 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDIF.
 *   Now add all VRSD entries to the main list:
     APPEND LINES OF lt_main_list_vrsd TO ex_to_add.
-    add_table_keys_to_list( IMPORTING table = ex_to_add ).
+    add_table_keys_to_list( CHANGING table = ex_to_add ).
 *   Only add the records that are not existing in the main list, so we
 *   do not add the records that already exist in the main list.
     LOOP AT ex_to_add INTO ls_added.
       lp_tabix = sy-tabix.
       READ TABLE main_list WITH KEY trkorr     = ls_added-trkorr
-                                        object     = ls_added-object
-                                        obj_name   = ls_added-obj_name
-                                        keyobject  = ls_added-keyobject
-                                        keyobjname = ls_added-keyobjname
-                                        tabkey     = ls_added-tabkey
-                               TRANSPORTING NO FIELDS.
+                                    object     = ls_added-object
+                                    obj_name   = ls_added-obj_name
+                                    keyobject  = ls_added-keyobject
+                                    keyobjname = ls_added-keyobjname
+                                    tabkey     = ls_added-tabkey
+                           TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
 *       If the added transports are already in the list, but in prd, they
 *       will be 'invisible', because the records with prd icon = co_okay
 *       are filtered out. So, the prd icon needs to be changed to co_scrap
 *       to become visible. We just make sure that all records for this
 *       transport are made visible.
-        LOOP AT main_list INTO  main_list_line   "#EC CI_NESTED
+        LOOP AT main_list INTO  main_list_line           "#EC CI_NESTED
                           WHERE trkorr     = ls_added-trkorr
                           AND   object     = ls_added-object
                           AND   obj_name   = ls_added-obj_name
@@ -2515,7 +2481,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lt_tr_cofilines      TYPE tr_cofilines.
     DATA ls_tstrfcofil        TYPE tstrfcofil.
     DATA ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
-    DATA lp_retcode           TYPE strw_int4.
     DATA st_stms_wbo_requests TYPE stms_wbo_request.
     DATA st_systems           TYPE ctslg_system.
     DATA lp_counter           TYPE i.
@@ -2581,7 +2546,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND   attribute = 'SAP_CTS_PROJECT'.  "#EC CI_SEL_NESTED
           SELECT descriptn
                  FROM  ctsproject UP TO 1 ROWS
-                 INTO  main_list_line-project_descr "#EC CI_SGLSELECT
+                 INTO  main_list_line-project_descr   "#EC CI_SGLSELECT
                  WHERE trkorr = main_list_line-project. "#EC CI_SEL_NESTED
           ENDSELECT.
         ENDSELECT.
@@ -2651,7 +2616,7 @@ CLASS lcl_ztct IMPLEMENTATION.
             OTHERS        = 0.
         READ TABLE lt_tr_cofilines INTO ls_tstrfcofil
                                    WITH KEY tarsystem = qas_system
-                                            function  = 'G'.
+                                            function  = 'G' ##WARN_OK.
         main_list_line-retcode = ls_tstrfcofil-retcode.
         IF st_stms_wbo_requests-e070-trstatus NA 'NR'.
           main_list_line-warning_lvl  = co_alert.
@@ -2791,7 +2756,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD build_conflict_popup.
     DATA lr_events          TYPE REF TO cl_salv_events_table.
-    DATA ls_conflict        TYPE ty_request_details.
+    DATA ls_conflict        TYPE ty_request_details ##NEEDED.
     DATA lp_xend            TYPE i.
     DATA lp_yend            TYPE i.
     DATA lp_xstart          TYPE i VALUE 50.
@@ -2804,7 +2769,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   and the main list is NOT checked again.
     set_building_conflict_popup(  ).
     flag_for_process( rows = rows
-                          cell = cell ).
+                      cell = cell ).
     check_for_conflicts( CHANGING ch_main_list = main_list ).
 *   If the button to add conflicts is clicked (not a double-click), then
 *   remove from the popup all low-level warning messages
@@ -2820,7 +2785,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       MESSAGE i000(db)
          WITH 'No transports need to be added'(019)
               'To see the conflicts, doubleclick the warning'(020).
-      EXIT.
+      RETURN.
     ENDIF.
     TRY.
         CALL METHOD cl_salv_table=>factory
@@ -2930,7 +2895,9 @@ CLASS lcl_ztct IMPLEMENTATION.
       ls_trkorr-low = main_list_line-trkorr.
       APPEND ls_trkorr TO ra_trkorr.
     ENDIF.
-    CHECK ra_trkorr IS NOT INITIAL.
+    IF ra_trkorr IS INITIAL.
+      RETURN.
+    ENDIF.
     SORT ra_trkorr.
     DELETE ADJACENT DUPLICATES FROM ra_trkorr.
 * Mark all records for all marked transports
@@ -2966,8 +2933,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         not_supported_by_gui = 3
         OTHERS               = 4.
     IF sy-subrc <> 0.
-      MESSAGE e001(00) WITH
-          'Desktop not found'(012).
+      MESSAGE e001(00) WITH 'Desktop not found'(008) ##MG_MISSING.
     ENDIF.
 * Update View
     CALL METHOD cl_gui_cfw=>update_view
@@ -3002,7 +2968,6 @@ CLASS lcl_ztct IMPLEMENTATION.
   METHOD main_to_tab_delimited.
     DATA lp_string             TYPE string.
     DATA lp_type               TYPE char01.
-    DATA lp_com                TYPE i.
     FIELD-SYMBOLS: <l_fs>       TYPE any.
 
 *   Determine the number of fields in the structure
@@ -3018,7 +2983,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         lr_structdescr ?= lr_tabledescr->get_table_line_type( ).
       CATCH cx_sy_move_cast_error INTO rf_root.
         handle_error( rf_oref = rf_root ).
-      CATCH cx_root INTO rf_root.
+      CATCH cx_root INTO rf_root ##CATCH_ALL.
         handle_error( rf_oref = rf_root ).
     ENDTRY.
 
@@ -3041,7 +3006,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           IF sy-index = 1.
             lp_string = <l_fs>.
           ELSE.
-            DESCRIBE FIELD <l_fs> TYPE lp_type COMPONENTS lp_com.
+            DESCRIBE FIELD <l_fs> TYPE lp_type.
             IF lp_type NA co_non_charlike.
               CONCATENATE lp_string tp_tab <l_fs> INTO lp_string.
             ENDIF.
@@ -3112,13 +3077,11 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_record         TYPE string.
     DATA ls_main           TYPE ty_request_details.
     DATA lp_type           TYPE char01.
-    DATA lp_com            TYPE i.
     FIELD-SYMBOLS: <l_fs>   TYPE any.
 *   Determine the number of fields in the structure
     DATA l_o_tabledescr         TYPE REF TO cl_abap_tabledescr.
     DATA l_o_typedescr          TYPE REF TO cl_abap_typedescr.
     DATA l_o_structdescr        TYPE REF TO cl_abap_structdescr.
-    DATA l_s_abap_compdescr_tab TYPE abap_compdescr.
     DATA ls_component           TYPE abap_compdescr.
     TRY.
         l_o_typedescr = cl_abap_tabledescr=>describe_by_data( p_data = main_list ).
@@ -3126,7 +3089,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         l_o_structdescr ?= l_o_tabledescr->get_table_line_type( ).
       CATCH cx_sy_move_cast_error INTO rf_root.
         handle_error( rf_oref = rf_root ).
-      CATCH cx_root INTO rf_root.
+      CATCH cx_root INTO rf_root ##CATCH_ALL.
         handle_error( rf_oref = rf_root ).
     ENDTRY.
 *   First line contains the name of the fields
@@ -3178,16 +3141,16 @@ CLASS lcl_ztct IMPLEMENTATION.
         IF sy-subrc = 0.
           TRY.
               ASSIGN COMPONENT ls_component-name OF STRUCTURE ls_main_line_upl TO <l_fs>.
-            CATCH cx_root INTO rf_root.
+            CATCH cx_root INTO rf_root  ##CATCH_ALL ##NO_HANDLER.
           ENDTRY.
           IF sy-subrc <> 0.
             EXIT.
           ELSE.
-            DESCRIBE FIELD <l_fs> TYPE lp_type COMPONENTS lp_com.
+            DESCRIBE FIELD <l_fs> TYPE lp_type.
             IF lp_type NA co_non_charlike.
               TRY .
                   <l_fs> = ls_upl_line-value.
-                CATCH cx_root INTO rf_root.
+                CATCH cx_root INTO rf_root  ##CATCH_ALL ##NO_HANDLER.
               ENDTRY.
             ENDIF.
           ENDIF.
@@ -3243,6 +3206,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   METHOD gui_upload.
     DATA lt_tab_delimited TYPE table_of_strings.
     DATA lt_temp_table    TYPE table_of_strings.
+    CLEAR ex_cancelled.
     CALL METHOD cl_gui_frontend_services=>gui_upload
       EXPORTING
         filename                = im_filename
@@ -3284,8 +3248,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     ELSE.
       lt_tab_delimited[] = lt_temp_table[].
 *     Now convert the tab delimited file to the main list field order:
-      tab_delimited_to_main( EXPORTING im_tab_delimited = lt_tab_delimited
-                             IMPORTING ex_main_list     = main_list ).
+      tab_delimited_to_main( EXPORTING im_tab_delimited = lt_tab_delimited ).
       total = lines( main_list ).
 *     Always reset the Check flag when uploading. Reason is that
 *     when combining multiple ZTCT files, these SHOULD be corrected
@@ -3500,14 +3463,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD set_check_ddic.
-    IF im_check_ddic IS SUPPLIED.
-      check_ddic = im_check_ddic.
-    ELSE.
-      check_ddic = abap_true.
-    ENDIF.
-  ENDMETHOD.
-
   METHOD set_check_tabkeys.
     IF im_check_tabkeys IS SUPPLIED.
       check_tabkeys = im_check_tabkeys.
@@ -3548,10 +3503,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     project_range = im_project_range.
   ENDMETHOD.
 
-  METHOD set_date_range.
-    date_range = im_date_range.
-  ENDMETHOD.
-
   METHOD set_excluded_objects.
     excluded_objects = im_excluded_objects.
   ENDMETHOD.
@@ -3584,6 +3535,19 @@ CLASS lcl_ztct IMPLEMENTATION.
     dev_system = im_dev_system.
     qas_system = im_qas_system.
     prd_system = im_prd_system.
+*   Move to range:
+    APPEND INITIAL LINE TO systems_range ASSIGNING FIELD-SYMBOL(<system_range>).
+    <system_range>-sign   = 'I'.
+    <system_range>-option = 'EQ'.
+    <system_range>-low    = dev_system.
+    APPEND INITIAL LINE TO systems_range ASSIGNING <system_range>.
+    <system_range>-sign   = 'I'.
+    <system_range>-option = 'EQ'.
+    <system_range>-low    = qas_system.
+    APPEND INITIAL LINE TO systems_range ASSIGNING <system_range>.
+    <system_range>-sign   = 'I'.
+    <system_range>-option = 'EQ'.
+    <system_range>-low    = prd_system.
   ENDMETHOD.
 
   METHOD set_building_conflict_popup.
@@ -3605,7 +3569,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lr_layout              TYPE REF TO cl_salv_layout.
     DATA ls_layout_key          TYPE salv_s_layout_key.
 *   Declaration for Aggregate Function Settings
-    DATA lr_aggregations        TYPE REF TO cl_salv_aggregations.
+    DATA lr_aggregations        TYPE REF TO cl_salv_aggregations ##NEEDED.
 *   Declaration for Sort Function Settings
     DATA lr_sorts               TYPE REF TO cl_salv_sorts.
 *   Declaration for Table Selection settings
@@ -3615,7 +3579,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_version             TYPE char10.
     DATA lp_title               TYPE lvc_title.
     DATA lp_class               TYPE xuclass.
-
+* Version management: directory table
+    DATA vrsd                   TYPE vrsd.
     FIELD-SYMBOLS: <table>       TYPE REF TO cl_salv_table.
     ASSIGN im_table TO <table>.
 
@@ -3633,7 +3598,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       TRY.
           lr_functions_list->set_function( name    = 'RECHECK'
                                            boolean = if_salv_c_bool_sap=>false ).
-        CATCH cx_root INTO rf_root.
+        CATCH cx_root INTO rf_root ##CATCH_ALL.
           handle_error( rf_oref = rf_root ).
       ENDTRY.
     ENDIF.
@@ -3684,7 +3649,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       IF sy-subrc <> 0.
         SELECT SINGLE text FROM  d347t INTO lp_title
                            WHERE progname = sy-repid
-                           AND   obj_code = '001'.
+                           AND   obj_code = '001' ##WARN_OK.
       ENDIF.
     ENDIF.
 *   Set title
@@ -3774,54 +3739,52 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Fill the symbols, colors in to table and set tooltips
     DATA tooltips TYPE REF TO cl_salv_tooltips.
     DATA settings TYPE REF TO cl_salv_functional_settings.
-    DATA value    TYPE char128.
     DATA lp_text  TYPE lvc_tip.
-    FIELD-SYMBOLS: <outtab> TYPE ty_request_details.
     FREE settings.
     FREE tooltips.
     settings = im_table->get_functional_settings( ).
     tooltips = settings->get_tooltips( ).
     TRY.
-        lp_text = 'Newer version in Acceptance'(w23).
+        lp_text = 'Newer version in test environment'(w23).
         tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
                                value   = '@0S@'
                                tooltip = lp_text ).
-      CATCH cx_salv_existing INTO rf_root.
+      CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
         lp_text = 'Previous transport not transported'(w17).
         tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
                                value   = '@5D@'
                                tooltip = lp_text ).
-      CATCH cx_salv_existing INTO rf_root.
+      CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
         lp_text = 'Conflicts are dealt with'(w04).
         tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
                                value   = '@AI@'
                                tooltip = lp_text ).
-      CATCH cx_salv_existing INTO rf_root.
+      CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
-        lp_text = 'Marked for re-import to Production'(w18).
+        lp_text = 'Marked for re-import to target environment'(w18).
         tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
                                value   = '@K3@'
                                tooltip = lp_text ).
-      CATCH cx_salv_existing INTO rf_root.
+      CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
-        lp_text = 'Newer version in production!'(w01).
+        lp_text = 'Newer version in target environment!'(w01).
         tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
                                value   = '@F1@'
                                tooltip = lp_text ).
-      CATCH cx_salv_existing INTO rf_root.
+      CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
-        lp_text = 'Object missing in List and Production!'(w05).
+        lp_text = 'Object missing in list and target environment!'(w05).
         tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
                                value   = '@CY@'
                                tooltip = lp_text ).
-      CATCH cx_salv_existing INTO rf_root.
+      CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
 
@@ -3848,7 +3811,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lr_column_table     TYPE REF TO cl_salv_column_table.
     DATA st_colo             TYPE lvc_s_colo.
 *   Declaration for Aggregate Function Settings
-    DATA lr_aggregations     TYPE REF TO cl_salv_aggregations.
+    DATA lr_aggregations     TYPE REF TO cl_salv_aggregations ##NEEDED.
 *   Remove some columns for the XLS output
     DATA lra_fieldname       TYPE RANGE OF lty_field_ran.
     DATA ls_fieldname        TYPE lty_field_ran.
@@ -4122,8 +4085,9 @@ CLASS lcl_ztct IMPLEMENTATION.
               lr_column_table->set_icon( ).
             ENDIF.
           WHEN 'RE_IMPORT'.
-            lp_short_text = 'Import again'(044).
-            lp_long_text = lp_medium_text = 'Import again'(044).
+            lp_short_text  = 'Import again'(059).
+            lp_medium_text = 'Import again'(059).
+            lp_long_text   = 'Import again'(059).
             lr_column_table->set_short_text( lp_short_text ).
             lr_column_table->set_medium_text( lp_medium_text ).
             lr_column_table->set_long_text( lp_long_text ).
@@ -4154,7 +4118,7 @@ CLASS lcl_ztct IMPLEMENTATION.
            FROM   dokil
            INTO   lv_langu
            WHERE  object = im_object
-           AND    id     = im_id.
+           AND    id     = im_id ##WARN_OK.
     IF sy-subrc <> 0.
       lv_langu = co_langu.
     ENDIF.
@@ -4192,31 +4156,45 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD determine_warning_text.
+    CLEAR: ex_highest_text.
     CASE im_highest_rank.
-      WHEN 0.  "ICON_LED_GREEN
-      WHEN 5.  "ICON_FAILURE
+      WHEN 0.
+*       ICON_LED_GREEN
+      WHEN 5.
+*       ICON_FAILURE
         ex_highest_text = lp_alert0_text.
-      WHEN 6.  "ICON_FAILURE
+      WHEN 6.
+*       ICON_FAILURE
         ex_highest_text = lp_alert1_text.
-      WHEN 7.  "ICON_FAILURE
+      WHEN 7.
+*       ICON_FAILURE
         ex_highest_text = lp_alert2_text.
-      WHEN 8.  "ICON_FAILURE
+      WHEN 8.
+*       ICON_FAILURE
         ex_highest_text  = lp_alert3_text.
-      WHEN 10. "ICON_HINT
+      WHEN 10.
+*       ICON_HINT
         ex_highest_text = lp_hint1_text.
-      WHEN 12. "ICON_HINT
+      WHEN 12.
+*       ICON_HINT
         ex_highest_text = lp_hint2_text.
-      WHEN 14. "ICON_HINT
+      WHEN 14.
+*       ICON_HINT
         ex_highest_text = lp_hint3_text.
-      WHEN 16. "ICON_HINT
+      WHEN 16.
+*       ICON_HINT
         ex_highest_text = lp_hint4_text.
-      WHEN 20. "ICON_INFORMATION
+      WHEN 20.
+*       ICON_INFORMATION
         ex_highest_text = lp_info_text.
-      WHEN 50. "ICON_LED_YELLOW
+      WHEN 50.
+*       ICON_LED_YELLOW
         ex_highest_text = lp_warn_text.
-      WHEN 98. "ICON_INCOMPLETE
+      WHEN 98.
+*       ICON_INCOMPLETE
         ex_highest_text = lp_ddic_text.
-      WHEN 99. "ICON_LED_RED
+      WHEN 99.
+*       ICON_LED_RED
         ex_highest_text = lp_error_text.
     ENDCASE.
   ENDMETHOD.
@@ -4306,7 +4284,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     If the object is a table, we need to be able to check the keys.
 *     Replace the entry with all entries containing the keys.
       IF im_line-objfunc = 'K'.
-        add_table_keys_to_list( IMPORTING table = lt_aggr_tp_list_of_objects ).
+        add_table_keys_to_list( CHANGING table = lt_aggr_tp_list_of_objects ).
       ENDIF.
 
 *     Now get the last date the object was imported:
@@ -4314,7 +4292,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         lp_index = sy-tabix.
 *       Remove all transports from a source system not known (usually an
 *       SAP system, not one of our systems).
-        IF NOT ls_tp_same_object-trkorr(3) IN ra_systems.
+        IF NOT ls_tp_same_object-trkorr(3) IN systems_range.
           DELETE lt_aggr_tp_list_of_objects INDEX sy-tabix.
           CONTINUE.
         ENDIF.
@@ -4332,15 +4310,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       ENDLOOP.
 *     Add the newly retrieved lines to the internal table:
       APPEND LINES OF lt_aggr_tp_list_of_objects TO aggr_tp_list_of_objects.
-    ELSE.
-*     Already retrieved and stored in the list
-      CHECK 1 = 1.
     ENDIF.
-
-*   Remove duplicates:
-*    SORT >aggr_tp_list_of_objects[] BY trkorr object obj_name.
-*    DELETE ADJACENT DUPLICATES FROM >aggr_tp_list_of_objects
-*                               COMPARING trkorr object obj_name.
 
 *   Move newer transports for this object to the relevant internal table:
     LOOP AT aggr_tp_list_of_objects INTO ls_tp_same_object
@@ -4379,23 +4349,22 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD check_colwidth.
-    DATA ls_component TYPE abap_compdescr.
     DATA lp_as4text   TYPE as4text.
     DATA lp_len       TYPE i.
     SELECT SINGLE scrtext_s
                   FROM dd04t INTO lp_as4text
                   WHERE rollname   = im_name
-                  AND   ddlanguage = co_langu.
+                  AND   ddlanguage = co_langu ##WARN_OK.
     IF lp_as4text IS INITIAL.
       SELECT SINGLE scrtext_m
                     FROM dd04t INTO lp_as4text
                     WHERE rollname   = im_name
-                    AND   ddlanguage = co_langu.
+                    AND   ddlanguage = co_langu ##WARN_OK.
       IF lp_as4text IS INITIAL.
         SELECT SINGLE scrtext_l
                       FROM dd04t INTO lp_as4text
                       WHERE rollname   = im_name
-                      AND   ddlanguage = co_langu.
+                      AND   ddlanguage = co_langu ##WARN_OK.
       ENDIF.
     ENDIF.
     lp_len = strlen( lp_as4text ).
@@ -4442,7 +4411,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                           rowspan = 0
                           colspan = 0 ).
 *   Header of Top of Page
-    lp_head = 'Information'(t05).
+    lp_head = 'Information'(t05) ##TEXT_DUP.
     lr_row = lr_rows->add_row( ).
     lr_row->create_header_information( text = lp_head ).
 *   Split filename from path
@@ -4491,82 +4460,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     ex_form_element = lr_logo.
   ENDMETHOD.
 
-  METHOD version_check.
-    DATA lversno_list    TYPE STANDARD TABLE OF  vrsn.
-    DATA version_list    TYPE STANDARD TABLE OF  vrsd.
-    DATA ls_version_list TYPE vrsd.
-    DATA lp_destination  TYPE rfcdest.
-    FIELD-SYMBOLS: <l_main_list> TYPE ty_request_details.
-    DELETE ADJACENT DUPLICATES FROM main_list COMPARING object obj_name.
-*   Delete tables
-    DELETE main_list WHERE objfunc = 'K'.
-    LOOP AT main_list ASSIGNING <l_main_list>.
-      FREE  lversno_list.
-      FREE  version_list.
-      CLEAR ls_version_list.
-      ls_version_list-objname = <l_main_list>-obj_name.
-      ls_version_list-objtype = <l_main_list>-object.
-*     Check local
-      CALL FUNCTION 'SVRS_GET_VERSION_DIRECTORY_46'
-        EXPORTING
-          destination            = 'NONE'
-          objname                = ls_version_list-objname
-          objtype                = ls_version_list-objtype
-        TABLES
-          lversno_list           = lversno_list
-          version_list           = version_list
-        EXCEPTIONS
-          no_entry               = 1
-          communication_failure_ = 2
-          system_failure         = 3
-          OTHERS                 = 4.
-      FIELD-SYMBOLS <version_list> TYPE vrsd.
-      LOOP AT version_list ASSIGNING <version_list>.     "#EC CI_NESTED
-        IF <version_list>-versno > ls_version_list-versno.
-*       Latest version.
-          ls_version_list = <version_list>.
-        ENDIF.
-      ENDLOOP.
-      FREE lversno_list.
-      FREE version_list.
-      lp_destination = qas_system.
-*     Check system
-      CALL FUNCTION 'SVRS_GET_VERSION_DIRECTORY_46'
-        EXPORTING
-          destination            = lp_destination
-          objname                = ls_version_list-objname
-          objtype                = ls_version_list-objtype
-        TABLES
-          lversno_list           = lversno_list
-          version_list           = version_list
-        EXCEPTIONS
-          no_entry               = 1
-          communication_failure_ = 2
-          system_failure         = 3
-          OTHERS                 = 4.
-      IF sy-subrc <> 0.
-        APPEND INITIAL LINE TO version_list ASSIGNING <version_list>.
-        <l_main_list>-warning_txt = 'No version found to compare'(w02).
-      ENDIF.
-      LOOP AT version_list ASSIGNING <version_list>.     "#EC CI_NESTED
-        IF <version_list>-korrnum <> ls_version_list-korrnum.
-          <l_main_list>-warning_lvl  = co_error.
-          <l_main_list>-warning_rank = co_error_rank.
-        ELSEIF <version_list>-korrnum IS INITIAL.
-          <l_main_list>-warning_lvl  = co_warn.
-          <l_main_list>-warning_rank = co_warn_rank.
-        ELSE.
-          <l_main_list>-warning_lvl  = co_okay.
-          <l_main_list>-warning_rank = co_okay_rank.
-        ENDIF.
-      ENDLOOP.
-    ENDLOOP.
-  ENDMETHOD.
-
   METHOD display_excel.
-    DATA ls_main_list_xls TYPE ty_request_details.
-    DATA lt_main_list_xls TYPE tt_request_details.
-    DATA lp_variant       TYPE disvariant.
     DATA lp_return        TYPE c.
     DATA lp_highest_lvl   TYPE icon_d.
     DATA lp_highest_rank  TYPE numc4.
@@ -4598,7 +4492,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       IF main_list_line_xls-qas <> co_okay OR
          main_list_line_xls-prd =  co_okay.
         lp_return = abap_true.
-        LOOP AT main_list ASSIGNING <l_main_list>    "#EC CI_NESTED
+        LOOP AT main_list ASSIGNING <l_main_list>        "#EC CI_NESTED
                           WHERE trkorr = main_list_line_xls-trkorr.
           <l_main_list>-warning_lvl  = co_tp_fail.
           <l_main_list>-warning_rank = co_tp_fail_rank.
@@ -4612,7 +4506,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       ENDIF.
 *     Make sure to find and keep the highest warning level for the
 *     transport
-      LOOP AT main_list INTO  main_list_line         "#EC CI_NESTED
+      LOOP AT main_list INTO  main_list_line             "#EC CI_NESTED
                         WHERE trkorr = main_list_line_xls-trkorr.
         IF main_list_line-warning_rank > lp_highest_rank.
           lp_highest_rank = main_list_line-warning_rank.
@@ -4641,26 +4535,26 @@ CLASS lcl_ztct IMPLEMENTATION.
             CLEAR: main_list_line_xls-warning_lvl.
         ENDCASE.
         IF main_list_line-prd = co_scrap.
-          main_list_line_xls-re_import = 'Import again'(040).
+          main_list_line_xls-re_import = 'Import again'(059).
         ENDIF.
       ENDIF.
 *     Apply the changes
       TRY.
-          MODIFY main_list_xls FROM main_list_line_xls.
-        CATCH cx_root INTO rf_root.
+          MODIFY TABLE main_list_xls FROM main_list_line_xls.
+        CATCH cx_root INTO rf_root ##CATCH_ALL.
           handle_error( rf_oref = rf_root ).
       ENDTRY.
     ENDLOOP.
 *   Message if entries were deleted because they were not in QAS:
     IF lp_return = abap_true.
       MESSAGE i000(db)
-         WITH 'Some transports will be deleted from the list because'(m02)
-              'they are missing in Acceptance or are already in'(m03)
-              'Production but not marked for re-import.'(m04)
-              'Please check the main list.'(m05).
+         WITH 'Some transports will be deleted from the list'(m02)
+              'because they are missing in Acceptance or are'(m03)
+              'already in Production but not marked for'(m04)
+              're-import. Please check the main list.'(m05).
       FREE rf_table_xls.
       FREE main_list_xls.
-      EXIT.
+      RETURN.
     ENDIF.
 *   Display short list for copy to Excel transport list:
     alv_xls_init( IMPORTING ex_rf_table = rf_table_xls
@@ -4678,13 +4572,11 @@ CLASS lcl_ztct IMPLEMENTATION.
              low    TYPE fieldname,
              high   TYPE fieldname,
            END OF lty_field_ran.
-    DATA ls_reference           TYPE salv_s_ddic_reference.
     DATA ls_s_column_ref        TYPE salv_s_column_ref.
     DATA lr_column_table        TYPE REF TO cl_salv_column_table.
 *   Declaration for Aggregate Function Settings
     DATA lr_aggregations        TYPE REF TO cl_salv_aggregations.
     DATA ls_table               TYPE ty_request_details.
-    DATA lp_popup_width         TYPE lvc_outlen.
     DATA lp_cw_columns          TYPE lvc_outlen.
     DATA lp_cw_korrnum          TYPE lvc_outlen.
     DATA lp_cw_tr_descr         TYPE lvc_outlen.
@@ -4699,12 +4591,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_cw_keyobject        TYPE lvc_outlen.
     DATA lp_cw_keyobjname       TYPE lvc_outlen.
     DATA lr_table_des           TYPE REF TO cl_abap_structdescr.
-    DATA lr_type_des            TYPE REF TO cl_abap_typedescr.
     DATA lt_details             TYPE abap_compdescr_tab.
     DATA ls_details             TYPE abap_compdescr.
     DATA lp_field               TYPE string.
-    DATA lp_length              TYPE i.
-    DATA lp_data_type           TYPE string.
     DATA lp_bool                TYPE abap_bool.
 *   Declaration for ALV Columns
     DATA lr_columns_table       TYPE REF TO cl_salv_columns_table.
@@ -4718,14 +4607,12 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Declarations for Title
     DATA lp_version             TYPE char10.
     DATA lp_title               TYPE lvc_title.
-    DATA l_o_tabledescr         TYPE REF TO cl_abap_tabledescr.
-    DATA l_o_typedescr          TYPE REF TO cl_abap_typedescr.
-    DATA l_o_structdescr        TYPE REF TO cl_abap_structdescr.
-    DATA l_s_abap_compdescr_tab TYPE abap_compdescr.
 *   Texts
     DATA lp_short_text          TYPE char10.
     DATA lp_medium_text         TYPE char20.
     DATA lp_long_text           TYPE char40.
+*   Version management: directory table
+    DATA vrsd                   TYPE vrsd.
 
     FIELD-SYMBOLS: <l_type>     TYPE any.
 *   To remove some columns from the output
@@ -4787,21 +4674,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                   ls_details-name INTO lp_field.
       ASSIGN (lp_field) TO <l_type>.
       CHECK <l_type> IS ASSIGNED.
-      lr_type_des = cl_abap_typedescr=>describe_by_data( <l_type> ).
-      lp_length = strlen( lr_type_des->absolute_name ).
-      lp_data_type = lr_type_des->absolute_name+6(lp_length).
     ENDLOOP.
-*   Determine the number of fields in the structure
-    FIELD-SYMBOLS:  <l_fs_field1> TYPE any.
-    TRY.
-        l_o_typedescr = cl_abap_tabledescr=>describe_by_data( p_data = im_table ).
-        l_o_tabledescr ?= l_o_typedescr.
-        l_o_structdescr ?= l_o_tabledescr->get_table_line_type( ).
-      CATCH cx_sy_move_cast_error INTO rf_root.
-        rf_ztct->handle_error( rf_oref = rf_root ).
-      CATCH cx_root INTO rf_root.
-        rf_ztct->handle_error( rf_oref = rf_root ).
-    ENDTRY.
 
 *   Determine total width
     LOOP AT im_table INTO ls_table.
@@ -4848,7 +4721,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       IF sy-subrc <> 0.
         SELECT SINGLE text FROM  d347t INTO lp_title
                            WHERE progname = sy-repid
-                           AND   obj_code = '001'.
+                           AND   obj_code = '001' ##WARN_OK.
       ENDIF.
     ENDIF.
 *   Set title
@@ -4876,7 +4749,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                               obligatory = if_salv_c_bool_sap=>false ).
         CATCH cx_salv_not_found INTO rf_root.
           handle_error( rf_oref = rf_root ).
-        CATCH cx_salv_existing INTO rf_root.
+        CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
 *          handle_error( EXPORTING rf_oref = rf_root ).
         CATCH cx_salv_data_error INTO rf_root.
           handle_error( rf_oref = rf_root ).
@@ -4890,7 +4763,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                obligatory = if_salv_c_bool_sap=>false ).
         CATCH cx_salv_not_found INTO rf_root.
           handle_error( rf_oref = rf_root ).
-        CATCH cx_salv_existing INTO rf_root.
+        CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
 *          rf_ztct->handle_error( EXPORTING rf_oref = rf_root ).
         CATCH cx_salv_data_error INTO rf_root.
           handle_error( rf_oref = rf_root ).
@@ -5073,25 +4946,33 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD set_ddic_objects.
-    FREE ddic_objects.
-*   DD01L (Domains)
-    SELECT a~domname  APPENDING TABLE ddic_objects
-           FROM dd01l AS a INNER JOIN tadir AS b
-           ON a~domname = b~obj_name
-           WHERE b~devclass LIKE 'Z%'.
-*   DD02L (SAP-tables)
-    SELECT a~tabname  APPENDING TABLE ddic_objects
-           FROM dd02l AS a INNER JOIN tadir AS b
-           ON a~tabname = b~obj_name
-           WHERE b~devclass LIKE 'Z%'.
-*   DD04L (Data elements)
-    SELECT a~rollname  APPENDING TABLE ddic_objects
-           FROM dd04l AS a INNER JOIN tadir AS b
-           ON a~rollname = b~obj_name
-           WHERE b~devclass LIKE 'Z%'.
+    TYPES: BEGIN OF ty_tadir,
+             devclass TYPE devclass,
+             obj_name TYPE sobj_name,
+           END OF ty_tadir.
+    TYPES tt_tadir TYPE STANDARD TABLE OF ty_tadir.
+    DATA  lt_tadir TYPE tt_tadir.
 
-    SORT ddic_objects.
-    DELETE ADJACENT DUPLICATES FROM ddic_objects.
+    FREE ddic_objects.
+*   Get all objects in Z-devclasses
+    SELECT devclass obj_name FROM tadir INTO TABLE lt_tadir
+                             WHERE devclass LIKE 'Z%'.
+    IF lt_tadir IS NOT INITIAL.
+*     DD01L (Domains)
+      SELECT domname APPENDING TABLE ddic_objects
+             FROM  dd01l FOR ALL ENTRIES IN lt_tadir
+             WHERE domname = lt_tadir-obj_name(30).
+*     DD02L (SAP-tables)
+      SELECT tabname APPENDING TABLE ddic_objects
+             FROM  dd02l FOR ALL ENTRIES IN lt_tadir
+             WHERE tabname = lt_tadir-obj_name(30).
+*     DD04L (Data elements)
+      SELECT rollname APPENDING TABLE ddic_objects
+             FROM  dd04l FOR ALL ENTRIES IN lt_tadir
+             WHERE rollname = lt_tadir-obj_name(30).
+      SORT ddic_objects.
+      DELETE ADJACENT DUPLICATES FROM ddic_objects.
+    ENDIF.
   ENDMETHOD.
 
   METHOD do_ddic_check.
@@ -5156,10 +5037,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
     DATA st_stms_wbo_requests TYPE stms_wbo_request.
     DATA st_systems           TYPE ctslg_system.
-    DATA lp_scope             TYPE seu_obj.
-    DATA lp_answer            TYPE char1.
-    DATA lt_trkorrs           TYPE trkorrs.
-    DATA lp_ddic_object       TYPE string.
+    DATA lp_scope             TYPE seu_obj ##NEEDED.
+    DATA lp_answer            TYPE char1 ##NEEDED.
     DATA ls_ddic_object       TYPE string.
     DATA lp_index             TYPE syindex.
     DATA lp_counter           TYPE i.
@@ -5171,12 +5050,9 @@ CLASS lcl_ztct IMPLEMENTATION.
 
 * Get all object types
 *--select values for pgmid/object/text from database--------------------
-    DATA lt_object_table  TYPE tr_object_texts.
-    DATA ls_object        TYPE ko100.
     DATA lt_objrangtab    TYPE objrangtab.
     DATA ls_objtyprang    TYPE objtyprang.
     DATA lt_objtype       TYPE TABLE OF versobjtyp.
-    DATA ls_objtype       TYPE versobjtyp.
     DATA lp_chars         TYPE string VALUE '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
 
 * Get all object types that have been transported before
@@ -5351,17 +5227,17 @@ CLASS lcl_ztct IMPLEMENTATION.
 * DD01L (Domains)
       SELECT SINGLE domname
                     FROM dd01l INTO lp_string
-                    WHERE domname = where_used_line-used_obj. "#EC CI_SEL_NESTED
+                    WHERE domname = where_used_line-used_obj ##WARN_OK.
       IF sy-subrc <> 0.
 * DD02L (SAP-tables)
         SELECT SINGLE tabname
                       FROM dd02l INTO lp_string
-                      WHERE tabname = where_used_line-used_obj. "#EC CI_SEL_NESTED
+                      WHERE tabname = where_used_line-used_obj ##WARN_OK.
         IF sy-subrc <> 0.
 * DD04L (Data elements)
           SELECT SINGLE rollname
                         FROM dd04l INTO lp_string
-                        WHERE rollname = where_used_line-used_obj. "#EC CI_SEL_NESTED
+                        WHERE rollname = where_used_line-used_obj ##WARN_OK.
         ENDIF.
       ENDIF.
       IF sy-subrc <> 0.
@@ -5371,9 +5247,9 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_import_datetime_qas.
-    DATA ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
-    DATA st_stms_wbo_requests TYPE stms_wbo_request.
     DATA st_systems           TYPE ctslg_system.
+    CLEAR ex_as4time.
+    CLEAR ex_as4date.
 *   Get the last date the object was imported
     CALL FUNCTION 'TR_READ_GLOBAL_INFO_OF_REQUEST'
       EXPORTING
@@ -5459,7 +5335,7 @@ START-OF-SELECTION.
   IF rf_ztct IS NOT BOUND.
     TRY .
         CREATE OBJECT rf_ztct.
-      CATCH cx_root INTO rf_root.
+      CATCH cx_root INTO rf_root ##CATCH_ALL.
         tp_msg = rf_root->get_text( ).
         CONCATENATE 'ERROR:'(038) tp_msg INTO tp_msg SEPARATED BY space.
         MESSAGE tp_msg TYPE 'E'.
@@ -5505,7 +5381,7 @@ START-OF-SELECTION.
 *       Check if the description contains the search string
         SELECT SINGLE as4text
                       FROM e07t INTO tp_transport_descr
-                      WHERE trkorr = st_trkorr_range-low. "#EC CI_SEL_NESTED
+                      WHERE trkorr = st_trkorr_range-low ##WARN_OK.
         IF pa_str CS '*'.
           IF tp_transport_descr NP pa_str.
             DELETE ta_trkorr_range INDEX sy-tabix.
@@ -5521,7 +5397,7 @@ START-OF-SELECTION.
         SELECT reference FROM e070a UP TO 1 ROWS
                INTO  tp_project_reference
                WHERE trkorr = st_trkorr_range-low
-               AND   attribute = 'SAP_CTS_PROJECT'.  "#EC CI_SEL_NESTED
+               AND   attribute = 'SAP_CTS_PROJECT'.
           IF NOT tp_project_reference IN so_proj.
             DELETE ta_trkorr_range INDEX sy-tabix.
           ENDIF.
@@ -5534,7 +5410,6 @@ START-OF-SELECTION.
 
   ta_project_range[]    = so_proj[].
   ta_excluded_objects[] = so_exobj[].
-  ta_date_range[]       = so_date[].
 
 END-OF-SELECTION.
 
@@ -5563,7 +5438,6 @@ FORM init_ztct.
   rf_ztct->set_user_layout( pa_user ).
   rf_ztct->set_trkorr_range( ta_trkorr_range ).
   rf_ztct->set_project_range( ta_project_range ).
-  rf_ztct->set_date_range( ta_date_range ).
   rf_ztct->set_excluded_objects( ta_excluded_objects ).
   rf_ztct->set_search_string( pa_str ).
   rf_ztct->set_process_type( tp_process_type ).
