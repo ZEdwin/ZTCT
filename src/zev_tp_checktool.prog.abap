@@ -364,7 +364,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS build_conflict_popup        IMPORTING rows TYPE salv_t_row
                                                   cell TYPE salv_s_cell.
     METHODS delete_tp_from_list         IMPORTING rows TYPE salv_t_row.
-    METHODS flag_same_objects           EXPORTING ex_main_list TYPE tt_request_details.
+    METHODS flag_same_objects           CHANGING  ex_main_list TYPE tt_request_details.
     METHODS mark_all_tp_records         IMPORTING im_cell TYPE salv_s_cell
                                         CHANGING  im_rows TYPE salv_t_row.
     METHODS main_to_tab_delimited       IMPORTING im_main_list TYPE tt_request_details
@@ -919,7 +919,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
                 MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
               ENDLOOP.
 *             After the transports have been added, we need to check again
-              rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
+              rf_ztct->flag_same_objects( CHANGING ex_main_list = rf_ztct->main_list ).
               rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
               rf_ztct->refresh_alv( ).
             ENDIF.
@@ -980,7 +980,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
                                      cell = ls_cell ).
           rf_ztct->add_table_keys_to_list( CHANGING table = rf_ztct->main_list ).
           rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->main_list ).
-          rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
+          rf_ztct->flag_same_objects( CHANGING ex_main_list = rf_ztct->main_list ).
           rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
           rf_ztct->refresh_alv( ).
         WHEN 'DDIC'.
@@ -1025,7 +1025,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
 *         transports to be added with checkboxes.
           rf_ztct->flag_for_process( rows = lt_rows
                                      cell = ls_cell ).
-          rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
+          rf_ztct->flag_same_objects( CHANGING ex_main_list = rf_ztct->main_list ).
           rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
           rf_ztct->build_conflict_popup( rows = lt_rows
                                          cell = ls_cell ).
@@ -1090,7 +1090,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           ENDLOOP.
 *         Unfortunately, after the transports have been added, we need to
 *         check again...
-          rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
+          rf_ztct->flag_same_objects( CHANGING ex_main_list = rf_ztct->main_list ).
           rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
           rf_ztct->refresh_alv( ).
         WHEN '&ADD_FILE'.
@@ -1112,7 +1112,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
                                         CHANGING  im_rows = lt_rows ).
           rf_ztct->flag_for_process( rows = lt_rows
                                      cell = ls_cell ).
-          rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
+          rf_ztct->flag_same_objects( CHANGING ex_main_list = rf_ztct->main_list ).
           rf_ztct->delete_tp_from_list( rows = lt_rows ).
           rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
           rf_ztct->refresh_alv( ).
@@ -1141,7 +1141,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
             rf_ztct->main_list_line-prd  = rf_ztct->co_scrap.
             MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
           ENDLOOP.
-          rf_ztct->flag_same_objects( IMPORTING ex_main_list = rf_ztct->main_list ).
+          rf_ztct->flag_same_objects( CHANGING ex_main_list = rf_ztct->main_list ).
           rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
           rf_ztct->refresh_alv( ).
         WHEN '&DOC'.
