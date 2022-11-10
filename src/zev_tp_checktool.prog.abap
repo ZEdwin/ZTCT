@@ -18,17 +18,6 @@ REPORT zev_tp_checktool.
 *--------------------------------------------------------------------*
 *  Use of ABAPGIT is recommended. SAPLINK is no longer maintained    *
 *--------------------------------------------------------------------*
-* Types for Function Group TR_LOG_OVERVIEW
-TYPE-POOLS ctslg.
-* Assignment: Icon Names in List of ASCII Codes
-TYPE-POOLS icon.
-* Global types for generic list modules
-TYPE-POOLS slis.
-* Transport Management System: Global Types
-TYPE-POOLS stms.
-* ABAP Language Type-Pool
-TYPE-POOLS abap.
-
 * Class for handling Events
 CLASS lcl_eventhandler_ztct DEFINITION DEFERRED.
 CLASS lcl_ztct              DEFINITION DEFERRED.
@@ -1113,7 +1102,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           rf_ztct->flag_for_process( rows = lt_rows
                                      cell = ls_cell ).
           rf_ztct->flag_same_objects( CHANGING ex_main_list = rf_ztct->main_list ).
-          rf_ztct->delete_tp_from_list( rows = lt_rows ).
+          rf_ztct->delete_tp_from_list( lt_rows ).
           rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
           rf_ztct->refresh_alv( ).
         WHEN '&IMPORT'.
@@ -1154,7 +1143,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           IF rf_table_xls IS BOUND.
             RETURN.
           ENDIF.
-          rf_ztct->display_excel( im_table = rf_ztct->main_list ).
+          rf_ztct->display_excel( rf_ztct->main_list ).
         WHEN '&SAVE'.
 *         Build header
           rf_ztct->main_to_tab_delimited( EXPORTING im_main_list     = rf_ztct->main_list
@@ -1287,14 +1276,14 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     ENDIF.
     CASE column.
       WHEN 'TRKORR'.
-        rf_ztct->display_transport( im_trkorr = rf_ztct->main_list_line-trkorr ).
+        rf_ztct->display_transport( rf_ztct->main_list_line-trkorr ).
       WHEN 'AS4USER'.
-        rf_ztct->display_user( im_user = rf_ztct->main_list_line-as4user ).
+        rf_ztct->display_user( rf_ztct->main_list_line-as4user ).
       WHEN 'CHECKED_BY'.
-        rf_ztct->display_user( im_user = rf_ztct->main_list_line-checked_by ).
+        rf_ztct->display_user( rf_ztct->main_list_line-checked_by ).
 *     Documentation
       WHEN 'INFO'.
-        rf_ztct->display_docu( im_trkorr = rf_ztct->main_list_line-trkorr ).
+        rf_ztct->display_docu( rf_ztct->main_list_line-trkorr ).
         rf_ztct->refresh_alv( ).
       WHEN 'WARNING_LVL'.
 *       Display popup with the conflicting transports/objects
@@ -1311,14 +1300,14 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     READ TABLE rf_ztct->conflicts INTO rf_ztct->conflict_line INDEX row.
     CASE column.
       WHEN 'TRKORR'.
-        rf_ztct->display_transport( im_trkorr = rf_ztct->conflict_line-trkorr ).
+        rf_ztct->display_transport( rf_ztct->conflict_line-trkorr ).
       WHEN 'AS4USER'.
-        rf_ztct->display_user( im_user = rf_ztct->conflict_line-as4user ).
+        rf_ztct->display_user( rf_ztct->conflict_line-as4user ).
       WHEN 'CHECKED_BY'.
-        rf_ztct->display_user( im_user = rf_ztct->conflict_line-checked_by ).
+        rf_ztct->display_user( rf_ztct->conflict_line-checked_by ).
 *     Documentation
       WHEN 'INFO'.
-        rf_ztct->display_docu( im_trkorr = rf_ztct->conflict_line-trkorr ).
+        rf_ztct->display_docu( rf_ztct->conflict_line-trkorr ).
         rf_ztct->refresh_alv( ).
       WHEN OTHERS.
     ENDCASE.
@@ -1333,7 +1322,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     ENDIF.
     CASE column.
       WHEN 'TRKORR'.
-        rf_ztct->display_transport( im_trkorr = rf_ztct->main_list_line-trkorr ).
+        rf_ztct->display_transport( rf_ztct->main_list_line-trkorr ).
       WHEN 'OBJ_NAME'.
         CALL FUNCTION 'TR_OBJECT_JUMP_TO_TOOL'
           EXPORTING
@@ -1354,7 +1343,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     READ TABLE rf_ztct->conflicts INTO rf_ztct->conflict_line INDEX row.
     CASE column.
       WHEN 'TRKORR'.
-        rf_ztct->display_transport( im_trkorr = rf_ztct->conflict_line-trkorr ).
+        rf_ztct->display_transport( rf_ztct->conflict_line-trkorr ).
       WHEN OTHERS.
     ENDCASE.
   ENDMETHOD.
@@ -1401,7 +1390,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   METHOD execute.
     DATA lp_cancelled TYPE abap_bool.
     IF process_type = 1.
-      get_data( im_trkorr_range = trkorr_range ).
+      get_data( trkorr_range ).
       get_additional_tp_info( CHANGING ch_table = main_list ).
 *     First selection: If the flag to exclude transport that are already
 *     in production is set, remove all these transports from the main
@@ -1441,21 +1430,21 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDIF.
     set_color( ).
     alv_init( ).
-    alv_set_properties( im_table = rf_table ).
-    alv_set_tooltips( im_table = rf_table ).
+    alv_set_properties( rf_table ).
+    alv_set_tooltips( rf_table ).
     alv_output( ).
   ENDMETHOD.
 
   METHOD get_data.
     refresh_import_queues( ).
-    get_main_transports( im_trkorr_range = im_trkorr_range ).
+    get_main_transports( im_trkorr_range ).
   ENDMETHOD.
 
   METHOD get_tp_prefix.
     IF prefix IS INITIAL.
 *     Build transport prefix
       IF im_dev IS SUPPLIED.
-        set_tp_prefix( im_dev = im_dev ).
+        set_tp_prefix( im_dev ).
       ELSE.
         set_tp_prefix( ).
       ENDIF.
@@ -1958,7 +1947,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   checking is active
 
 * Determine the transport prefix (if not done already)
-    lp_tp_prefix = get_tp_prefix( im_dev = dev_system ).
+    lp_tp_prefix = get_tp_prefix( dev_system ).
 *   Fill the internal table to be displayed in the popup:
     LOOP AT main_list INTO main_list_line
                      WHERE objfunc    = 'K'
@@ -2046,7 +2035,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                 lr_column_table ?=
                   lr_columns_table->get_column( ls_s_column_ref-columnname ).
               CATCH cx_salv_not_found INTO rf_root.
-                handle_error( rf_oref = rf_root ).
+                handle_error( rf_root ).
             ENDTRY.
             CASE lr_column_table->get_columnname( ).
               WHEN 'COUNTER'.
@@ -2081,7 +2070,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                          end_line     = lp_yend ).
         rf_table_keys->display( ).
       CATCH cx_salv_msg INTO rf_root.
-        handle_error( rf_oref = rf_root ).
+        handle_error( rf_root ).
     ENDTRY.
 
   ENDMETHOD.
@@ -2803,7 +2792,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         set_properties_conflicts( EXPORTING im_table = conflicts
                                   IMPORTING ex_xend  = lp_xend ).
 *       Set Tooltips
-        alv_set_tooltips( im_table = rf_conflicts ).
+        alv_set_tooltips( rf_conflicts ).
 *       Register handler for actions
         lr_events = rf_conflicts->get_event( ).
         SET HANDLER lcl_eventhandler_ztct=>on_function_click FOR lr_events.
@@ -2826,7 +2815,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                         end_line     = lp_yend ).
         rf_conflicts->display( ).
       CATCH cx_salv_msg INTO rf_root.
-        handle_error( rf_oref = rf_root ).
+        handle_error( rf_root ).
     ENDTRY.
     FREE rf_conflicts.
     set_building_conflict_popup( abap_false ).
@@ -2990,9 +2979,9 @@ CLASS lcl_ztct IMPLEMENTATION.
         lr_tabledescr ?= lr_typedescr.
         lr_structdescr ?= lr_tabledescr->get_table_line_type( ).
       CATCH cx_sy_move_cast_error INTO rf_root.
-        handle_error( rf_oref = rf_root ).
+        handle_error( rf_root ).
       CATCH cx_root INTO rf_root ##CATCH_ALL.
-        handle_error( rf_oref = rf_root ).
+        handle_error( rf_root ).
     ENDTRY.
 
 * Build header line
@@ -3069,7 +3058,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     top_of_page( IMPORTING ex_form_element = lr_form_element ).
     rf_table->set_top_of_list( lr_form_element ).
     set_color( ).
-    alv_set_tooltips( im_table = rf_table ).
+    alv_set_tooltips( rf_table ).
     rf_table->refresh( ).
   ENDMETHOD.
 
@@ -3096,9 +3085,9 @@ CLASS lcl_ztct IMPLEMENTATION.
         l_o_tabledescr ?= l_o_typedescr.
         l_o_structdescr ?= l_o_tabledescr->get_table_line_type( ).
       CATCH cx_sy_move_cast_error INTO rf_root.
-        handle_error( rf_oref = rf_root ).
+        handle_error( rf_root ).
       CATCH cx_root INTO rf_root ##CATCH_ALL.
-        handle_error( rf_oref = rf_root ).
+        handle_error( rf_root ).
     ENDTRY.
 *   First line contains the name of the fields
 *   Now modify the lines of the main list to a tab delimited list
@@ -3388,7 +3377,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           CHANGING
             t_table      = main_list ).
       CATCH cx_salv_msg INTO rf_root.
-        handle_error( rf_oref = rf_root ).
+        handle_error( rf_root ).
     ENDTRY.
     IF rf_table IS INITIAL.
       MESSAGE 'Error Creating ALV Grid'(t03) TYPE 'A' DISPLAY LIKE 'E'.
@@ -3405,7 +3394,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           CHANGING
             t_table      = ch_table ).
       CATCH cx_salv_msg INTO rf_root.
-        handle_error( rf_oref = rf_root ).
+        handle_error( rf_root ).
     ENDTRY.
     IF rf_table_xls IS INITIAL.
       MESSAGE 'Error Creating ALV Grid'(t03) TYPE 'A' DISPLAY LIKE 'E'.
@@ -3606,7 +3595,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           lr_functions_list->set_function( name    = 'RECHECK'
                                            boolean = if_salv_c_bool_sap=>false ).
         CATCH cx_root INTO rf_root ##CATCH_ALL.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
       ENDTRY.
     ENDIF.
 *   Layout Settings
@@ -3659,11 +3648,11 @@ CLASS lcl_ztct IMPLEMENTATION.
                               subtotal   = if_salv_c_bool_sap=>false
                               obligatory = if_salv_c_bool_sap=>false ).
         CATCH cx_salv_not_found INTO rf_root.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
         CATCH cx_salv_existing INTO rf_root.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
         CATCH cx_salv_data_error INTO rf_root.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
       ENDTRY.
       TRY.
           lr_sorts->add_sort( columnname = 'AS4TIME'
@@ -3673,11 +3662,11 @@ CLASS lcl_ztct IMPLEMENTATION.
                               group      = if_salv_c_sort=>group_none
                               obligatory = if_salv_c_bool_sap=>false ).
         CATCH cx_salv_not_found INTO rf_root.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
         CATCH cx_salv_existing INTO rf_root.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
         CATCH cx_salv_data_error INTO rf_root.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
       ENDTRY.
     ENDIF.
 *   Table Selection Settings
@@ -3703,7 +3692,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       TRY.
           lr_columns_table->set_color_column( 'T_COLOR' ).
         CATCH cx_salv_data_error INTO rf_root.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
       ENDTRY.
 *     Individual Column Properties.
       column_settings( im_column_ref       = lt_t_column_ref
@@ -3896,7 +3885,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           lr_column_table ?=
             im_rf_columns_table->get_column( ls_s_column_ref-columnname ).
         CATCH cx_salv_not_found INTO rf_root.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
       ENDTRY.
       IF lr_column_table IS NOT INITIAL.
 *       Make Mandt column invisible
@@ -3912,11 +3901,11 @@ CLASS lcl_ztct IMPLEMENTATION.
                                  columnname  = ls_s_column_ref-columnname
                                  aggregation = if_salv_c_aggregation=>total ).
               CATCH cx_salv_data_error INTO rf_root.
-                handle_error( rf_oref = rf_root ).
+                handle_error( rf_root ).
               CATCH cx_salv_not_found INTO rf_root.
-                handle_error( rf_oref = rf_root ).
+                handle_error( rf_root ).
               CATCH cx_salv_existing INTO rf_root.
-                handle_error( rf_oref = rf_root ).
+                handle_error( rf_root ).
             ENDTRY.
           ENDIF.
         ENDIF.
@@ -4527,7 +4516,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       TRY.
           MODIFY TABLE main_list_xls FROM main_list_line_xls.
         CATCH cx_root INTO rf_root ##CATCH_ALL.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
       ENDTRY.
     ENDLOOP.
 *   Message if entries were deleted because they were not in QAS:
@@ -4544,7 +4533,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Display short list for copy to Excel transport list:
     alv_xls_init( IMPORTING ex_rf_table = rf_table_xls
                   CHANGING  ch_table    = main_list_xls ).
-    alv_set_properties( im_table = rf_table_xls ).
+    alv_set_properties( rf_table_xls ).
     alv_xls_output( ).
     FREE rf_table_xls.
     FREE main_list_xls.
@@ -4733,11 +4722,11 @@ CLASS lcl_ztct IMPLEMENTATION.
                               subtotal   = if_salv_c_bool_sap=>false
                               obligatory = if_salv_c_bool_sap=>false ).
         CATCH cx_salv_not_found INTO rf_root.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
         CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
 *          handle_error( EXPORTING rf_oref = rf_root ).
         CATCH cx_salv_data_error INTO rf_root.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
       ENDTRY.
       TRY.
           lr_sorts->add_sort( columnname  = 'AS4TIME'
@@ -4747,11 +4736,11 @@ CLASS lcl_ztct IMPLEMENTATION.
                                group      = if_salv_c_sort=>group_none
                                obligatory = if_salv_c_bool_sap=>false ).
         CATCH cx_salv_not_found INTO rf_root.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
         CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
 *          rf_ztct->handle_error( EXPORTING rf_oref = rf_root ).
         CATCH cx_salv_data_error INTO rf_root.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
       ENDTRY.
     ENDIF.
 *   Table Selection Settings
@@ -4778,7 +4767,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       TRY.
           lr_columns_table->set_color_column( 'T_COLOR' ).
         CATCH cx_salv_data_error INTO rf_root.
-          handle_error( rf_oref = rf_root ).
+          handle_error( rf_root ).
       ENDTRY.
 
       LOOP AT lt_t_column_ref INTO ls_s_column_ref.
@@ -4786,7 +4775,7 @@ CLASS lcl_ztct IMPLEMENTATION.
             lr_column_table ?=
               lr_columns_table->get_column( ls_s_column_ref-columnname ).
           CATCH cx_salv_not_found INTO rf_root.
-            handle_error( rf_oref = rf_root ).
+            handle_error( rf_root ).
         ENDTRY.
         IF lr_column_table IS NOT INITIAL.
 *         Make Mandt column invisible
@@ -4802,11 +4791,11 @@ CLASS lcl_ztct IMPLEMENTATION.
                                     columnname  = ls_s_column_ref-columnname
                                     aggregation = if_salv_c_aggregation=>total ).
                 CATCH cx_salv_data_error INTO rf_root.
-                  handle_error( rf_oref = rf_root ).
+                  handle_error( rf_root ).
                 CATCH cx_salv_not_found INTO rf_root.
-                  handle_error( rf_oref = rf_root ).
+                  handle_error( rf_root ).
                 CATCH cx_salv_existing INTO rf_root.
-                  handle_error( rf_oref = rf_root ).
+                  handle_error( rf_root ).
               ENDTRY.
             ENDIF.
           ENDIF.
@@ -5327,7 +5316,7 @@ START-OF-SELECTION.
     ENDTRY.
   ENDIF.
 
-  tp_prefix = rf_ztct->get_tp_prefix( im_dev = pa_dev ).
+  tp_prefix = rf_ztct->get_tp_prefix( pa_dev ).
 
   IF pa_sel = abap_true.
     tp_process_type = 1.
