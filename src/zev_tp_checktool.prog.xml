@@ -2406,13 +2406,13 @@
     <item>
      <ID>I</ID>
      <KEY>H01</KEY>
-     <ENTRY>If there is a warning icon in column `Warning`, double-clicking on the icon will display a list of objects that should be checked</ENTRY>
+     <ENTRY>If there is a warning icon in column `Warning`, double-clicking on the icon will display a list of objects that should be checked.</ENTRY>
      <LENGTH>132</LENGTH>
     </item>
     <item>
      <ID>I</ID>
      <KEY>H02</KEY>
-     <ENTRY>You can add these conflicts by means of the button &apos;Add Conflicts&apos; in the application toolbar or doubleclicking the warning</ENTRY>
+     <ENTRY>You can add these conflicts by means of the button &apos;Add Conflicts&apos; in the application toolbar or doubleclicking the warning.</ENTRY>
      <LENGTH>132</LENGTH>
     </item>
     <item>
@@ -2739,12 +2739,6 @@
       </item>
       <item>
        <ID>I</ID>
-       <KEY>012</KEY>
-       <ENTRY>Desktop not found</ENTRY>
-       <LENGTH>50</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
        <KEY>013</KEY>
        <ENTRY>Select a transportlist</ENTRY>
        <LENGTH>50</LENGTH>
@@ -2847,20 +2841,8 @@
       </item>
       <item>
        <ID>I</ID>
-       <KEY>030</KEY>
-       <ENTRY>Documentation for</ENTRY>
-       <LENGTH>50</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
        <KEY>031</KEY>
        <ENTRY>Cancelled by user</ENTRY>
-       <LENGTH>50</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
-       <KEY>032</KEY>
-       <ENTRY>Hints and Tips for</ENTRY>
        <LENGTH>50</LENGTH>
       </item>
       <item>
@@ -2873,18 +2855,6 @@
        <ID>I</ID>
        <KEY>034</KEY>
        <ENTRY>Warn</ENTRY>
-       <LENGTH>50</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
-       <KEY>035</KEY>
-       <ENTRY>The file has been saved</ENTRY>
-       <LENGTH>50</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
-       <KEY>036</KEY>
-       <ENTRY>Cancelled by user</ENTRY>
        <LENGTH>50</LENGTH>
       </item>
       <item>
@@ -2949,18 +2919,6 @@
       </item>
       <item>
        <ID>I</ID>
-       <KEY>047</KEY>
-       <ENTRY>Sts</ENTRY>
-       <LENGTH>3</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
-       <KEY>048</KEY>
-       <ENTRY>Status</ENTRY>
-       <LENGTH>6</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
        <KEY>049</KEY>
        <ENTRY>File uploaded:</ENTRY>
        <LENGTH>14</LENGTH>
@@ -3021,6 +2979,12 @@
       </item>
       <item>
        <ID>I</ID>
+       <KEY>059</KEY>
+       <ENTRY>Import again</ENTRY>
+       <LENGTH>12</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
        <KEY>B10</KEY>
        <ENTRY>Selection range / Upload file</ENTRY>
        <LENGTH>29</LENGTH>
@@ -3054,12 +3018,6 @@
        <KEY>B50</KEY>
        <ENTRY>Exclude from check</ENTRY>
        <LENGTH>18</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
-       <KEY>B60</KEY>
-       <ENTRY>Overview of used Icons</ENTRY>
-       <LENGTH>50</LENGTH>
       </item>
       <item>
        <ID>I</ID>
@@ -3123,18 +3081,6 @@
       </item>
       <item>
        <ID>I</ID>
-       <KEY>C46</KEY>
-       <ENTRY>Check ON</ENTRY>
-       <LENGTH>20</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
-       <KEY>C47</KEY>
-       <ENTRY>Check OFF</ENTRY>
-       <LENGTH>9</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
        <KEY>C51</KEY>
        <ENTRY>Objects in the range will not be taken into account when checking the</ENTRY>
        <LENGTH>69</LENGTH>
@@ -3154,20 +3100,14 @@
       <item>
        <ID>I</ID>
        <KEY>H01</KEY>
-       <ENTRY>If there is a warning icon in column `Warning`, double-clicking on the icon will display a list of objects that should be checked</ENTRY>
+       <ENTRY>If there is a warning icon in column `Warning`, double-clicking on the icon will display a list of objects that should be checked.</ENTRY>
        <LENGTH>132</LENGTH>
       </item>
       <item>
        <ID>I</ID>
        <KEY>H02</KEY>
-       <ENTRY>You can add these conflicts by means of the button &apos;Add Conflicts&apos; in the application toolbar or doubleclicking the warning</ENTRY>
+       <ENTRY>You can add these conflicts by means of the button &apos;Add Conflicts&apos; in the application toolbar or doubleclicking the warning.</ENTRY>
        <LENGTH>132</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
-       <KEY>M01</KEY>
-       <ENTRY>Select the row to delete</ENTRY>
-       <LENGTH>24</LENGTH>
       </item>
       <item>
        <ID>I</ID>
@@ -3297,15 +3237,9 @@
       </item>
       <item>
        <ID>I</ID>
-       <KEY>W02</KEY>
-       <ENTRY>No version found to compare</ENTRY>
-       <LENGTH>27</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
        <KEY>W03</KEY>
        <ENTRY>Uses object not in list or production</ENTRY>
-       <LENGTH>40</LENGTH>
+       <LENGTH>50</LENGTH>
       </item>
       <item>
        <ID>I</ID>
@@ -3365,7 +3299,7 @@
        <ID>I</ID>
        <KEY>W22</KEY>
        <ENTRY>Newer version in Acceptance, but in list</ENTRY>
-       <LENGTH>40</LENGTH>
+       <LENGTH>49</LENGTH>
       </item>
       <item>
        <ID>I</ID>
