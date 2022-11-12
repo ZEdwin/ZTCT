@@ -2526,14 +2526,8 @@
     <item>
      <ID>I</ID>
      <KEY>T06</KEY>
-     <ENTRY>Select the tables for which</ENTRY>
-     <LENGTH>40</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>T07</KEY>
-     <ENTRY> the keys must be checked</ENTRY>
-     <LENGTH>40</LENGTH>
+     <ENTRY>Select the tables for which the keys must be checked</ENTRY>
+     <LENGTH>55</LENGTH>
     </item>
     <item>
      <ID>I</ID>
