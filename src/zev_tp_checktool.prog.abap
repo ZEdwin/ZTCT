@@ -38,10 +38,10 @@ TABLES sscrfields.
 CONSTANTS:
   co_langu  TYPE ddlanguage VALUE 'E'.
 
-DATA ra_project_trkorrs     TYPE RANGE OF ctsproject-trkorr ##NEEDED.
-DATA st_project_trkorrs     LIKE LINE  OF ra_project_trkorrs ##NEEDED.
+DATA lt_range_project_trkorrs     TYPE RANGE OF ctsproject-trkorr ##NEEDED.
+DATA ls_range_project_trkorrs     LIKE LINE  OF lt_range_project_trkorrs ##NEEDED.
 DATA ra_systems             TYPE RANGE OF tmscsys-sysnam ##NEEDED.
-DATA st_systems             LIKE LINE  OF ra_systems ##NEEDED.
+DATA ls_systems             LIKE LINE  OF ra_systems ##NEEDED.
 
 * Global data declarations:
 DATA tp_prefix              TYPE char5 ##NEEDED.
@@ -118,7 +118,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
 
   PUBLIC SECTION.
 
-    TYPES ra_trkorr                  TYPE RANGE OF trkorr.
+    TYPES lt_range_trkorr                  TYPE RANGE OF trkorr.
     TYPES ra_excluded_objects        TYPE RANGE OF trobj_name.
     DATA ls_excluded_objects        LIKE LINE OF lt_excluded_objects.
     TYPES: BEGIN OF ty_request_details,
@@ -198,8 +198,8 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS set_clear_checked           IMPORTING im_clear_checked           TYPE abap_bool OPTIONAL.
     METHODS set_buffer_chk              IMPORTING im_buffer_chk              TYPE abap_bool OPTIONAL.
     METHODS set_buffer_remove_tp        IMPORTING im_buffer_remove_tp        TYPE abap_bool OPTIONAL.
-    METHODS set_trkorr_range            IMPORTING im_trkorr_range            TYPE ra_trkorr OPTIONAL.
-    METHODS set_project_range           IMPORTING im_project_range           TYPE ra_trkorr OPTIONAL.
+    METHODS set_trkorr_range            IMPORTING im_trkorr_range            TYPE lt_range_trkorr OPTIONAL.
+    METHODS set_project_range           IMPORTING im_project_range           TYPE lt_range_trkorr OPTIONAL.
     METHODS set_excluded_objects        IMPORTING im_excluded_objects        TYPE ra_excluded_objects OPTIONAL.
     METHODS set_search_string           IMPORTING im_search_string           TYPE as4text OPTIONAL.
     METHODS set_user_layout             IMPORTING im_user_layout             TYPE abap_bool OPTIONAL.
@@ -299,7 +299,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     DATA lp_ddic_text                TYPE text74.
 
 * Attributes
-    DATA project_trkorrs             TYPE ra_trkorr.
+    DATA project_trkorrs             TYPE lt_range_trkorr.
     DATA prefix                      TYPE char5.
     DATA aggr_tp_list_of_objects     TYPE tt_request_details.
     DATA add_to_main                 TYPE tt_request_details.
@@ -319,8 +319,8 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     DATA clear_checked               TYPE abap_bool.
     DATA buffer_chk                  TYPE abap_bool.
     DATA buffer_remove_tp            TYPE abap_bool.
-    DATA trkorr_range                TYPE ra_trkorr.
-    DATA project_range               TYPE ra_trkorr.
+    DATA trkorr_range                TYPE lt_range_trkorr.
+    DATA project_range               TYPE lt_range_trkorr.
     DATA excluded_objects            TYPE ra_excluded_objects.
     DATA search_string               TYPE as4text.
     DATA user_layout                 TYPE abap_bool.
@@ -341,7 +341,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS get_tp_info                 IMPORTING im_trkorr      TYPE trkorr
                                                   im_obj_name    TYPE trobj_name
                                         RETURNING VALUE(re_line) TYPE ty_request_details.
-    METHODS get_added_objects           IMPORTING im_to_add TYPE ra_trkorr
+    METHODS get_added_objects           IMPORTING im_to_add TYPE lt_range_trkorr
                                         EXPORTING ex_to_add TYPE tt_request_details.
     METHODS add_to_list                 IMPORTING im_to_add TYPE tt_request_details
                                         EXPORTING ex_main   TYPE tt_request_details.
@@ -411,7 +411,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS alv_init.
     METHODS set_color.
     METHODS alv_set_properties          IMPORTING im_table TYPE REF TO cl_salv_table.
-    METHODS alv_set_tooltips            IMPORTING im_table TYPE REF TO cl_salv_table.
+    METHODS alv_set_lr_tooltips            IMPORTING im_table TYPE REF TO cl_salv_table.
     METHODS alv_output.
     METHODS set_where_used.
     METHODS get_import_datetime_qas     IMPORTING im_trkorr  TYPE trkorr
@@ -557,8 +557,8 @@ INITIALIZATION.
         MESSAGE tp_msg TYPE 'E'.
     ENDTRY.
   ENDIF.
-
-  i_name = '@L8@'." icon_terminated_position.
+* icon_terminated_position.
+  i_name = '@L8@'.
   i_date = 'Clear'(025).
   IF so_date IS INITIAL.
     i_date = 'Clear'(025).
@@ -601,11 +601,11 @@ INITIALIZATION.
   WRITE icon_information AS ICON TO i_ckey.
 
 * Create a range table containing all project numbers:
-  st_project_trkorrs-sign = 'E'.
-  st_project_trkorrs-option = 'EQ'.
+  ls_range_project_trkorrs-sign = 'E'.
+  ls_range_project_trkorrs-option = 'EQ'.
   SELECT trkorr FROM ctsproject
-                INTO st_project_trkorrs-low.          "#EC CI_SGLSELECT
-    APPEND st_project_trkorrs TO ra_project_trkorrs.
+                INTO ls_range_project_trkorrs-low.    "#EC CI_SGLSELECT
+    APPEND ls_range_project_trkorrs TO lt_range_project_trkorrs.
   ENDSELECT.
 
 * Get the transport track
@@ -801,8 +801,8 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     TYPES lty_field TYPE STANDARD TABLE OF lty_sval.
 
 
-    DATA lra_transports_to_add TYPE RANGE OF e070-trkorr.
-    DATA lst_transports_to_add LIKE LINE OF lra_transports_to_add.
+    DATA lt_range_transports_to_add TYPE RANGE OF e070-trkorr.
+    DATA ls_range_transports_to_add LIKE LINE OF lt_range_transports_to_add.
     DATA lt_excluded_objects  TYPE RANGE OF trobj_name.
     DATA ls_excluded_objects  LIKE LINE OF lt_excluded_objects.
 *   Global data declarations:
@@ -828,19 +828,19 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     DATA lp_question         TYPE string.
     DATA lp_answer           TYPE char01.
 
-    FIELD-SYMBOLS: <rf_ref_table> TYPE REF TO cl_salv_table.
+    FIELD-SYMBOLS: <lf_ref_table> TYPE REF TO cl_salv_table.
 
 *   Which popup are we displaying? Conflicts or Table keys?
     IF rf_conflicts IS BOUND.
-      ASSIGN rf_conflicts TO <rf_ref_table>.              "#EC CI_SUBRC
+      ASSIGN rf_conflicts TO <lf_ref_table>.              "#EC CI_SUBRC
     ELSEIF rf_table_keys IS BOUND.
-      ASSIGN rf_table_keys TO <rf_ref_table>.             "#EC CI_SUBRC
+      ASSIGN rf_table_keys TO <lf_ref_table>.             "#EC CI_SUBRC
     ELSE.
-      ASSIGN rf_table TO <rf_ref_table>.                  "#EC CI_SUBRC
+      ASSIGN rf_table TO <lf_ref_table>.                  "#EC CI_SUBRC
     ENDIF.
-    IF <rf_ref_table> IS ASSIGNED.
+    IF <lf_ref_table> IS ASSIGNED.
 *     Get current row
-      lr_selections = <rf_ref_table>->get_selections( ).
+      lr_selections = <lf_ref_table>->get_selections( ).
       lt_rows       = lr_selections->get_selected_rows( ).
       ls_cell       = lr_selections->get_current_cell( ).
       IF e_salv_function <> 'GOON' AND e_salv_function <> 'ABR'.
@@ -853,26 +853,26 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
             rf_conflicts->close_screen( ).
 *           Move the conflicts to a range. The transports in this range will
 *           be added to the main list:
-            FREE lra_transports_to_add.
+            FREE lt_range_transports_to_add.
             rf_ztct->set_building_conflict_popup( abap_false ).
-            CLEAR: lst_transports_to_add.
-            lst_transports_to_add-sign = 'I'.
-            lst_transports_to_add-option = 'EQ'.
+            CLEAR: ls_range_transports_to_add.
+            ls_range_transports_to_add-sign = 'I'.
+            ls_range_transports_to_add-option = 'EQ'.
 *           If row(s) are selected, use the table
             LOOP AT lt_rows INTO ls_row.
               READ TABLE rf_ztct->conflicts INTO rf_ztct->conflict_line
                                            INDEX ls_row.
               IF sy-subrc = 0.
-                lst_transports_to_add-low = rf_ztct->conflict_line-trkorr.
-                APPEND lst_transports_to_add TO lra_transports_to_add.
+                ls_range_transports_to_add-low = rf_ztct->conflict_line-trkorr.
+                APPEND ls_range_transports_to_add TO lt_range_transports_to_add.
               ENDIF.
             ENDLOOP.
 *           Rows MUST be selected, take the current cell instead
             IF lt_rows[] IS INITIAL.
               MESSAGE i000(db) WITH 'No rows selected: No transports will be added'(m06).
             ENDIF.
-            IF lra_transports_to_add[] IS NOT INITIAL.
-              rf_ztct->get_added_objects( EXPORTING im_to_add = lra_transports_to_add
+            IF lt_range_transports_to_add[] IS NOT INITIAL.
+              rf_ztct->get_added_objects( EXPORTING im_to_add = lt_range_transports_to_add
                                           IMPORTING ex_to_add = rf_ztct->add_to_main ).
               rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
               rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
@@ -882,7 +882,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
 *             changing the prd icon to co_scrap.
               LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
                                          WHERE prd    = rf_ztct->co_okay
-                                           AND trkorr IN lra_transports_to_add.
+                                           AND trkorr IN lt_range_transports_to_add.
                 rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
                 MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
               ENDLOOP.
@@ -1021,10 +1021,10 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           ENDIF.
 *         Move the conflicts to a range. The transports in this range will
 *         be added to the main list:
-          FREE lra_transports_to_add.
-          CLEAR lst_transports_to_add.
-          lst_transports_to_add-sign = 'I'.
-          lst_transports_to_add-option = 'EQ'.
+          FREE lt_range_transports_to_add.
+          CLEAR ls_range_transports_to_add.
+          ls_range_transports_to_add-sign = 'I'.
+          ls_range_transports_to_add-option = 'EQ'.
           READ TABLE lt_fields INTO ls_fields INDEX 1.    "#EC CI_SUBRC
           IF ls_fields-value IS INITIAL.
             RETURN.
@@ -1036,9 +1036,9 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
             RETURN.
           ENDIF.
 *         Add transport number to the internal table to add:
-          lst_transports_to_add-low = ls_fields-value.
-          APPEND lst_transports_to_add TO lra_transports_to_add.
-          rf_ztct->get_added_objects( EXPORTING im_to_add = lra_transports_to_add
+          ls_range_transports_to_add-low = ls_fields-value.
+          APPEND ls_range_transports_to_add TO lt_range_transports_to_add.
+          rf_ztct->get_added_objects( EXPORTING im_to_add = lt_range_transports_to_add
                                       IMPORTING ex_to_add = rf_ztct->add_to_main ).
           rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
           rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
@@ -1048,7 +1048,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
 *         changing the prd icon to co_scrap.
           LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
                                     WHERE prd    = rf_ztct->co_okay
-                                      AND trkorr IN lra_transports_to_add.
+                                      AND trkorr IN lt_range_transports_to_add.
             rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
             MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
           ENDLOOP.
@@ -1085,22 +1085,22 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           rf_ztct->clear_flags( ).
           rf_ztct->flag_for_process( rows = lt_rows
                                      cell = ls_cell ).
-          FREE lra_transports_to_add.
-          CLEAR lst_transports_to_add.
-          lst_transports_to_add-sign   = 'I'.
-          lst_transports_to_add-option = 'EQ'.
+          FREE lt_range_transports_to_add.
+          CLEAR ls_range_transports_to_add.
+          ls_range_transports_to_add-sign   = 'I'.
+          ls_range_transports_to_add-option = 'EQ'.
           LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
                                     WHERE flag = 'X'
                                       AND prd  = rf_ztct->co_okay.
-            lst_transports_to_add-low = rf_ztct->main_list_line-trkorr.
-            APPEND lst_transports_to_add TO lra_transports_to_add.
+            ls_range_transports_to_add-low = rf_ztct->main_list_line-trkorr.
+            APPEND ls_range_transports_to_add TO lt_range_transports_to_add.
           ENDLOOP.
-          IF lra_transports_to_add IS INITIAL.
+          IF lt_range_transports_to_add IS INITIAL.
             MESSAGE i000(db) WITH 'No records selected that can be re-imported'(m11).
             RETURN.
           ENDIF.
           LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
-                                       WHERE trkorr IN lra_transports_to_add.
+                                       WHERE trkorr IN lt_range_transports_to_add.
             rf_ztct->main_list_line-flag = 'X'.
             rf_ztct->main_list_line-prd  = rf_ztct->co_scrap.
             MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
@@ -1337,8 +1337,8 @@ ENDCLASS.
 CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD constructor.
-    DATA ra_project_trkorrs TYPE RANGE OF trkorr.
-    DATA st_project_trkorrs LIKE LINE OF ra_project_trkorrs.
+    DATA lt_range_project_trkorrs TYPE RANGE OF trkorr.
+    DATA ls_range_project_trkorrs LIKE LINE OF lt_range_project_trkorrs.
 
     lp_alert0_text = 'Log couldn''t be read or TP not released'(w16).
     lp_alert1_text = 'Transport not released'(w19).
@@ -1355,16 +1355,16 @@ CLASS lcl_ztct IMPLEMENTATION.
     lp_fail_text   = 'Transport not possible'(w24).
 *   Create a range table containing all project transport numbers.
 *   When selecting transports, these can be skipped.
-    st_project_trkorrs-sign   = 'I'.
-    st_project_trkorrs-option = 'EQ'.
+    ls_range_project_trkorrs-sign   = 'I'.
+    ls_range_project_trkorrs-option = 'EQ'.
     SELECT trkorr FROM ctsproject
-                  INTO st_project_trkorrs-low.        "#EC CI_SGLSELECT
-      APPEND st_project_trkorrs TO project_trkorrs.
+                  INTO ls_range_project_trkorrs-low.  "#EC CI_SGLSELECT
+      APPEND ls_range_project_trkorrs TO project_trkorrs.
     ENDSELECT.
 *   Ensure that the range cannot be empty
     IF project_trkorrs IS INITIAL.
-      st_project_trkorrs-low = 'DUMMY'.               "#EC CI_SGLSELECT
-      APPEND st_project_trkorrs TO project_trkorrs.
+      ls_range_project_trkorrs-low = 'DUMMY'.         "#EC CI_SGLSELECT
+      APPEND ls_range_project_trkorrs TO project_trkorrs.
     ENDIF.
   ENDMETHOD.
 
@@ -1412,7 +1412,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     set_color( ).
     alv_init( ).
     alv_set_properties( rf_table ).
-    alv_set_tooltips( rf_table ).
+    alv_set_lr_tooltips( rf_table ).
     alv_output( ).
   ENDMETHOD.
 
@@ -1481,8 +1481,8 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD check_for_conflicts.
-    DATA ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
-    DATA st_stms_wbo_requests TYPE stms_wbo_request.
+    DATA lt_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
+    DATA ls_stms_wbo_requests TYPE stms_wbo_request.
     DATA lp_counter           TYPE i.
     DATA lp_tabix             TYPE sytabix.
     DATA lp_return            TYPE c.
@@ -1569,13 +1569,13 @@ CLASS lcl_ztct IMPLEMENTATION.
                                 INTO  ls_newer_line-tr_descr
                                 WHERE trkorr = ls_newer_line-trkorr ##WARN_OK. "#EC CI_SUBRC
 *         Check if it has been transported to the target system:
-          FREE ta_stms_wbo_requests.
-          CLEAR ta_stms_wbo_requests.
+          FREE lt_stms_wbo_requests.
+          CLEAR lt_stms_wbo_requests.
           READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
                WITH TABLE KEY request          = ls_newer_line-trkorr
                               target_system    = lp_target.
           IF sy-subrc = 0.
-            ta_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
+            lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
           ELSE.
             CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
               EXPORTING
@@ -1584,7 +1584,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                 iv_header_only             = 'X'
                 iv_monitor                 = ' '
               IMPORTING
-                et_request_infos           = ta_stms_wbo_requests
+                et_request_infos           = lt_stms_wbo_requests
               EXCEPTIONS
                 read_config_failed         = 1
                 table_of_requests_is_empty = 2
@@ -1596,13 +1596,13 @@ CLASS lcl_ztct IMPLEMENTATION.
             ELSE.
               tms_mgr_buffer_line-request       = ls_newer_line-trkorr.
               tms_mgr_buffer_line-target_system = lp_target.
-              tms_mgr_buffer_line-request_infos = ta_stms_wbo_requests.
+              tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
               INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
             ENDIF.
           ENDIF.
-          READ TABLE ta_stms_wbo_requests INDEX 1
-                     INTO st_stms_wbo_requests.
-          IF st_stms_wbo_requests-e070 IS NOT INITIAL.
+          READ TABLE lt_stms_wbo_requests INDEX 1
+                     INTO ls_stms_wbo_requests.
+          IF ls_stms_wbo_requests-e070 IS NOT INITIAL.
 *           Only display the warning if the preceding transport is not
 *           one of the selected transports (and in an earlier
 *           position)
@@ -1689,13 +1689,13 @@ CLASS lcl_ztct IMPLEMENTATION.
                                 INTO  ls_older_line-tr_descr
                                 WHERE trkorr = ls_older_line-trkorr ##WARN_OK. "#EC CI_SUBRC
 *         Check if it has been transported to QAS
-          FREE ta_stms_wbo_requests.
-          CLEAR ta_stms_wbo_requests.
+          FREE lt_stms_wbo_requests.
+          CLEAR lt_stms_wbo_requests.
           READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
                           WITH TABLE KEY request          = ls_older_line-trkorr
                                          target_system    = lp_target.
           IF sy-subrc = 0.
-            ta_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
+            lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
           ELSE.
             CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
               EXPORTING
@@ -1704,7 +1704,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                 iv_header_only             = 'X'
                 iv_monitor                 = ' '
               IMPORTING
-                et_request_infos           = ta_stms_wbo_requests
+                et_request_infos           = lt_stms_wbo_requests
               EXCEPTIONS
                 read_config_failed         = 1
                 table_of_requests_is_empty = 2
@@ -1716,14 +1716,14 @@ CLASS lcl_ztct IMPLEMENTATION.
             ELSE.
               tms_mgr_buffer_line-request       = ls_older_line-trkorr.
               tms_mgr_buffer_line-target_system = lp_target.
-              tms_mgr_buffer_line-request_infos = ta_stms_wbo_requests.
+              tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
               INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
             ENDIF.
           ENDIF.
 *         Was an older transport found that has not yet gone to EEP?
-          READ TABLE ta_stms_wbo_requests INDEX 1
-                                          INTO st_stms_wbo_requests.
-          IF st_stms_wbo_requests-e070 IS INITIAL.
+          READ TABLE lt_stms_wbo_requests INDEX 1
+                                          INTO ls_stms_wbo_requests.
+          IF ls_stms_wbo_requests-e070 IS INITIAL.
             check_if_same_object( EXPORTING im_line        = ls_main
                                             im_newer_older = ls_older_line
                                   IMPORTING ex_tabkey      = tp_tabkey
@@ -1760,13 +1760,13 @@ CLASS lcl_ztct IMPLEMENTATION.
 *             O - Release started
 *             R - Released
 *             N - Released (with import protection for repaired objects)
-              FREE ta_stms_wbo_requests.
-              CLEAR ta_stms_wbo_requests.
+              FREE lt_stms_wbo_requests.
+              CLEAR lt_stms_wbo_requests.
               READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
                               WITH TABLE KEY request          = ls_older_line-trkorr
                                              target_system    = dev_system.
               IF sy-subrc = 0.
-                ta_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
+                lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
               ELSE.
                 CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
                   EXPORTING
@@ -1775,7 +1775,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                     iv_header_only             = 'X'
                     iv_monitor                 = ' '
                   IMPORTING
-                    et_request_infos           = ta_stms_wbo_requests
+                    et_request_infos           = lt_stms_wbo_requests
                   EXCEPTIONS
                     read_config_failed         = 1
                     table_of_requests_is_empty = 2
@@ -1787,17 +1787,17 @@ CLASS lcl_ztct IMPLEMENTATION.
                 ELSE.
                   tms_mgr_buffer_line-request       = ls_older_line-trkorr.
                   tms_mgr_buffer_line-target_system = lp_target.
-                  tms_mgr_buffer_line-request_infos = ta_stms_wbo_requests.
+                  tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
                   INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
                 ENDIF.
               ENDIF.
-              READ TABLE ta_stms_wbo_requests INDEX 1
-                                              INTO st_stms_wbo_requests.
-              IF st_stms_wbo_requests-e070-trstatus NA 'NR'.
+              READ TABLE lt_stms_wbo_requests INDEX 1
+                                              INTO ls_stms_wbo_requests.
+              IF ls_stms_wbo_requests-e070-trstatus NA 'NR'.
                 conflict_line-warning_lvl  = co_alert.
                 conflict_line-warning_rank = co_alert1_rank.
                 conflict_line-warning_txt  = lp_alert1_text.
-              ELSEIF st_stms_wbo_requests-e070-trstatus = 'O'.
+              ELSEIF ls_stms_wbo_requests-e070-trstatus = 'O'.
                 conflict_line-warning_lvl  = co_alert.
                 conflict_line-warning_rank = co_alert2_rank.
                 conflict_line-warning_txt  = lp_alert2_text.
@@ -1941,11 +1941,11 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     Count the keys...
       SELECT COUNT(*)
               FROM e071k INTO table_keys_line-counter
-             WHERE trkorr     =    main_list_line-trkorr
-               AND mastertype =    main_list_line-object
-               AND trkorr NOT IN   project_trkorrs
+             WHERE trkorr     = main_list_line-trkorr
+               AND mastertype = main_list_line-object
+               AND trkorr NOT IN project_trkorrs
                AND trkorr     LIKE lp_tp_prefix
-               AND objname    IN   excluded_objects.
+               AND objname    IN excluded_objects.
       table_keys_line-tabname = main_list_line-obj_name.
       COLLECT table_keys_line INTO table_keys.
     ENDLOOP.
@@ -2159,10 +2159,10 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_main_transports.
-    DATA ta_main_list_vrsd  TYPE tt_request_details.
-    DATA st_main_list_vrsd  TYPE ty_request_details.
-    FIELD-SYMBOLS: <l_main_list> TYPE ty_request_details.
-    FREE ta_main_list_vrsd.
+    DATA lt_main_list_vrsd  TYPE tt_request_details.
+    DATA ls_main_list_vrsd  TYPE ty_request_details.
+    FIELD-SYMBOLS: <lf_main_list> TYPE ty_request_details.
+    FREE lt_main_list_vrsd.
     CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
       EXPORTING
         text = 'Selecting data...'(014).
@@ -2182,14 +2182,14 @@ CLASS lcl_ztct IMPLEMENTATION.
                  pgmid     = 'R3TR' ) ##TOO_MANY_ITAB_FIELDS.
 
     IF main_list[] IS NOT INITIAL.
-      LOOP AT main_list ASSIGNING <l_main_list>.
+      LOOP AT main_list ASSIGNING <lf_main_list>.
 *       If the transports should be checked, flag it.
-        <l_main_list>-flag = abap_true.
+        <lf_main_list>-flag = abap_true.
 *       Read transport description:
         SELECT SINGLE  as4text
                  FROM  e07t
-                 INTO <l_main_list>-tr_descr
-                 WHERE trkorr = <l_main_list>-trkorr ##WARN_OK.
+                 INTO <lf_main_list>-tr_descr
+                 WHERE trkorr = <lf_main_list>-trkorr ##WARN_OK.
       ENDLOOP.
     ENDIF.
     SORT main_list.
@@ -2200,11 +2200,11 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDIF.
 *   Check if project is in selection range:
     IF project_range IS NOT INITIAL.
-      LOOP AT main_list ASSIGNING <l_main_list>.
+      LOOP AT main_list ASSIGNING <lf_main_list>.
         SELECT SINGLE reference
                FROM e070a
-               INTO  <l_main_list>-project
-               WHERE trkorr = <l_main_list>-trkorr
+               INTO  <lf_main_list>-project
+               WHERE trkorr = <lf_main_list>-trkorr
                AND   attribute = 'SAP_CTS_PROJECT'
                AND   reference IN project_range ##WARN_OK.
         IF sy-subrc <> 0.
@@ -2237,21 +2237,21 @@ CLASS lcl_ztct IMPLEMENTATION.
     SELECT korrnum objtype objname
            author  datum zeit
            FROM vrsd
-           INTO (st_main_list_vrsd-trkorr,
-                 st_main_list_vrsd-object,
-                 st_main_list_vrsd-obj_name,
-                 st_main_list_vrsd-as4user,
-                 st_main_list_vrsd-as4date,
-                 st_main_list_vrsd-as4time)
+           INTO (ls_main_list_vrsd-trkorr,
+                 ls_main_list_vrsd-object,
+                 ls_main_list_vrsd-obj_name,
+                 ls_main_list_vrsd-as4user,
+                 ls_main_list_vrsd-as4date,
+                 ls_main_list_vrsd-as4time)
            FOR ALL ENTRIES IN main_list
            WHERE korrnum = main_list-trkorr.
       READ TABLE main_list INTO main_list_line
-                           WITH KEY trkorr = st_main_list_vrsd-trkorr.
-      main_list_line-object   = st_main_list_vrsd-object.
-      main_list_line-obj_name = st_main_list_vrsd-obj_name.
-      main_list_line-as4user  = st_main_list_vrsd-as4user.
-      main_list_line-as4date  = st_main_list_vrsd-as4date.
-      main_list_line-as4time  = st_main_list_vrsd-as4time.
+                           WITH KEY trkorr = ls_main_list_vrsd-trkorr.
+      main_list_line-object   = ls_main_list_vrsd-object.
+      main_list_line-obj_name = ls_main_list_vrsd-obj_name.
+      main_list_line-as4user  = ls_main_list_vrsd-as4user.
+      main_list_line-as4date  = ls_main_list_vrsd-as4date.
+      main_list_line-as4time  = ls_main_list_vrsd-as4time.
 *     Only append if the object from VRSD does not already exist in the
 *     main list:
       READ TABLE main_list WITH KEY trkorr   = main_list_line-trkorr
@@ -2260,16 +2260,16 @@ CLASS lcl_ztct IMPLEMENTATION.
                                     TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
         main_list_line-flag = abap_true.
-        APPEND main_list_line TO ta_main_list_vrsd.
+        APPEND main_list_line TO lt_main_list_vrsd.
       ENDIF.
     ENDSELECT.
 *   Duplicates may exist if the same object exists in different tasks
 *   belonging to the same request:
-    SORT ta_main_list_vrsd DESCENDING.
-    DELETE ADJACENT DUPLICATES FROM ta_main_list_vrsd
+    SORT lt_main_list_vrsd DESCENDING.
+    DELETE ADJACENT DUPLICATES FROM lt_main_list_vrsd
                     COMPARING trkorr object obj_name.
 *   Now add all VRSD entries to the main list:
-    APPEND LINES OF ta_main_list_vrsd TO main_list.
+    APPEND LINES OF lt_main_list_vrsd TO main_list.
     sort_main_list( ).
   ENDMETHOD.
 
@@ -2345,7 +2345,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_main_list_vrsd TYPE ty_request_details.
     DATA lt_main_list_vrsd TYPE tt_request_details.
     DATA ls_added          TYPE ty_request_details.
-    FIELD-SYMBOLS: <l_main_list> TYPE ty_request_details.
+    FIELD-SYMBOLS: <lf_main_list> TYPE ty_request_details.
     FREE ex_to_add.
     FREE lt_main_list_vrsd.
     CLEAR ls_main.
@@ -2366,12 +2366,12 @@ CLASS lcl_ztct IMPLEMENTATION.
                    b~pgmid = 'LANG' ) ##TOO_MANY_ITAB_FIELDS.
 *   Read transport description:
     IF ex_to_add[] IS NOT INITIAL.
-      LOOP AT ex_to_add ASSIGNING <l_main_list>.
-        <l_main_list>-flag = abap_true.
+      LOOP AT ex_to_add ASSIGNING <lf_main_list>.
+        <lf_main_list>-flag = abap_true.
         SELECT SINGLE as4text
                       FROM  e07t
-                      INTO <l_main_list>-tr_descr
-                      WHERE trkorr = <l_main_list>-trkorr ##WARN_OK.
+                      INTO <lf_main_list>-tr_descr
+                      WHERE trkorr = <lf_main_list>-trkorr ##WARN_OK.
       ENDLOOP.
     ENDIF.
 *   Also read from the version table VRSD. This table contains all
@@ -2451,9 +2451,9 @@ CLASS lcl_ztct IMPLEMENTATION.
   METHOD get_additional_tp_info.
     DATA lt_tr_cofilines      TYPE tr_cofilines.
     DATA ls_tstrfcofil        TYPE tstrfcofil.
-    DATA ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
-    DATA st_stms_wbo_requests TYPE stms_wbo_request.
-    DATA st_systems           TYPE ctslg_system.
+    DATA lt_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
+    DATA ls_stms_wbo_requests TYPE stms_wbo_request.
+    DATA ls_systems           TYPE ctslg_system.
     DATA lp_counter           TYPE i.
     DATA lp_index             TYPE sytabix.
     DATA lp_indexinc          TYPE sytabix.
@@ -2536,13 +2536,13 @@ CLASS lcl_ztct IMPLEMENTATION.
 *       O - Release started
 *       R - Released
 *       N - Released (with import protection for repaired objects)
-        FREE ta_stms_wbo_requests.
-        CLEAR ta_stms_wbo_requests.
+        FREE lt_stms_wbo_requests.
+        CLEAR lt_stms_wbo_requests.
         READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
                    WITH TABLE KEY request       = main_list_line-trkorr
                                   target_system = dev_system.
         IF sy-subrc = 0.
-          ta_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
+          lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
         ELSE.
           CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
             EXPORTING
@@ -2551,7 +2551,7 @@ CLASS lcl_ztct IMPLEMENTATION.
               iv_header_only             = 'X'
               iv_monitor                 = ' '
             IMPORTING
-              et_request_infos           = ta_stms_wbo_requests
+              et_request_infos           = lt_stms_wbo_requests
             EXCEPTIONS
               read_config_failed         = 1
               table_of_requests_is_empty = 2
@@ -2563,15 +2563,15 @@ CLASS lcl_ztct IMPLEMENTATION.
           ELSE.
             tms_mgr_buffer_line-request       = main_list_line-trkorr.
             tms_mgr_buffer_line-target_system = dev_system.
-            tms_mgr_buffer_line-request_infos = ta_stms_wbo_requests.
+            tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
             INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
           ENDIF.
         ENDIF.
-        READ TABLE ta_stms_wbo_requests INDEX 1
-                                        INTO st_stms_wbo_requests.
+        READ TABLE lt_stms_wbo_requests INDEX 1
+                                        INTO ls_stms_wbo_requests.
 *       Check if there is documentation available
         CLEAR main_list_line-info.
-        IF st_stms_wbo_requests-docu[] IS NOT INITIAL.
+        IF ls_stms_wbo_requests-docu[] IS NOT INITIAL.
           check_documentation( EXPORTING im_trkorr = main_list_line-trkorr
                                CHANGING  ch_table  = ch_table ).
         ENDIF.
@@ -2593,11 +2593,11 @@ CLASS lcl_ztct IMPLEMENTATION.
                                    WITH KEY tarsystem = qas_system
                                             function  = 'G' ##WARN_OK.
         main_list_line-retcode = ls_tstrfcofil-retcode.
-        IF st_stms_wbo_requests-e070-trstatus NA 'NR'.
+        IF ls_stms_wbo_requests-e070-trstatus NA 'NR'.
           main_list_line-warning_lvl  = co_alert.
           main_list_line-warning_rank = co_alert1_rank.
           main_list_line-warning_txt  = lp_alert1_text.
-        ELSEIF st_stms_wbo_requests-e070-trstatus = 'O'.
+        ELSEIF ls_stms_wbo_requests-e070-trstatus = 'O'.
           main_list_line-warning_lvl  = co_alert.
           main_list_line-warning_rank = co_alert2_rank.
           main_list_line-warning_txt  = lp_alert2_text.
@@ -2644,9 +2644,9 @@ CLASS lcl_ztct IMPLEMENTATION.
             main_list_line-qas = co_inact.
             main_list_line-prd = co_inact.
 *           Now check in which environments the transport can be found
-            LOOP AT st_request-cofile-systems INTO st_systems.
+            LOOP AT st_request-cofile-systems INTO ls_systems.
 *             For each environment, set the status icon:
-              CASE st_systems-systemid.
+              CASE ls_systems-systemid.
                 WHEN dev_system.
 *                 Green - Exists
                   main_list_line-dev = co_okay.
@@ -2654,16 +2654,16 @@ CLASS lcl_ztct IMPLEMENTATION.
 *                 Green - Exists
                   main_list_line-qas = co_okay.
 *                 Get the latest date/time stamp
-                  READ TABLE st_systems-steps INTO st_steps
-                                              INDEX lines( st_systems-steps ).
+                  READ TABLE ls_systems-steps INTO st_steps
+                                              INDEX lines( ls_systems-steps ).
                   CHECK st_steps-stepid <> '<'.
                   READ TABLE st_steps-actions INTO st_actions
                                               INDEX lines( st_steps-actions ).
                   main_list_line-as4time = st_actions-time.
                   main_list_line-as4date = st_actions-date.
                 WHEN prd_system.
-                  READ TABLE st_systems-steps INTO st_steps
-                                             INDEX lines( st_systems-steps ).
+                  READ TABLE ls_systems-steps INTO st_steps
+                                             INDEX lines( ls_systems-steps ).
                   CHECK st_steps-stepid <> '<'.
 *                 Green - Exists
                   main_list_line-prd = co_okay.
@@ -2773,8 +2773,8 @@ CLASS lcl_ztct IMPLEMENTATION.
 *       Set ALV properties
         set_properties_conflicts( EXPORTING im_table = conflicts
                                   IMPORTING ex_xend  = lp_xend ).
-*       Set Tooltips
-        alv_set_tooltips( rf_conflicts ).
+*       Set lr_tooltips
+        alv_set_lr_tooltips( rf_conflicts ).
 *       Register handler for actions
         lr_events = rf_conflicts->get_event( ).
         SET HANDLER lcl_eventhandler_ztct=>on_function_click FOR lr_events.
@@ -2804,22 +2804,22 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD delete_tp_from_list.
-    DATA ra_trkorr TYPE RANGE OF trkorr.
-    DATA ls_trkorr LIKE LINE OF ra_trkorr.
+    DATA lt_range_trkorr TYPE RANGE OF trkorr.
+    DATA ls_range_trkorr LIKE LINE OF lt_range_trkorr.
     DATA ls_row TYPE int4.
 * If row(s) are selected, use the table
 * Add transports to range
-    ls_trkorr-sign   = 'I'.
-    ls_trkorr-option = 'EQ'.
+    ls_range_trkorr-sign   = 'I'.
+    ls_range_trkorr-option = 'EQ'.
     LOOP AT rows INTO ls_row.
       READ TABLE main_list INTO main_list_line
                           INDEX ls_row.
-      ls_trkorr-low = main_list_line-trkorr.
-      APPEND ls_trkorr TO ra_trkorr.
+      ls_range_trkorr-low = main_list_line-trkorr.
+      APPEND ls_range_trkorr TO lt_range_trkorr.
     ENDLOOP.
-    SORT ra_trkorr.
-    DELETE ADJACENT DUPLICATES FROM ra_trkorr.
-    DELETE main_list WHERE trkorr IN ra_trkorr.
+    SORT lt_range_trkorr.
+    DELETE ADJACENT DUPLICATES FROM lt_range_trkorr.
+    DELETE main_list WHERE trkorr IN lt_range_trkorr.
   ENDMETHOD.
 
   METHOD flag_same_objects.
@@ -2854,34 +2854,34 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD mark_all_tp_records.
-    DATA ra_trkorr TYPE RANGE OF trkorr.
-    DATA ls_trkorr LIKE LINE OF ra_trkorr.
-    DATA ls_row    TYPE int4.
+    DATA lt_range_trkorr TYPE RANGE OF trkorr.
+    DATA ls_range_trkorr LIKE LINE OF lt_range_trkorr.
+    DATA ls_row          TYPE int4.
 * Add transports to range
-    ls_trkorr-sign   = 'I'.
-    ls_trkorr-option = 'EQ'.
+    ls_range_trkorr-sign   = 'I'.
+    ls_range_trkorr-option = 'EQ'.
 * If row(s) are selected, use the table
     LOOP AT im_rows INTO ls_row.
       READ TABLE main_list INTO main_list_line
                            INDEX ls_row.
-      ls_trkorr-low = main_list_line-trkorr.
-      APPEND ls_trkorr TO ra_trkorr.
+      ls_range_trkorr-low = main_list_line-trkorr.
+      APPEND ls_range_trkorr TO lt_range_trkorr.
     ENDLOOP.
 * If no rows were selected, take the current cell instead
     IF sy-subrc <> 0.
       READ TABLE main_list INTO main_list_line
                            INDEX im_cell-row.
-      ls_trkorr-low = main_list_line-trkorr.
-      APPEND ls_trkorr TO ra_trkorr.
+      ls_range_trkorr-low = main_list_line-trkorr.
+      APPEND ls_range_trkorr TO lt_range_trkorr.
     ENDIF.
-    IF ra_trkorr IS INITIAL.
+    IF lt_range_trkorr IS INITIAL.
       RETURN.
     ENDIF.
-    SORT ra_trkorr.
-    DELETE ADJACENT DUPLICATES FROM ra_trkorr.
+    SORT lt_range_trkorr.
+    DELETE ADJACENT DUPLICATES FROM lt_range_trkorr.
 * Mark all records for all marked transports
     LOOP AT main_list INTO main_list_line
-                      WHERE trkorr IN ra_trkorr.
+                      WHERE trkorr IN lt_range_trkorr.
       APPEND sy-tabix TO im_rows.
     ENDLOOP.
     SORT im_rows.
@@ -2947,7 +2947,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   METHOD main_to_tab_delimited.
     DATA lp_string             TYPE string.
     DATA lp_type               TYPE char01.
-    FIELD-SYMBOLS: <l_fs>       TYPE any.
+    FIELD-SYMBOLS: <lf_string> TYPE any.
 
 *   Determine the number of fields in the structure
     DATA lr_tabledescr         TYPE REF TO cl_abap_tabledescr.
@@ -2978,16 +2978,16 @@ CLASS lcl_ztct IMPLEMENTATION.
     LOOP AT im_main_list INTO main_list_line.
       CLEAR: lp_string.
       DO.
-        ASSIGN COMPONENT sy-index OF STRUCTURE main_list_line TO <l_fs>.
+        ASSIGN COMPONENT sy-index OF STRUCTURE main_list_line TO <lf_string>.
         IF sy-subrc <> 0.
           EXIT.
         ELSE.
           IF sy-index = 1.
-            lp_string = <l_fs>.
+            lp_string = <lf_string>.
           ELSE.
-            DESCRIBE FIELD <l_fs> TYPE lp_type.
+            DESCRIBE FIELD <lf_string> TYPE lp_type.
             IF lp_type NA co_non_charlike.
-              CONCATENATE lp_string tp_tab <l_fs> INTO lp_string.
+              CONCATENATE lp_string tp_tab <lf_string> INTO lp_string.
             ENDIF.
           ENDIF.
         ENDIF.
@@ -3040,7 +3040,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     lr_form_element = top_of_page( ).
     rf_table->set_top_of_list( lr_form_element ).
     set_color( ).
-    alv_set_tooltips( rf_table ).
+    alv_set_lr_tooltips( rf_table ).
     rf_table->refresh( ).
   ENDMETHOD.
 
@@ -3049,23 +3049,23 @@ CLASS lcl_ztct IMPLEMENTATION.
              field TYPE fieldname,
              value TYPE string,
            END OF lty_upl_line.
-    DATA lt_upl_line       TYPE TABLE OF lty_upl_line.
-    DATA ls_upl_line       TYPE lty_upl_line.
-    DATA lt_main_upl       TYPE tt_request_details.
-    DATA ls_main_line_upl  TYPE ty_request_details.
-    DATA lp_record         TYPE string.
-    DATA ls_main           TYPE ty_request_details.
-    DATA lp_type           TYPE char01.
-    FIELD-SYMBOLS: <l_fs>   TYPE any.
+    DATA lt_upl_line           TYPE TABLE OF lty_upl_line.
+    DATA ls_upl_line           TYPE lty_upl_line.
+    DATA lt_main_upl           TYPE tt_request_details.
+    DATA ls_main_line_upl      TYPE ty_request_details.
+    DATA lp_record             TYPE string.
+    DATA ls_main               TYPE ty_request_details.
+    DATA lp_type               TYPE char01.
+    FIELD-SYMBOLS: <lf_string> TYPE any.
 *   Determine the number of fields in the structure
-    DATA l_o_tabledescr         TYPE REF TO cl_abap_tabledescr.
-    DATA l_o_typedescr          TYPE REF TO cl_abap_typedescr.
-    DATA l_o_structdescr        TYPE REF TO cl_abap_structdescr.
-    DATA ls_component           TYPE abap_compdescr.
+    DATA lr_o_tabledescr       TYPE REF TO cl_abap_tabledescr.
+    DATA lr_o_typedescr        TYPE REF TO cl_abap_typedescr.
+    DATA lr_o_structdescr      TYPE REF TO cl_abap_structdescr.
+    DATA ls_component          TYPE abap_compdescr.
     TRY.
-        l_o_typedescr = cl_abap_tabledescr=>describe_by_data( p_data = main_list ).
-        l_o_tabledescr ?= l_o_typedescr.
-        l_o_structdescr ?= l_o_tabledescr->get_table_line_type( ).
+        lr_o_typedescr = cl_abap_tabledescr=>describe_by_data( p_data = main_list ).
+        lr_o_tabledescr ?= lr_o_typedescr.
+        lr_o_structdescr ?= lr_o_tabledescr->get_table_line_type( ).
       CATCH cx_sy_move_cast_error INTO rf_root.
         handle_error( rf_root ).
       CATCH cx_root INTO rf_root ##CATCH_ALL.
@@ -3114,21 +3114,21 @@ CLASS lcl_ztct IMPLEMENTATION.
         ENDIF.
 *       Get information about where the column is in the structure
 *       Get the lenght and position from the structure definition:
-        READ TABLE l_o_structdescr->components
+        READ TABLE lr_o_structdescr->components
                    INTO ls_component
                    WITH KEY name = ls_upl_line-field.
         IF sy-subrc = 0.
           TRY.
-              ASSIGN COMPONENT ls_component-name OF STRUCTURE ls_main_line_upl TO <l_fs>.
+              ASSIGN COMPONENT ls_component-name OF STRUCTURE ls_main_line_upl TO <lf_string>.
             CATCH cx_root INTO rf_root  ##CATCH_ALL ##NO_HANDLER.
           ENDTRY.
           IF sy-subrc <> 0.
             EXIT.
           ELSE.
-            DESCRIBE FIELD <l_fs> TYPE lp_type.
+            DESCRIBE FIELD <lf_string> TYPE lp_type.
             IF lp_type NA co_non_charlike.
               TRY .
-                  <l_fs> = ls_upl_line-value.
+                  <lf_string> = ls_upl_line-value.
                 CATCH cx_root INTO rf_root  ##CATCH_ALL ##NO_HANDLER.
               ENDTRY.
             ENDIF.
@@ -3329,7 +3329,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_doktl  TYPE doktl.
     tp_dokl_object = im_trkorr.
     SELECT * FROM doktl UP TO 1 ROWS
-             INTO  ls_doktl
+             INTO ls_doktl
             WHERE id        = 'TA'
               AND object    = tp_dokl_object
               AND typ       = 'T'
@@ -3385,51 +3385,51 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD set_color.
 *   Color Structure of columns
-    DATA ta_scol                     TYPE lvc_t_scol.
-    DATA st_scol                     TYPE lvc_s_scol.
+    DATA lt_scol                     TYPE lvc_t_scol.
+    DATA ls_scol                     TYPE lvc_s_scol.
 
-    FIELD-SYMBOLS: <fs_main> TYPE ty_request_details.
-    LOOP AT main_list ASSIGNING <fs_main>.
+    FIELD-SYMBOLS: <lf_main> TYPE ty_request_details.
+    LOOP AT main_list ASSIGNING <lf_main>.
 *     Init
-      FREE ta_scol.
-      CLEAR st_scol.
-      <fs_main>-t_color = ta_scol.
+      FREE lt_scol.
+      CLEAR ls_scol.
+      <lf_main>-t_color = lt_scol.
 *     Add color
-      IF <fs_main>-warning_rank >= co_info_rank.
-        FREE ta_scol.
-        CLEAR st_scol.
-        st_scol-color-col = 3.
-        st_scol-color-int = 0.
-        st_scol-color-inv = 0.
-        st_scol-fname     = 'WARNING_TXT'.
-        APPEND st_scol TO ta_scol.
-        st_scol-fname     = 'WARNING_LVL'.
-        APPEND st_scol TO ta_scol.
-        <fs_main>-t_color = ta_scol.
+      IF <lf_main>-warning_rank >= co_info_rank.
+        FREE lt_scol.
+        CLEAR ls_scol.
+        ls_scol-color-col = 3.
+        ls_scol-color-int = 0.
+        ls_scol-color-inv = 0.
+        ls_scol-fname     = 'WARNING_TXT'.
+        APPEND ls_scol TO lt_scol.
+        ls_scol-fname     = 'WARNING_LVL'.
+        APPEND ls_scol TO lt_scol.
+        <lf_main>-t_color = lt_scol.
       ENDIF.
-      IF <fs_main>-warning_rank >= co_warn_rank.
-        FREE ta_scol.
-        CLEAR st_scol.
-        st_scol-color-col = 7.
-        st_scol-color-int = 0.
-        st_scol-color-inv = 0.
-        st_scol-fname     = 'WARNING_TXT'.
-        APPEND st_scol TO ta_scol.
-        st_scol-fname     = 'WARNING_LVL'.
-        APPEND st_scol TO ta_scol.
-        <fs_main>-t_color = ta_scol.
+      IF <lf_main>-warning_rank >= co_warn_rank.
+        FREE lt_scol.
+        CLEAR ls_scol.
+        ls_scol-color-col = 7.
+        ls_scol-color-int = 0.
+        ls_scol-color-inv = 0.
+        ls_scol-fname     = 'WARNING_TXT'.
+        APPEND ls_scol TO lt_scol.
+        ls_scol-fname     = 'WARNING_LVL'.
+        APPEND ls_scol TO lt_scol.
+        <lf_main>-t_color = lt_scol.
       ENDIF.
-      IF <fs_main>-warning_rank >= co_error_rank.
-        FREE ta_scol.
-        CLEAR st_scol.
-        st_scol-color-col = 6.
-        st_scol-color-int = 0.
-        st_scol-color-inv = 0.
-        st_scol-fname     = 'WARNING_TXT'.
-        APPEND st_scol TO ta_scol.
-        st_scol-fname     = 'WARNING_LVL'.
-        APPEND st_scol TO ta_scol.
-        <fs_main>-t_color = ta_scol.
+      IF <lf_main>-warning_rank >= co_error_rank.
+        FREE lt_scol.
+        CLEAR ls_scol.
+        ls_scol-color-col = 6.
+        ls_scol-color-int = 0.
+        ls_scol-color-inv = 0.
+        ls_scol-fname     = 'WARNING_TXT'.
+        APPEND ls_scol TO lt_scol.
+        ls_scol-fname     = 'WARNING_LVL'.
+        APPEND ls_scol TO lt_scol.
+        <lf_main>-t_color = lt_scol.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
@@ -3515,18 +3515,18 @@ CLASS lcl_ztct IMPLEMENTATION.
     qas_system = im_qas_system.
     prd_system = im_prd_system.
 *   Move to range:
-    APPEND INITIAL LINE TO systems_range ASSIGNING FIELD-SYMBOL(<system_range>).
-    <system_range>-sign   = 'I'.
-    <system_range>-option = 'EQ'.
-    <system_range>-low    = dev_system.
-    APPEND INITIAL LINE TO systems_range ASSIGNING <system_range>.
-    <system_range>-sign   = 'I'.
-    <system_range>-option = 'EQ'.
-    <system_range>-low    = qas_system.
-    APPEND INITIAL LINE TO systems_range ASSIGNING <system_range>.
-    <system_range>-sign   = 'I'.
-    <system_range>-option = 'EQ'.
-    <system_range>-low    = prd_system.
+    APPEND INITIAL LINE TO systems_range ASSIGNING FIELD-SYMBOL(<lf_system_range>).
+    <lf_system_range>-sign   = 'I'.
+    <lf_system_range>-option = 'EQ'.
+    <lf_system_range>-low    = dev_system.
+    APPEND INITIAL LINE TO systems_range ASSIGNING <lf_system_range>.
+    <lf_system_range>-sign   = 'I'.
+    <lf_system_range>-option = 'EQ'.
+    <lf_system_range>-low    = qas_system.
+    APPEND INITIAL LINE TO systems_range ASSIGNING <lf_system_range>.
+    <lf_system_range>-sign   = 'I'.
+    <lf_system_range>-option = 'EQ'.
+    <lf_system_range>-low    = prd_system.
   ENDMETHOD.
 
   METHOD set_building_conflict_popup.
@@ -3559,16 +3559,16 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_title               TYPE lvc_title.
     DATA lp_class               TYPE xuclass.
 * Version management: directory table
-    DATA vrsd                   TYPE vrsd.
-    FIELD-SYMBOLS: <table>       TYPE REF TO cl_salv_table.
-    ASSIGN im_table TO <table>.
+
+    FIELD-SYMBOLS: <lf_table>      TYPE REF TO cl_salv_table.
+    ASSIGN im_table TO <lf_table>.
 *   Set status
 *   Copy the status from program SAPLSLVC_FULLSCREEN and delete the
 *   buttons you do not need. Add extra buttons for use in USER_COMMAND
-    <table>->set_screen_status( pfstatus = 'STANDARD_FULLSCREEN'
+    <lf_table>->set_screen_status( pfstatus = 'STANDARD_FULLSCREEN'
                                 report   = sy-repid ).
 *   Get functions details
-    lr_functions_list = <table>->get_functions( ).
+    lr_functions_list = <lf_table>->get_functions( ).
 *   Activate All Buttons in Tool Bar
     lr_functions_list->set_all( if_salv_c_bool_sap=>true ).
 *   If necessary, deactivate functions
@@ -3586,7 +3586,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Set Report ID as Layout Key
     ls_layout_key-report = sy-repid.
 *   Get Layout of Table
-    lr_layout = <table>->get_layout( ).
+    lr_layout = <lf_table>->get_layout( ).
 *   To allow DEFAULT layout
     lr_layout->set_default( if_salv_c_bool_sap=>true ).
 *   Set Report Id to Layout
@@ -3613,15 +3613,15 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Global Display Settings
     CLEAR: lr_display_settings.
 *   Global display settings
-    lr_display_settings = <table>->get_display_settings( ).
+    lr_display_settings = <lf_table>->get_display_settings( ).
 *   Activate Striped Pattern
     lr_display_settings->set_striped_pattern( if_salv_c_bool_sap=>true ).
 *   Report header
     lr_display_settings->set_list_header( sy-title ).
 *   Aggregate Function Settings
-    lr_aggregations = <table>->get_aggregations( ).
+    lr_aggregations = <lf_table>->get_aggregations( ).
 *   Sort Functions
-    lr_sorts = <table>->get_sorts( ).
+    lr_sorts = <lf_table>->get_sorts( ).
     IF lr_sorts IS NOT INITIAL.
       TRY.
           lr_sorts->add_sort( columnname = 'AS4DATE'
@@ -3652,19 +3652,19 @@ CLASS lcl_ztct IMPLEMENTATION.
       ENDTRY.
     ENDIF.
 *   Table Selection Settings
-    lr_selections = <table>->get_selections( ).
+    lr_selections = <lf_table>->get_selections( ).
     IF lr_selections IS NOT INITIAL.
 *   Allow row Selection
       lr_selections->set_selection_mode( if_salv_c_selection_mode=>row_column ).
     ENDIF.
 *   Event Register settings
-    rf_events_table = <table>->get_event( ).
+    rf_events_table = <lf_table>->get_event( ).
     CREATE OBJECT rf_handle_events.
     SET HANDLER rf_handle_events->on_function_click FOR rf_events_table.
     SET HANDLER rf_handle_events->on_double_click   FOR rf_events_table.
     SET HANDLER rf_handle_events->on_link_click     FOR rf_events_table.
 *   Get the columns from ALV Table
-    lr_columns_table = <table>->get_columns( ).
+    lr_columns_table = <lf_table>->get_columns( ).
     IF lr_columns_table IS NOT INITIAL.
       FREE lt_t_column_ref.
       lt_t_column_ref = lr_columns_table->get( ).
@@ -3679,63 +3679,63 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     Individual Column Properties.
       column_settings( im_column_ref       = lt_t_column_ref
                        im_rf_columns_table = lr_columns_table
-                       im_table            = <table> ).
+                       im_table            = <lf_table> ).
     ENDIF.
 *   Skip the following code for the conflicts popups
-    IF <table> <> rf_conflicts.
+    IF <lf_table> <> rf_conflicts.
 *     Top of List settings
       lr_form_element = top_of_page( ).
-      <table>->set_top_of_list( lr_form_element ).
+      <lf_table>->set_top_of_list( lr_form_element ).
     ENDIF.
   ENDMETHOD.
 
-  METHOD alv_set_tooltips.
-*   Fill the symbols, colors in to table and set tooltips
-    DATA tooltips TYPE REF TO cl_salv_tooltips.
-    DATA settings TYPE REF TO cl_salv_functional_settings.
+  METHOD alv_set_lr_tooltips.
+*   Fill the symbols, colors in to table and set lr_tooltips
+    DATA lr_tooltips TYPE REF TO cl_salv_tooltips.
+    DATA lr_settings TYPE REF TO cl_salv_functional_settings.
     DATA lp_text  TYPE lvc_tip.
-    FREE settings.
-    FREE tooltips.
-    settings = im_table->get_functional_settings( ).
-    tooltips = settings->get_tooltips( ).
+    FREE lr_settings.
+    FREE lr_tooltips.
+    lr_settings = im_table->get_functional_settings( ).
+    lr_tooltips = lr_settings->get_tooltips( ).
     TRY.
         lp_text = 'Newer version in test environment'(w23).
-        tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
+        lr_tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
                                value   = '@AH@'
                                tooltip = lp_text ).
       CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
         lp_text = 'Previous transport not transported'(w17).
-        tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
+        lr_tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
                                value   = '@5D@'
                                tooltip = lp_text ).
       CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
         lp_text = 'Conflicts are dealt with'(w04).
-        tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
+        lr_tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
                                value   = '@AI@'
                                tooltip = lp_text ).
       CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
         lp_text = 'Marked for re-import to target environment'(w18).
-        tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
+        lr_tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
                                value   = '@K3@'
                                tooltip = lp_text ).
       CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
         lp_text = 'Newer version in target environment!'(w01).
-        tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
+        lr_tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
                                value   = '@F1@'
                                tooltip = lp_text ).
       CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
         lp_text = 'Object missing in list and target environment!'(w05).
-        tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
+        lr_tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
                                value   = '@CY@'
                                tooltip = lp_text ).
       CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
@@ -3763,15 +3763,15 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_reference        TYPE salv_s_ddic_reference.
     DATA ls_s_column_ref     TYPE salv_s_column_ref.
     DATA lr_column_table     TYPE REF TO cl_salv_column_table.
-    DATA st_colo             TYPE lvc_s_colo.
+    DATA ls_colo             TYPE lvc_s_colo.
 *   Declaration for Aggregate Function Settings
     DATA lr_aggregations     TYPE REF TO cl_salv_aggregations ##NEEDED.
 *   Remove some columns for the XLS output
-    DATA lra_fieldname       TYPE RANGE OF lty_field_ran.
+    DATA lt_range_fieldname       TYPE RANGE OF lty_field_ran.
     DATA ls_fieldname        TYPE lty_field_ran.
     DATA lp_return           TYPE abap_bool.
 *   Hide columns when empty
-    DATA lra_hide_when_empty TYPE RANGE OF lty_field_ran.
+    DATA lt_range_hide_when_empty TYPE RANGE OF lty_field_ran.
     DATA ls_hide_when_empty  TYPE lty_field_ran.
 *   Texts
     DATA lp_short_text       TYPE char10.
@@ -3781,17 +3781,17 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_sys_s TYPE REF TO data.
     DATA lp_sys_m TYPE REF TO data.
     DATA lp_sys_l TYPE REF TO data.
-    FIELD-SYMBOLS: <text_s> TYPE scrtext_s.
-    FIELD-SYMBOLS: <text_m> TYPE scrtext_m.
-    FIELD-SYMBOLS: <text_l> TYPE scrtext_l.
+    FIELD-SYMBOLS: <lf_text_s> TYPE scrtext_s.
+    FIELD-SYMBOLS: <lf_text_m> TYPE scrtext_m.
+    FIELD-SYMBOLS: <lf_text_l> TYPE scrtext_l.
 
 * Instantiate data references for column headers
     CREATE DATA lp_sys_s TYPE scrtext_s.
     CREATE DATA lp_sys_m TYPE scrtext_m.
     CREATE DATA lp_sys_l TYPE scrtext_l.
-    ASSIGN lp_sys_s->* TO <text_s>.
-    ASSIGN lp_sys_m->* TO <text_m>.
-    ASSIGN lp_sys_l->* TO <text_l>.
+    ASSIGN lp_sys_s->* TO <lf_text_s>.
+    ASSIGN lp_sys_m->* TO <lf_text_m>.
+    ASSIGN lp_sys_l->* TO <lf_text_l>.
 
 *   Build range for all unwanted columns:
     CASE im_table.
@@ -3799,68 +3799,68 @@ CLASS lcl_ztct IMPLEMENTATION.
         ls_fieldname-option = 'EQ'.
         ls_fieldname-sign = 'I'.
         ls_fieldname-low = 'CHECKED'.
-        APPEND ls_fieldname TO lra_fieldname.
+        APPEND ls_fieldname TO lt_range_fieldname.
         ls_fieldname-low = 'OBJECT'.
-        APPEND ls_fieldname TO lra_fieldname.
+        APPEND ls_fieldname TO lt_range_fieldname.
         ls_fieldname-low = 'OBJ_NAME'.
-        APPEND ls_fieldname TO lra_fieldname.
+        APPEND ls_fieldname TO lt_range_fieldname.
         ls_fieldname-low = 'OBJKEY'.
-        APPEND ls_fieldname TO lra_fieldname.
+        APPEND ls_fieldname TO lt_range_fieldname.
         ls_fieldname-low = 'KEYOBJECT'.
-        APPEND ls_fieldname TO lra_fieldname.
+        APPEND ls_fieldname TO lt_range_fieldname.
         ls_fieldname-low = 'KEYOBJNAME'.
-        APPEND ls_fieldname TO lra_fieldname.
+        APPEND ls_fieldname TO lt_range_fieldname.
         ls_fieldname-low = 'TABKEY'.
-        APPEND ls_fieldname TO lra_fieldname.
+        APPEND ls_fieldname TO lt_range_fieldname.
         ls_fieldname-low = 'PGMID'.
-        APPEND ls_fieldname TO lra_fieldname.
+        APPEND ls_fieldname TO lt_range_fieldname.
         ls_fieldname-low = 'DEV'.
-        APPEND ls_fieldname TO lra_fieldname.
+        APPEND ls_fieldname TO lt_range_fieldname.
         ls_fieldname-low = 'QAS'.
-        APPEND ls_fieldname TO lra_fieldname.
+        APPEND ls_fieldname TO lt_range_fieldname.
         ls_fieldname-low = 'PRD'.
-        APPEND ls_fieldname TO lra_fieldname.
+        APPEND ls_fieldname TO lt_range_fieldname.
         ls_fieldname-low = 'STATUS_TEXT'.
-        APPEND ls_fieldname TO lra_fieldname.
+        APPEND ls_fieldname TO lt_range_fieldname.
       WHEN rf_table.
         ls_fieldname-option = 'EQ'.
         ls_fieldname-sign = 'I'.
         ls_fieldname-low = 'RE_IMPORT'.
-        APPEND ls_fieldname TO lra_fieldname.
+        APPEND ls_fieldname TO lt_range_fieldname.
     ENDCASE.
 *   Always remove the following colums, regardless of which table is used
     ls_fieldname-option = 'EQ'.
     ls_fieldname-sign = 'I'.
     ls_fieldname-low = 'TRSTATUS'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'TRFUNCTION'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'TROBJ_NAME  '.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'FLAG'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'OBJFUNC'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'CHECKED_BY'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'WARNING_RANK'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
 
 *   Hide when empty
     ls_hide_when_empty-option = 'EQ'.
     ls_hide_when_empty-sign   = 'I'.
     ls_hide_when_empty-low    = 'OBJKEY'.
-    APPEND ls_hide_when_empty TO lra_hide_when_empty.
+    APPEND ls_hide_when_empty TO lt_range_hide_when_empty.
     ls_hide_when_empty-low    = 'KEYOBJECT'.
-    APPEND ls_hide_when_empty TO lra_hide_when_empty.
+    APPEND ls_hide_when_empty TO lt_range_hide_when_empty.
     ls_hide_when_empty-low    = 'KEYOBJNAME'.
-    APPEND ls_hide_when_empty TO lra_hide_when_empty.
+    APPEND ls_hide_when_empty TO lt_range_hide_when_empty.
     ls_hide_when_empty-low    = 'TABKEY'.
-    APPEND ls_hide_when_empty TO lra_hide_when_empty.
+    APPEND ls_hide_when_empty TO lt_range_hide_when_empty.
     ls_hide_when_empty-low    = 'PROJECT'.
-    APPEND ls_hide_when_empty TO lra_hide_when_empty.
+    APPEND ls_hide_when_empty TO lt_range_hide_when_empty.
     ls_hide_when_empty-low    = 'PROJECT_DESCR'.
-    APPEND ls_hide_when_empty TO lra_hide_when_empty.
+    APPEND ls_hide_when_empty TO lt_range_hide_when_empty.
 
     LOOP AT im_column_ref INTO ls_s_column_ref.
       TRY.
@@ -3898,18 +3898,18 @@ CLASS lcl_ztct IMPLEMENTATION.
 *       Set color to Date Columns
         IF lr_column_table->get_ddic_datatype( ) = 'DATS'
             OR lr_column_table->get_ddic_datatype( ) = 'TIMS'.
-          CLEAR st_colo.
-          st_colo-col = 2.
-          st_colo-int = 1.
-          st_colo-inv = 1.
-          lr_column_table->set_color( st_colo ).
+          CLEAR ls_colo.
+          ls_colo-col = 2.
+          ls_colo-int = 1.
+          ls_colo-inv = 1.
+          lr_column_table->set_color( ls_colo ).
         ENDIF.
 *       Remove columns that are not required
-        IF lr_column_table->get_columnname( ) IN lra_fieldname.
+        IF lr_column_table->get_columnname( ) IN lt_range_fieldname.
           lr_column_table->set_technical( if_salv_c_bool_sap=>true ).
         ENDIF.
 *       Remove columns that are not required when empty
-        IF lr_column_table->get_columnname( ) IN lra_hide_when_empty.
+        IF lr_column_table->get_columnname( ) IN lt_range_hide_when_empty.
           lp_return = is_empty_column( im_column = ls_s_column_ref-columnname
                                        im_table  = main_list ).
           IF lp_return = abap_true.
@@ -3995,46 +3995,46 @@ CLASS lcl_ztct IMPLEMENTATION.
             lr_column_table->set_ddic_reference( ls_reference ).
             lr_column_table->set_key( ).
           WHEN 'DEV'.
-            <text_s> = dev_system.
-            <text_m> = dev_system.
-            <text_l> = dev_system.
-            IF <text_s> IS ASSIGNED.
-              lr_column_table->set_short_text( <text_s> ).
+            <lf_text_s> = dev_system.
+            <lf_text_m> = dev_system.
+            <lf_text_l> = dev_system.
+            IF <lf_text_s> IS ASSIGNED.
+              lr_column_table->set_short_text( <lf_text_s> ).
             ENDIF.
-            IF <text_m> IS ASSIGNED.
-              lr_column_table->set_medium_text( <text_m> ).
+            IF <lf_text_m> IS ASSIGNED.
+              lr_column_table->set_medium_text( <lf_text_m> ).
             ENDIF.
-            IF <text_l> IS ASSIGNED.
-              lr_column_table->set_long_text( <text_l> ).
+            IF <lf_text_l> IS ASSIGNED.
+              lr_column_table->set_long_text( <lf_text_l> ).
             ENDIF.
             lr_column_table->set_icon( ).
           WHEN 'QAS'.
-            <text_s> = qas_system.
-            <text_m> = qas_system.
-            <text_l> = qas_system.
-            IF <text_s> IS ASSIGNED.
-              lr_column_table->set_short_text( <text_s> ).
+            <lf_text_s> = qas_system.
+            <lf_text_m> = qas_system.
+            <lf_text_l> = qas_system.
+            IF <lf_text_s> IS ASSIGNED.
+              lr_column_table->set_short_text( <lf_text_s> ).
             ENDIF.
-            IF <text_m> IS ASSIGNED.
-              lr_column_table->set_medium_text( <text_m> ).
+            IF <lf_text_m> IS ASSIGNED.
+              lr_column_table->set_medium_text( <lf_text_m> ).
             ENDIF.
-            IF <text_l> IS ASSIGNED.
-              lr_column_table->set_long_text( <text_l> ).
+            IF <lf_text_l> IS ASSIGNED.
+              lr_column_table->set_long_text( <lf_text_l> ).
             ENDIF.
             lr_column_table->set_icon( ).
           WHEN 'PRD'.
-            IF <text_l> IS ASSIGNED.
-              <text_s> = prd_system.
-              <text_m> = prd_system.
-              <text_l> = prd_system.
-              IF <text_s> IS ASSIGNED.
-                lr_column_table->set_short_text( <text_s> ).
+            IF <lf_text_l> IS ASSIGNED.
+              <lf_text_s> = prd_system.
+              <lf_text_m> = prd_system.
+              <lf_text_l> = prd_system.
+              IF <lf_text_s> IS ASSIGNED.
+                lr_column_table->set_short_text( <lf_text_s> ).
               ENDIF.
-              IF <text_m> IS ASSIGNED.
-                lr_column_table->set_medium_text( <text_m> ).
+              IF <lf_text_m> IS ASSIGNED.
+                lr_column_table->set_medium_text( <lf_text_m> ).
               ENDIF.
-              IF <text_l> IS ASSIGNED.
-                lr_column_table->set_long_text( <text_l> ).
+              IF <lf_text_l> IS ASSIGNED.
+                lr_column_table->set_long_text( <lf_text_l> ).
               ENDIF.
               lr_column_table->set_icon( ).
             ENDIF.
@@ -4052,11 +4052,11 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD is_empty_column.
     DATA ls_line TYPE ty_request_details.
-    FIELD-SYMBOLS: <column> TYPE any.
+    FIELD-SYMBOLS: <lf_column> TYPE any.
     re_is_empty = abap_true.
     LOOP AT im_table INTO ls_line.
-      ASSIGN COMPONENT im_column OF STRUCTURE ls_line TO <column>.
-      IF <column> IS NOT INITIAL.
+      ASSIGN COMPONENT im_column OF STRUCTURE ls_line TO <lf_column>.
+      IF <lf_column> IS NOT INITIAL.
         re_is_empty = abap_false.
         EXIT.
       ENDIF.
@@ -4193,13 +4193,13 @@ CLASS lcl_ztct IMPLEMENTATION.
                    ls_tp_same_object-as4user,
                    ls_tp_same_object-as4date,
                    ls_tp_same_object-as4time)
-             WHERE NOT a~trkorr IN project_trkorrs
-             AND   a~trfunction <> 'T'
-             AND   b~obj_name   IN excluded_objects
-             AND   a~strkorr    = ''
-             AND   a~trkorr     LIKE prefix
-             AND   b~object     = im_line-object
-             AND   b~obj_name   = im_line-obj_name.
+             WHERE a~trkorr NOT IN project_trkorrs
+               AND a~trfunction <> 'T'
+               AND b~obj_name   IN excluded_objects
+               AND a~strkorr    = ''
+               AND a~trkorr     LIKE prefix
+               AND b~object     = im_line-object
+               AND b~obj_name   = im_line-obj_name.
         APPEND ls_tp_same_object TO lt_aggr_tp_list_of_objects.
       ENDSELECT.
 
@@ -4212,7 +4212,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *                should also be treated as the same object.
       SELECT korrnum objtype objname
              author
-             FROM  vrsd
+             FROM vrsd
              INNER JOIN e070 ON vrsd~korrnum = e070~trkorr
              INTO (ls_tp_same_object-trkorr,
                    ls_tp_same_object-object,
@@ -4268,11 +4268,11 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Move newer transports for this object to the relevant internal table:
     LOOP AT aggr_tp_list_of_objects INTO ls_tp_same_object
                                     WHERE object     = im_line-object
-                                    AND   obj_name   = im_line-obj_name
-                                    AND   keyobject  = im_line-keyobject
-                                    AND   keyobjname = im_line-keyobjname
-                                    AND   tabkey     = im_line-tabkey
-                                    AND   trkorr     <> im_line-trkorr.
+                                      AND obj_name   = im_line-obj_name
+                                      AND keyobject  = im_line-keyobject
+                                      AND keyobjname = im_line-keyobjname
+                                      AND tabkey     = im_line-tabkey
+                                      AND trkorr     <> im_line-trkorr.
 *     If on the same date, check if the time is later
       IF ls_tp_same_object-as4date = im_line-as4date.
         IF ls_tp_same_object-as4time >= im_line-as4time.
@@ -4414,11 +4414,11 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_highest_text  TYPE text74.
     DATA lp_highest_col   TYPE lvc_t_scol.
 
-    FIELD-SYMBOLS: <l_main_list> TYPE ty_request_details.
+    FIELD-SYMBOLS: <lf_main_list> TYPE ty_request_details.
 
 *   Only when called from the Main Screen (Object Level). Do not build again
 *   when the XLS list has been build already.
-    IF  main_list_xls IS NOT INITIAL.
+    IF main_list_xls IS NOT INITIAL.
       RETURN.
     ENDIF.
 *   Remove duplicate transport numbers (only need single lines):
@@ -4440,11 +4440,11 @@ CLASS lcl_ztct IMPLEMENTATION.
       IF main_list_line_xls-qas <> co_okay
           OR main_list_line_xls-prd = co_okay.
         lp_return = abap_true.
-        LOOP AT main_list ASSIGNING <l_main_list>
+        LOOP AT main_list ASSIGNING <lf_main_list>
                           WHERE trkorr = main_list_line_xls-trkorr.
-          <l_main_list>-warning_lvl  = co_tp_fail.
-          <l_main_list>-warning_rank = co_tp_fail_rank.
-          <l_main_list>-warning_txt  = lp_fail_text.
+          <lf_main_list>-warning_lvl  = co_tp_fail.
+          <lf_main_list>-warning_rank = co_tp_fail_rank.
+          <lf_main_list>-warning_txt  = lp_fail_text.
         ENDLOOP.
       ENDIF.
 *     Rename Documentation Icon to text
@@ -4558,57 +4558,55 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_short_text          TYPE char10.
     DATA lp_medium_text         TYPE char20.
     DATA lp_long_text           TYPE char40.
-*   Version management: directory table
-    DATA vrsd                   TYPE vrsd.
 
     FIELD-SYMBOLS: <l_type>     TYPE any.
 *   To remove some columns from the output
-    DATA lra_fieldname          TYPE RANGE OF lty_field_ran.
+    DATA lt_range_fieldname          TYPE RANGE OF lty_field_ran.
     DATA ls_fieldname           TYPE lty_field_ran.
 *   Individual Column Properties.
 *   Build range for all columns to be removed
     ls_fieldname-option = 'EQ'.
     ls_fieldname-sign = 'I'.
     ls_fieldname-low = 'INFO'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'RETCODE'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'TRSTATUS'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'STATUS_TEXT'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'TRFUNCTION'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'TRFUNCTION_TXT'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'OBJKEY'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'OBJFUNC'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'CHECKED_BY'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'PROJECT'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'PROJECT_DESCR'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'WARNING_TXT'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'WARNING_RANK'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'SYSTEMID'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'STEPID'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'DEV'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'QAS'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'PRD'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'FLAG'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
     ls_fieldname-low = 'CHECKED'.
-    APPEND ls_fieldname TO lra_fieldname.
+    APPEND ls_fieldname TO lt_range_fieldname.
 *   Create the standard output fields.
 *   Get the structure of the table.
     lr_table_des ?=
@@ -4650,37 +4648,12 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDLOOP.
 *   Global Display Settings
     CLEAR: lr_display_settings.
-*   Build title:
-*   Get version to display in title:
-    SELECT datum FROM vrsd
-                 INTO vrsd-datum UP TO 1 ROWS
-                WHERE objtype = 'REPS'
-                  AND objname = sy-repid.
-      WRITE vrsd-datum TO lp_version.
-    ENDSELECT.
-    IF lp_version IS NOT INITIAL.
-      SELECT SINGLE text FROM d347t INTO lp_title
-                        WHERE progname = sy-repid
-                          AND sprsl    = co_langu
-                          AND obj_code = '001'.
-      IF sy-subrc <> 0.
-        SELECT SINGLE text FROM d347t INTO lp_title
-                          WHERE progname = sy-repid
-                            AND obj_code = '001' ##WARN_OK.
-      ENDIF.
-    ENDIF.
-*   Set title
-    IF lp_title IS INITIAL.
-      lp_title = sy-title.
-    ELSE.
-      REPLACE '&1' WITH lp_version INTO lp_title.
-    ENDIF.
 *   Global display settings
     lr_display_settings = rf_conflicts->get_display_settings( ).
 *   Activate Striped Pattern
     lr_display_settings->set_striped_pattern( if_salv_c_bool_sap=>true ).
 *   Report header
-    lr_display_settings->set_list_header( lp_title ).
+    lr_display_settings->set_list_header( sy-title ).
 *   Aggregate Function Settings
     lr_aggregations = rf_conflicts->get_aggregations( ).
 *   Sort Functions
@@ -4777,7 +4750,7 @@ CLASS lcl_ztct IMPLEMENTATION.
             lr_column_table->set_key( if_salv_c_bool_sap=>true ).
           ENDIF.
 *         Remove columns that are not required
-          IF lr_column_table->get_columnname( ) IN lra_fieldname.
+          IF lr_column_table->get_columnname( ) IN lt_range_fieldname.
             lr_column_table->set_technical( if_salv_c_bool_sap=>true ).
             CONTINUE.
           ENDIF.
@@ -4902,8 +4875,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     IF lt_tadir IS NOT INITIAL.
 *     DD01L (Domains)
       SELECT domname APPENDING TABLE ddic_objects
-             FROM  dd01l FOR ALL ENTRIES IN lt_tadir
-             WHERE domname = lt_tadir-obj_name(30).
+             FROM dd01l FOR ALL ENTRIES IN lt_tadir
+            WHERE domname = lt_tadir-obj_name(30).
 *     DD02L (SAP-tables)
       SELECT tabname
              APPENDING TABLE ddic_objects
@@ -4978,9 +4951,9 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD set_where_used.
-    DATA ta_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
-    DATA st_stms_wbo_requests TYPE stms_wbo_request.
-    DATA st_systems           TYPE ctslg_system.
+    DATA lt_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
+    DATA ls_stms_wbo_requests TYPE stms_wbo_request.
+    DATA ls_systems           TYPE ctslg_system.
     DATA lp_scope             TYPE seu_obj ##NEEDED.
     DATA lp_answer            TYPE char1 ##NEEDED.
     DATA ls_ddic_object       TYPE string.
@@ -5040,13 +5013,13 @@ CLASS lcl_ztct IMPLEMENTATION.
         DELETE ddic_e071 INDEX lp_index.
         CONTINUE.
       ENDIF.
-      FREE ta_stms_wbo_requests.
-      CLEAR ta_stms_wbo_requests.
+      FREE lt_stms_wbo_requests.
+      CLEAR lt_stms_wbo_requests.
       READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
                       WITH TABLE KEY request          = ddic_e071_line-trkorr
                                      target_system    = dev_system.
       IF sy-subrc = 0.
-        ta_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
+        lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
       ELSE.
         CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
           EXPORTING
@@ -5055,7 +5028,7 @@ CLASS lcl_ztct IMPLEMENTATION.
             iv_header_only             = 'X'
             iv_monitor                 = ' '
           IMPORTING
-            et_request_infos           = ta_stms_wbo_requests
+            et_request_infos           = lt_stms_wbo_requests
           EXCEPTIONS
             read_config_failed         = 1
             table_of_requests_is_empty = 2
@@ -5067,17 +5040,17 @@ CLASS lcl_ztct IMPLEMENTATION.
         ELSE.
           tms_mgr_buffer_line-request       = ddic_e071_line-trkorr.
           tms_mgr_buffer_line-target_system = dev_system.
-          tms_mgr_buffer_line-request_infos = ta_stms_wbo_requests.
+          tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
           INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
         ENDIF.
       ENDIF.
-      READ TABLE ta_stms_wbo_requests INDEX 1
-                                      INTO st_stms_wbo_requests.
-      IF st_stms_wbo_requests-e070-trstatus NA 'NR'.
+      READ TABLE lt_stms_wbo_requests INDEX 1
+                                      INTO ls_stms_wbo_requests.
+      IF ls_stms_wbo_requests-e070-trstatus NA 'NR'.
 *       Transport not released, check not required
         DELETE ddic_e071 INDEX lp_index.
         lp_deleted = abap_true.
-      ELSEIF st_stms_wbo_requests-e070-trstatus = 'O'.
+      ELSEIF ls_stms_wbo_requests-e070-trstatus = 'O'.
       ELSE.
 *       Retrieve the environments where the transport can be found.
 *       Read the info of the request (transport log) to determine the
@@ -5093,12 +5066,12 @@ CLASS lcl_ztct IMPLEMENTATION.
           lp_deleted = abap_true.
         ELSE.
 *         Now check in which environments the transport can be found
-          LOOP AT st_request-cofile-systems INTO st_systems.
+          LOOP AT st_request-cofile-systems INTO ls_systems.
 *           For each environment, set the status icon:
-            CASE st_systems-systemid.
+            CASE ls_systems-systemid.
               WHEN prd_system.
-                READ TABLE st_systems-steps INTO st_steps
-                                            INDEX lines( st_systems-steps ).
+                READ TABLE ls_systems-steps INTO st_steps
+                                            INDEX lines( ls_systems-steps ).
                 CHECK st_steps-stepid <> '<'.
 *               Transported to production, check not required on this
 *               object. Delete all records for this object (not only
@@ -5195,7 +5168,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_import_datetime_qas.
-    DATA st_systems           TYPE ctslg_system.
+    DATA ls_systems TYPE ctslg_system.
     CLEAR ex_as4time.
     CLEAR ex_as4date.
 *   Get the last date the object was imported
@@ -5204,11 +5177,11 @@ CLASS lcl_ztct IMPLEMENTATION.
         iv_trkorr = im_trkorr
       IMPORTING
         es_cofile = st_request-cofile.
-    LOOP AT st_request-cofile-systems INTO st_systems
+    LOOP AT st_request-cofile-systems INTO ls_systems
                                       WHERE systemid = qas_system.
 *     Get the latest import date:
-      READ TABLE st_systems-steps INTO st_steps
-                                  INDEX lines( st_systems-steps ).
+      READ TABLE ls_systems-steps INTO st_steps
+                                  INDEX lines( ls_systems-steps ).
       READ TABLE st_steps-actions INTO st_actions
                                   INDEX lines( st_steps-actions ).
       ex_as4time = st_actions-time.
@@ -5219,15 +5192,15 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD go_back_months.
     DATA: BEGIN OF dat,
-            jjjj(4) ,
-            mm(2) ,
-            tt(2) ,
+            jjjj TYPE char4,
+            mm   TYPE char2,
+            tt   TYPE char2,
           END OF dat,
 
           BEGIN OF hdat,
-            jjjj(4) ,
-            mm(2) ,
-            tt(2) ,
+            jjjj TYPE char4,
+            mm   TYPE char2,
+            tt   TYPE char2,
           END OF hdat,
           newmm    TYPE p,
           diffjjjj TYPE p.
@@ -5318,7 +5291,7 @@ START-OF-SELECTION.
             AND b~obj_name IN so_exobj
             AND strkorr    = ''
             AND a~trkorr   LIKE tp_prefix
-            AND a~trkorr   IN ra_project_trkorrs
+            AND a~trkorr   IN lt_range_project_trkorrs
             AND ( pgmid    = 'LIMU' OR
                   pgmid    = 'R3TR' ).
       APPEND st_trkorr_range TO ta_trkorr_range.
