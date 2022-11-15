@@ -1602,7 +1602,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           ENDIF.
           READ TABLE lt_stms_wbo_requests INDEX 1
                      INTO ls_stms_wbo_requests.
-          IF ls_stms_wbo_requests-e070 IS NOT INITIAL.
+          IF sy-subrc = 0 AND ls_stms_wbo_requests-e070 IS NOT INITIAL.
 *           Only display the warning if the preceding transport is not
 *           one of the selected transports (and in an earlier
 *           position)
@@ -1723,7 +1723,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *         Was an older transport found that has not yet gone to EEP?
           READ TABLE lt_stms_wbo_requests INDEX 1
                                           INTO ls_stms_wbo_requests.
-          IF ls_stms_wbo_requests-e070 IS INITIAL.
+          IF sy-subrc = 0 AND ls_stms_wbo_requests-e070 IS INITIAL.
             check_if_same_object( EXPORTING im_line        = ls_main
                                             im_newer_older = ls_older_line
                                   IMPORTING ex_tabkey      = tp_tabkey
@@ -1875,7 +1875,7 @@ CLASS lcl_ztct IMPLEMENTATION.
             ls_main-warning_lvl  = co_alert.
             ls_main-warning_rank = co_alert3_rank.
             ls_main-warning_txt  = lp_alert3_text.
-            MODIFY TABLE ch_main_list FROM ls_main.
+            MODIFY ch_main_list FROM ls_main.
           ENDIF.
         ENDIF.
       ENDLOOP.
@@ -1933,11 +1933,10 @@ CLASS lcl_ztct IMPLEMENTATION.
                        AND keyobjname IS INITIAL
                        AND obj_name   IN excluded_objects.
       CLEAR: table_keys_line.
-      SELECT ddtext FROM dd02t UP TO 1 ROWS
-                    INTO table_keys_line-ddtext
-                   WHERE ddlanguage = co_langu
-                     AND tabname    = main_list_line-obj_name.
-      ENDSELECT.
+      SELECT SINGLE ddtext FROM dd02t
+                           INTO table_keys_line-ddtext
+                          WHERE ddlanguage = co_langu
+                            AND tabname    = main_list_line-obj_name.
 *     Count the keys...
       SELECT COUNT(*)
               FROM e071k INTO table_keys_line-counter
@@ -3171,7 +3170,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                              AND keyobjname = ls_main-keyobjname
                              AND tabkey     = ls_main-tabkey.
             main_list_line-flag = abap_true.
-            MODIFY TABLE main_list FROM main_list_line.
+            MODIFY main_list FROM main_list_line.
           ENDLOOP.
         ENDIF.
         APPEND ls_main TO main_list.
@@ -3566,7 +3565,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Copy the status from program SAPLSLVC_FULLSCREEN and delete the
 *   buttons you do not need. Add extra buttons for use in USER_COMMAND
     <lf_table>->set_screen_status( pfstatus = 'STANDARD_FULLSCREEN'
-                                report   = sy-repid ).
+                                   report   = sy-repid ).
 *   Get functions details
     lr_functions_list = <lf_table>->get_functions( ).
 *   Activate All Buttons in Tool Bar
@@ -3701,43 +3700,43 @@ CLASS lcl_ztct IMPLEMENTATION.
     TRY.
         lp_text = 'Newer version in test environment'(w23).
         lr_tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
-                               value   = '@AH@'
-                               tooltip = lp_text ).
+                                  value   = '@AH@'
+                                  tooltip = lp_text ).
       CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
         lp_text = 'Previous transport not transported'(w17).
         lr_tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
-                               value   = '@5D@'
-                               tooltip = lp_text ).
+                                  value   = '@5D@'
+                                  tooltip = lp_text ).
       CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
         lp_text = 'Conflicts are dealt with'(w04).
         lr_tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
-                               value   = '@AI@'
-                               tooltip = lp_text ).
+                                  value   = '@AI@'
+                                  tooltip = lp_text ).
       CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
         lp_text = 'Marked for re-import to target environment'(w18).
         lr_tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
-                               value   = '@K3@'
-                               tooltip = lp_text ).
+                                  value   = '@K3@'
+                                  tooltip = lp_text ).
       CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
         lp_text = 'Newer version in target environment!'(w01).
         lr_tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
-                               value   = '@F1@'
-                               tooltip = lp_text ).
+                                  value   = '@F1@'
+                                  tooltip = lp_text ).
       CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
     TRY.
         lp_text = 'Object missing in list and target environment!'(w05).
         lr_tooltips->add_tooltip( type    = cl_salv_tooltip=>c_type_symbol
-                               value   = '@CY@'
-                               tooltip = lp_text ).
+                                  value   = '@CY@'
+                                  tooltip = lp_text ).
       CATCH cx_salv_existing INTO rf_root ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
@@ -4218,14 +4217,14 @@ CLASS lcl_ztct IMPLEMENTATION.
                    ls_tp_same_object-object,
                    ls_tp_same_object-obj_name,
                    ls_tp_same_object-as4user)
-             WHERE NOT korrnum IN project_trkorrs
-             AND   objname     IN excluded_objects
-             AND   korrnum     <> im_line-trkorr
-             AND   korrnum     LIKE prefix
-             AND   korrnum     <> ''
-             AND   objtype     =  im_line-object
-             AND   objname     =  im_line-obj_name      "#EC CI_NOFIELD
-             AND   e070~trfunction <> 'T'.
+             WHERE korrnum NOT IN project_trkorrs
+               AND objname IN excluded_objects
+               AND korrnum <> im_line-trkorr
+               AND korrnum LIKE prefix
+               AND korrnum <> ''
+               AND objtype =  im_line-object
+               AND objname =  im_line-obj_name          "#EC CI_NOFIELD
+               AND e070~trfunction <> 'T'.
         APPEND ls_tp_same_object TO lt_aggr_tp_list_of_objects.
       ENDSELECT.
 
@@ -4256,7 +4255,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                            ex_as4date = ls_tp_same_object-as4date
                                            ex_return  = lp_return ).
         IF lp_return = 0.
-          MODIFY TABLE lt_aggr_tp_list_of_objects FROM ls_tp_same_object.
+          MODIFY lt_aggr_tp_list_of_objects FROM ls_tp_same_object.
         ELSE.
           DELETE lt_aggr_tp_list_of_objects INDEX lp_index.
         ENDIF.
@@ -4487,7 +4486,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       ENDIF.
 *     Apply the changes
       TRY.
-          MODIFY TABLE main_list_xls FROM main_list_line_xls.
+          MODIFY main_list_xls FROM main_list_line_xls.
         CATCH cx_root INTO rf_root ##CATCH_ALL.
           handle_error( rf_root ).
       ENDTRY.
@@ -5051,6 +5050,8 @@ CLASS lcl_ztct IMPLEMENTATION.
         DELETE ddic_e071 INDEX lp_index.
         lp_deleted = abap_true.
       ELSEIF ls_stms_wbo_requests-e070-trstatus = 'O'.
+        MESSAGE e000(db) DISPLAY LIKE 'E'
+                         WITH 'Transport being released. Recheck needed!'(060).
       ELSE.
 *       Retrieve the environments where the transport can be found.
 *       Read the info of the request (transport log) to determine the

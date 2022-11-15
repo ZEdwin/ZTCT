@@ -2291,6 +2291,12 @@
     </item>
     <item>
      <ID>I</ID>
+     <KEY>060</KEY>
+     <ENTRY>Transport being released. Recheck needed!</ENTRY>
+     <LENGTH>50</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
      <KEY>B10</KEY>
      <ENTRY>Selection range / Upload file</ENTRY>
      <LENGTH>29</LENGTH>
