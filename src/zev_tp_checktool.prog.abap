@@ -2605,7 +2605,7 @@ CLASS lcl_ztct IMPLEMENTATION.
             no_info_found = 2
             OTHERS        = 3.
         IF sy-subrc <> 0.
-          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+          MESSAGE ID sy-msgid TYPE 'I' NUMBER sy-msgno
                   WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
         ENDIF.
         READ TABLE lt_tr_cofilines INTO ls_tstrfcofil
