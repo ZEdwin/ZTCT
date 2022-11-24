@@ -306,7 +306,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     DATA tab_delimited               TYPE table_of_strings.
     DATA conflict_line               TYPE ty_request_details.
     DATA line_found_in_list          TYPE ty_request_details.
-    DATA total(10)                   TYPE n.
+    DATA total                       TYPE sytabix.
     DATA ddic_objects                TYPE string_table.
     DATA ddic_objects_sub            TYPE string_table.
     DATA ddic_e071                   TYPE tt_ddic_e071.
@@ -384,7 +384,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
                                                   ex_older TYPE tt_request_details.
     METHODS progress_indicator          IMPORTING im_counter TYPE sytabix
                                                   im_object  TYPE trobj_name
-                                                  im_total   TYPE numc10
+                                                  im_total   TYPE sytabix
                                                   im_text    TYPE itex132
                                                   im_flag    TYPE c.
     METHODS alv_xls_init                EXPORTING ex_rf_table TYPE REF TO cl_salv_table
@@ -1854,28 +1854,28 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   When checking the buffer, but never when building popup
 *   (buffer_chk = abap_true AND building_conflict_popup = abap_false)
     IF buffer_chk = abap_true AND building_conflict_popup = abap_false.
-      LOOP AT ch_main_list INTO ls_main WHERE prd  <> co_okay
-                                          AND dev  <> co_error
-                                          AND flag = abap_true.
+      LOOP AT ch_main_list ASSIGNING FIELD-SYMBOL(<lf_main_list>)
+                           WHERE prd  <> co_okay
+                             AND dev  <> co_error
+                             AND flag = abap_true.
 *       Show the progress indicator
         lp_counter = lp_counter + 1.
         progress_indicator( im_counter = lp_counter
-                            im_object  = ls_main-obj_name
+                            im_object  = <lf_main_list>-obj_name
                             im_total   = total
                             im_text    = 'Checking buffer'(050)
                             im_flag    = ' ' ).
         CLEAR lp_domnam.
-        SELECT SINGLE domnam INTO  lp_domnam FROM tmsbuffer
-                             WHERE trkorr = ls_main-trkorr
-                             AND   sysnam = prd_system ##WARN_OK.
+        SELECT SINGLE domnam INTO lp_domnam FROM tmsbuffer
+                            WHERE trkorr = <lf_main_list>-trkorr
+                              AND sysnam = prd_system ##WARN_OK.
         IF sy-subrc = 4.
           IF buffer_remove_tp = abap_true.
             DELETE ch_main_list INDEX sy-tabix.
           ELSE.
-            ls_main-warning_lvl  = co_alert.
-            ls_main-warning_rank = co_alert3_rank.
-            ls_main-warning_txt  = lp_alert3_text.
-            MODIFY ch_main_list FROM ls_main.
+            <lf_main_list>-warning_lvl  = co_alert.
+            <lf_main_list>-warning_rank = co_alert3_rank.
+            <lf_main_list>-warning_txt  = lp_alert3_text.
           ENDIF.
         ENDIF.
       ENDLOOP.
@@ -2138,10 +2138,14 @@ CLASS lcl_ztct IMPLEMENTATION.
                   INTO lp_gprogtext
                   SEPARATED BY ' '.
       CONDENSE lp_gprogtext.
-      CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
+
+      cl_progress_indicator=>progress_indicate(
         EXPORTING
-          percentage = lp_gprogperc
-          text       = lp_gprogtext.
+          i_text               = lp_gprogtext
+          i_processed          = im_counter
+          i_total              = im_total
+          i_output_immediately = abap_true ).
+
     ENDIF.
 
 * To avoid timeouts
@@ -2162,9 +2166,11 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_main_list_vrsd  TYPE ty_request_details.
     FIELD-SYMBOLS: <lf_main_list> TYPE ty_request_details.
     FREE lt_main_list_vrsd.
-    CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
+
+    cl_progress_indicator=>progress_indicate(
       EXPORTING
-        text = 'Selecting data...'(014).
+        i_text = 'Selecting data...'(014) ).
+
 *   Join over E070, E071:
 *   Description is read later to prevent complicated join and
 *   increased runtime
@@ -2306,6 +2312,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           WHERE domname    = 'TRSTATUS'
             AND ddlanguage = co_langu
             AND domvalue_l = re_line-trstatus.
+      EXIT.
     ENDSELECT.
 *   Retrieve texts for Description of request/task type
     SELECT ddtext
@@ -2314,6 +2321,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           WHERE domname    = 'TRFUNCTION'
             AND ddlanguage = co_langu
             AND domvalue_l = re_line-trfunction.
+      EXIT.
     ENDSELECT.
 *   Retrieve the project number (and description):
     SELECT reference
@@ -2325,6 +2333,7 @@ CLASS lcl_ztct IMPLEMENTATION.
              FROM ctsproject UP TO 1 ROWS
              INTO re_line-project_descr
             WHERE trkorr  = re_line-project.
+        EXIT.
       ENDSELECT.
     ENDSELECT.
 *   Retrieve the description of the status
@@ -2334,6 +2343,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           WHERE domname    = 'TRSTATUS'
             AND ddlanguage = co_langu
             AND domvalue_l = re_line-trstatus.
+      EXIT.
     ENDSELECT.
 
   ENDMETHOD.
@@ -3163,19 +3173,16 @@ CLASS lcl_ztct IMPLEMENTATION.
 *       also in the loaded list:
         IF sy-ucomm  = '&ADD_FILE'.
           ls_main-flag = abap_true.
-          LOOP AT main_list INTO main_list_line
+          LOOP AT main_list ASSIGNING FIELD-SYMBOL(<f_main_list_line>)
                            WHERE object     = ls_main-object
                              AND obj_name   = ls_main-obj_name
                              AND keyobject  = ls_main-keyobject
                              AND keyobjname = ls_main-keyobjname
                              AND tabkey     = ls_main-tabkey.
-            main_list_line-flag = abap_true.
-            MODIFY main_list FROM main_list_line.
+            <f_main_list_line>-flag = abap_true.
           ENDLOOP.
         ENDIF.
         APPEND ls_main TO main_list.
-      ELSE.
-        CHECK 1 = 1.
       ENDIF.
     ENDLOOP.
     sort_main_list( ).
@@ -4222,8 +4229,8 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND korrnum <> im_line-trkorr
                AND korrnum LIKE prefix
                AND korrnum <> ''
-               AND objtype =  im_line-object
-               AND objname =  im_line-obj_name          "#EC CI_NOFIELD
+               AND objtype = im_line-object
+               AND objname = im_line-obj_name           "#EC CI_NOFIELD
                AND e070~trfunction <> 'T'.
         APPEND ls_tp_same_object TO lt_aggr_tp_list_of_objects.
       ENDSELECT.
@@ -4558,7 +4565,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_medium_text         TYPE char20.
     DATA lp_long_text           TYPE char40.
 
-    FIELD-SYMBOLS: <l_type>     TYPE any.
+    FIELD-SYMBOLS: <lf_type>     TYPE any.
 *   To remove some columns from the output
     DATA lt_range_fieldname          TYPE RANGE OF lty_field_ran.
     DATA ls_fieldname           TYPE lty_field_ran.
@@ -4614,8 +4621,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     LOOP AT lt_details INTO ls_details.
       CONCATENATE '>MAIN_LIST_LINE' '-'
                   ls_details-name INTO lp_field.
-      ASSIGN (lp_field) TO <l_type>.
-      CHECK <l_type> IS ASSIGNED.
+      ASSIGN (lp_field) TO <lf_type>.
+      CHECK <lf_type> IS ASSIGNED.
     ENDLOOP.
 
 *   Determine total width
@@ -4958,7 +4965,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_ddic_object       TYPE string.
     DATA lp_index             TYPE syindex.
     DATA lp_counter           TYPE i.
-    DATA lp_total(10)         TYPE n.
+    DATA lp_total             TYPE sytabix.
     DATA lp_deleted           TYPE abap_bool.
     DATA lp_obj_name          TYPE trobj_name.
 
@@ -5104,9 +5111,10 @@ CLASS lcl_ztct IMPLEMENTATION.
     SORT ddic_objects.
     DELETE ADJACENT DUPLICATES FROM ddic_objects.
 *   Show the progress indicator
-    CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
+    cl_progress_indicator=>progress_indicate(
       EXPORTING
-        text = 'Retrieving Where Used list'(052).
+        i_text = 'Retrieving Where Used list'(052) ).
+
 * Build the WHERE_USED list for all remaining objects
     DATA ls_objects     TYPE string.
     DATA where_used_sub TYPE sci_findlst.
@@ -5274,9 +5282,9 @@ START-OF-SELECTION.
 
   IF tp_process_type = 1.
 *   Get transports
-    CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
+    cl_progress_indicator=>progress_indicate(
       EXPORTING
-        text = 'Selecting data...'(014).
+        i_text = 'Selecting data...'(014) ).
 *   Join over E070, E071:
 *   Description is read later to prevent complicated join and
 *   increased runtime
