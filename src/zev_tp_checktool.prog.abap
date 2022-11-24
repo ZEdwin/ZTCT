@@ -1312,7 +1312,17 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           EXCEPTIONS
             OTHERS      = 1.
         IF sy-subrc <> 0.
-          MESSAGE i000(db) WITH 'Object cannot be displayed...'(m14).
+          CALL FUNCTION 'TR_OBJECT_JUMP_TO_TOOL'
+            EXPORTING
+              iv_pgmid    = 'LIMU'
+              iv_object   = rf_ztct->main_list_line-object
+              iv_obj_name = rf_ztct->main_list_line-obj_name
+              iv_action   = 'SHOW'
+            EXCEPTIONS
+              OTHERS      = 1.
+          IF sy-subrc <> 0.
+            MESSAGE i000(db) WITH 'Object cannot be displayed...'(m14).
+          ENDIF.
         ENDIF.
       WHEN OTHERS.
     ENDCASE.
