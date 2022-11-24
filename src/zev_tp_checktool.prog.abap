@@ -5191,11 +5191,15 @@ CLASS lcl_ztct IMPLEMENTATION.
     CLEAR ex_as4time.
     CLEAR ex_as4date.
 *   Get the last date the object was imported
-    CALL FUNCTION 'TR_READ_GLOBAL_INFO_OF_REQUEST'
-      EXPORTING
-        iv_trkorr = im_trkorr
-      IMPORTING
-        es_cofile = st_request-cofile.
+    TRY.
+        CALL FUNCTION 'TR_READ_GLOBAL_INFO_OF_REQUEST'
+          EXPORTING
+            iv_trkorr = im_trkorr
+          IMPORTING
+            es_cofile = st_request-cofile.
+      CATCH cx_root.
+        RETURN.
+    ENDTRY.
     LOOP AT st_request-cofile-systems INTO ls_systems
                                       WHERE systemid = qas_system.
 *     Get the latest import date:
