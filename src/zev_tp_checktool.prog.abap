@@ -1628,7 +1628,7 @@ CLASS lcl_ztct IMPLEMENTATION.
             conflict_line-warning_txt  = lp_error_text.
             conflict_line-objkey       = tp_tabkey.
 *           Get the last date the object was imported
-            get_import_datetime_qas( EXPORTING im_trkorr  = ls_older_line-trkorr
+            get_import_datetime_qas( EXPORTING im_trkorr  = ls_newer_line-trkorr
                                      IMPORTING ex_as4time = conflict_line-as4time
                                                ex_as4date = conflict_line-as4date ).
 *           Check if the transport is in the list
@@ -5191,15 +5191,11 @@ CLASS lcl_ztct IMPLEMENTATION.
     CLEAR ex_as4time.
     CLEAR ex_as4date.
 *   Get the last date the object was imported
-    TRY.
-        CALL FUNCTION 'TR_READ_GLOBAL_INFO_OF_REQUEST'
-          EXPORTING
-            iv_trkorr = im_trkorr
-          IMPORTING
-            es_cofile = st_request-cofile.
-      CATCH cx_root.
-        RETURN.
-    ENDTRY.
+    CALL FUNCTION 'TR_READ_GLOBAL_INFO_OF_REQUEST'
+      EXPORTING
+        iv_trkorr = im_trkorr
+      IMPORTING
+        es_cofile = st_request-cofile.
     LOOP AT st_request-cofile-systems INTO ls_systems
                                       WHERE systemid = qas_system.
 *     Get the latest import date:
