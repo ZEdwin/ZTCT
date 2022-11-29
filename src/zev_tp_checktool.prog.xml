@@ -2626,85 +2626,85 @@
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PA_CHD</KEY>
+     <KEY>P_CHD</KEY>
      <ENTRY>Reset &apos;Checked&apos; field</ENTRY>
      <LENGTH>29</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PA_CHKKY</KEY>
+     <KEY>P_CHKKY</KEY>
      <ENTRY>Check table keys</ENTRY>
      <LENGTH>24</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PA_FILE</KEY>
+     <KEY>P_FILE</KEY>
      <ENTRY>File name</ENTRY>
      <LENGTH>17</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PA_PRD</KEY>
+     <KEY>P_PRD</KEY>
      <ENTRY>Production</ENTRY>
      <LENGTH>18</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PA_QAS</KEY>
+     <KEY>P_QAS</KEY>
      <ENTRY>Acceptance</ENTRY>
      <LENGTH>18</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PA_SEL</KEY>
+     <KEY>P_SEL</KEY>
      <ENTRY>Build transport list</ENTRY>
      <LENGTH>28</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PA_STR</KEY>
+     <KEY>P_STR</KEY>
      <ENTRY>Short Description</ENTRY>
      <LENGTH>25</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PA_UPL</KEY>
+     <KEY>P_UPL</KEY>
      <ENTRY>Upload transport list</ENTRY>
      <LENGTH>29</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PA_USER</KEY>
+     <KEY>P_USER</KEY>
      <ENTRY>Use User specific layout</ENTRY>
      <LENGTH>32</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>SO_DATE</KEY>
+     <KEY>S_DATE</KEY>
      <ENTRY>Date</ENTRY>
      <LENGTH>12</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>SO_EXOBJ</KEY>
+     <KEY>S_EXOBJ</KEY>
      <ENTRY>Obj. Name</ENTRY>
      <LENGTH>17</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>SO_KORR</KEY>
+     <KEY>S_KORR</KEY>
      <ENTRY>Request number</ENTRY>
      <LENGTH>22</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>SO_PROJ</KEY>
+     <KEY>S_PROJ</KEY>
      <ENTRY>CTS Project</ENTRY>
      <LENGTH>19</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>SO_USER</KEY>
+     <KEY>S_USER</KEY>
      <ENTRY>User Name</ENTRY>
      <LENGTH>17</LENGTH>
     </item>
@@ -2985,6 +2985,12 @@
       </item>
       <item>
        <ID>I</ID>
+       <KEY>060</KEY>
+       <ENTRY>Transport being released. Recheck needed!</ENTRY>
+       <LENGTH>50</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
        <KEY>B10</KEY>
        <ENTRY>Selection range / Upload file</ENTRY>
        <LENGTH>29</LENGTH>
@@ -3221,13 +3227,7 @@
        <ID>I</ID>
        <KEY>T06</KEY>
        <ENTRY>Select the tables for which</ENTRY>
-       <LENGTH>40</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
-       <KEY>T07</KEY>
-       <ENTRY> the keys must be checked</ENTRY>
-       <LENGTH>40</LENGTH>
+       <LENGTH>55</LENGTH>
       </item>
       <item>
        <ID>I</ID>
@@ -3320,85 +3320,85 @@
       </item>
       <item>
        <ID>S</ID>
-       <KEY>PA_CHD</KEY>
+       <KEY>P_CHD</KEY>
        <ENTRY>Reset &apos;Checked&apos; field</ENTRY>
        <LENGTH>29</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>PA_CHKKY</KEY>
+       <KEY>P_CHKKY</KEY>
        <ENTRY>Check table keys</ENTRY>
        <LENGTH>24</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>PA_FILE</KEY>
+       <KEY>P_FILE</KEY>
        <ENTRY>File name</ENTRY>
        <LENGTH>17</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>PA_PRD</KEY>
+       <KEY>P_PRD</KEY>
        <ENTRY>Production</ENTRY>
        <LENGTH>18</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>PA_QAS</KEY>
+       <KEY>P_QAS</KEY>
        <ENTRY>Acceptance</ENTRY>
        <LENGTH>18</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>PA_SEL</KEY>
+       <KEY>P_SEL</KEY>
        <ENTRY>Build transport list</ENTRY>
        <LENGTH>28</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>PA_STR</KEY>
+       <KEY>P_STR</KEY>
        <ENTRY>Short Description</ENTRY>
        <LENGTH>25</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>PA_UPL</KEY>
+       <KEY>P_UPL</KEY>
        <ENTRY>Upload transport list</ENTRY>
        <LENGTH>29</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>PA_USER</KEY>
+       <KEY>P_USER</KEY>
        <ENTRY>Use User specific layout</ENTRY>
        <LENGTH>32</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>SO_DATE</KEY>
+       <KEY>S_DATE</KEY>
        <ENTRY>Date</ENTRY>
        <LENGTH>12</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>SO_EXOBJ</KEY>
+       <KEY>S_EXOBJ</KEY>
        <ENTRY>Obj. Name</ENTRY>
        <LENGTH>17</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>SO_KORR</KEY>
+       <KEY>S_KORR</KEY>
        <ENTRY>Request number</ENTRY>
        <LENGTH>22</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>SO_PROJ</KEY>
+       <KEY>S_PROJ</KEY>
        <ENTRY>CTS Project</ENTRY>
        <LENGTH>19</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>SO_USER</KEY>
+       <KEY>S_USER</KEY>
        <ENTRY>User Name</ENTRY>
        <LENGTH>17</LENGTH>
       </item>
