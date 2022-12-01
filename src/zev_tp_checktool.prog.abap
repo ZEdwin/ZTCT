@@ -352,7 +352,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS flag_same_objects           CHANGING  ch_main_list TYPE ty_request_details_tt.
     METHODS mark_all_tp_records         IMPORTING im_cell TYPE salv_s_cell
                                         CHANGING  ch_rows TYPE salv_t_row.
-    METHODS main_to_tab_delimited       IMPORTING im_main_list TYPE ty_request_details_tt
+    METHODS main_to_tab_delimited       IMPORTING im_main_list     TYPE ty_request_details_tt
                                         EXPORTING ex_tab_delimited TYPE table_of_strings.
     METHODS tab_delimited_to_main       IMPORTING im_tab_delimited TYPE table_of_strings.
     METHODS display_transport           IMPORTING im_trkorr TYPE trkorr.
@@ -433,37 +433,37 @@ SELECTION-SCREEN: FUNCTION KEY 1.
 * B10: Selection range / Upload file
 *---------------------------------------
 SELECTION-SCREEN BEGIN OF BLOCK box1 WITH FRAME TITLE sc_b10.
-PARAMETERS       p_sel RADIOBUTTON GROUP mod DEFAULT 'X'
-                                               USER-COMMAND sel.
-PARAMETERS       p_upl RADIOBUTTON GROUP mod.
+PARAMETERS p_sel RADIOBUTTON GROUP mod DEFAULT 'X'
+                                       USER-COMMAND sel.
+PARAMETERS p_upl RADIOBUTTON GROUP mod.
 SELECTION-SCREEN END OF BLOCK box1.
 
 * B20: Selection criteria or Upload file
 *---------------------------------------
 SELECTION-SCREEN BEGIN OF BLOCK box2 WITH FRAME TITLE sc_b20.
-SELECT-OPTIONS   s_korr FOR e070-strkorr MODIF ID sel.
-PARAMETERS       p_str TYPE as4text VISIBLE LENGTH 41
-                                      MODIF ID sel.
+SELECT-OPTIONS s_korr FOR e070-strkorr MODIF ID sel.
+PARAMETERS p_str TYPE as4text VISIBLE LENGTH 41
+                              MODIF ID sel.
 SELECTION-SCREEN SKIP 1.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(20) sc_c21 MODIF ID sel.
 SELECTION-SCREEN POSITION 30.
-SELECT-OPTIONS   s_user FOR sy-uname DEFAULT sy-uname
-                                       MATCHCODE OBJECT user_addr
-                                       MODIF ID sel.
-SELECTION-SCREEN PUSHBUTTON 71(5) i_name
-                                   USER-COMMAND name
-                                   MODIF ID sel.            "#EC NEEDED
+SELECT-OPTIONS s_user FOR sy-uname DEFAULT sy-uname
+                                   MATCHCODE OBJECT user_addr
+                                   MODIF ID sel.
+SELECTION-SCREEN PUSHBUTTON 71(5) sc_name
+                                  USER-COMMAND name
+                                  MODIF ID sel.             "#EC NEEDED
 SELECTION-SCREEN END OF LINE.
-SELECT-OPTIONS   s_date FOR e070-as4date MODIF ID sel.
-SELECTION-SCREEN PUSHBUTTON 69(7) i_date
-                             USER-COMMAND date
-                             MODIF ID sel.                  "#EC NEEDED
-SELECT-OPTIONS   s_proj FOR ctsproject-trkorr MODIF ID sel.
+SELECT-OPTIONS s_date FOR e070-as4date MODIF ID sel.
+SELECTION-SCREEN PUSHBUTTON 69(7) sc_date
+                                  USER-COMMAND date
+                                  MODIF ID sel.             "#EC NEEDED
+SELECT-OPTIONS s_proj FOR ctsproject-trkorr MODIF ID sel.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(20) sc_c22 MODIF ID upl.
 SELECTION-SCREEN POSITION POS_LOW.
-PARAMETERS       p_file TYPE string MODIF ID upl.
+PARAMETERS p_file TYPE string MODIF ID upl.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN END OF BLOCK box2.
 
@@ -474,15 +474,15 @@ SELECTION-SCREEN BEGIN OF LINE.
 * C31 - Route
 SELECTION-SCREEN COMMENT 1(20) sc_c31.
 SELECTION-SCREEN POSITION POS_LOW.
-PARAMETERS       p_dev TYPE sysname DEFAULT 'DEV' ##SEL_WRONG.
+PARAMETERS p_dev TYPE sysname DEFAULT 'DEV' ##SEL_WRONG.
 * C32 - -->
 SELECTION-SCREEN COMMENT 45(3) sc_c32.
 SELECTION-SCREEN POSITION 51.
-PARAMETERS       p_qas TYPE sysname DEFAULT 'QAS'.
+PARAMETERS p_qas TYPE sysname DEFAULT 'QAS'.
 * C33 - -->
 SELECTION-SCREEN COMMENT 63(3) sc_c33.
 SELECTION-SCREEN POSITION 69.
-PARAMETERS       p_prd TYPE sysname DEFAULT 'PRD'.
+PARAMETERS p_prd TYPE sysname DEFAULT 'PRD'.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN END OF BLOCK box3.
 
@@ -490,39 +490,41 @@ SELECTION-SCREEN END OF BLOCK box3.
 *---------------------------------------
 SELECTION-SCREEN BEGIN OF BLOCK box4 WITH FRAME TITLE sc_b40.
 SELECTION-SCREEN BEGIN OF LINE.
-PARAMETERS       p_noprd AS CHECKBOX DEFAULT 'X' ##SEL_WRONG.
+PARAMETERS p_noprd AS CHECKBOX DEFAULT 'X' ##SEL_WRONG.
 * C40 - Do not select transports already in production
 SELECTION-SCREEN COMMENT 4(63) sc_c40.
 SELECTION-SCREEN END OF LINE.
 
 SELECTION-SCREEN BEGIN OF LINE.
-PARAMETERS       p_user AS CHECKBOX DEFAULT ' '.
+PARAMETERS p_user AS CHECKBOX DEFAULT ' '.
 * C41 - Use User specific layout
 SELECTION-SCREEN COMMENT 4(63) sc_c41.
 SELECTION-SCREEN END OF LINE.
 
 SELECTION-SCREEN BEGIN OF LINE.
-PARAMETERS       p_buff AS CHECKBOX DEFAULT 'X' USER-COMMAND buf ##SEL_WRONG.
+PARAMETERS p_buff AS CHECKBOX DEFAULT 'X' USER-COMMAND buf ##SEL_WRONG.
 * C42 - Check transport buffer
 SELECTION-SCREEN COMMENT 4(22) sc_c42.
-PARAMETERS       p_buffd AS CHECKBOX DEFAULT 'X' MODIF ID buf ##SEL_WRONG.
+PARAMETERS p_buffd AS CHECKBOX DEFAULT 'X' MODIF ID buf ##SEL_WRONG.
 SELECTION-SCREEN COMMENT 29(35) sc_c45 MODIF ID buf.
-SELECTION-SCREEN PUSHBUTTON (4) i_buff USER-COMMAND buff
-                                          MODIF ID buf
-                                          VISIBLE LENGTH 2. "#EC NEEDED
+SELECTION-SCREEN PUSHBUTTON (4) sc_buff
+                                USER-COMMAND buff
+                                MODIF ID buf
+                                VISIBLE LENGTH 2.           "#EC NEEDED
 SELECTION-SCREEN END OF LINE.
 
 SELECTION-SCREEN BEGIN OF LINE.
-PARAMETERS       p_chkky AS CHECKBOX DEFAULT 'X' MODIF ID chk
-                           USER-COMMAND key.
+PARAMETERS p_chkky AS CHECKBOX DEFAULT 'X' MODIF ID chk
+                   USER-COMMAND key.
 * C43 - Check table keys
 SELECTION-SCREEN COMMENT 4(16) sc_c43    MODIF ID chk.
-SELECTION-SCREEN PUSHBUTTON 65(4) i_ckey USER-COMMAND ckey
-                                          MODIF ID chk
-                                          VISIBLE LENGTH 2. "#EC NEEDED
+SELECTION-SCREEN PUSHBUTTON 65(4) sc_ckey
+                                  USER-COMMAND ckey
+                                  MODIF ID chk
+                                  VISIBLE LENGTH 2.         "#EC NEEDED
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN BEGIN OF LINE.
-PARAMETERS       p_chd AS CHECKBOX DEFAULT ' ' MODIF ID upl.
+PARAMETERS p_chd AS CHECKBOX DEFAULT ' ' MODIF ID upl.
 * C44  - Reset 'Checked' field
 SELECTION-SCREEN COMMENT 4(16) sc_c44 MODIF ID upl.
 SELECTION-SCREEN END OF LINE.
@@ -539,8 +541,8 @@ SELECTION-SCREEN COMMENT /1(74) sc_c51 MODIF ID chk.
 SELECTION-SCREEN COMMENT /1(74) sc_c52 MODIF ID chk.
 * C53 - workflow or the tables for Pricing procedures).
 SELECTION-SCREEN COMMENT /1(74) sc_c53 MODIF ID chk.
-SELECT-OPTIONS   s_exobj FOR e071-obj_name NO INTERVALS
-                                             MODIF ID chk.
+SELECT-OPTIONS s_exobj FOR e071-obj_name NO INTERVALS
+                                         MODIF ID chk.
 SELECTION-SCREEN END OF BLOCK box5.
 
 *--------------------------------------------------------------------*
@@ -559,18 +561,18 @@ INITIALIZATION.
     ENDTRY.
   ENDIF.
 * icon_terminated_position.
-  i_name = '@L8@'.
-  i_date = 'Clear'(025).
+  sc_name = '@L8@'.
+  sc_date = 'Clear'(025).
   IF s_date IS INITIAL.
-    i_date = 'Clear'(025).
+    sc_date = 'Clear'(025).
     s_date-sign = 'I'.
     s_date-option = 'BT'.
     s_date-high = sy-datum.
     s_date-low = rf_ztct->go_back_months( im_currdate   = sy-datum
-                                           im_backmonths = 6 ).
+                                          im_backmonths = 6 ).
     APPEND s_date TO s_date.
   ELSE.
-    i_date = 'Def.'(026).
+    sc_date = 'Def.'(026).
     FREE s_date.
   ENDIF.
 
@@ -598,8 +600,8 @@ INITIALIZATION.
            '(like SWOTICE for'(c52).
   sc_c53 = 'workflow or the tables for Pricing procedures).'(c53).
 
-  WRITE icon_information AS ICON TO i_buff.
-  WRITE icon_information AS ICON TO i_ckey.
+  WRITE icon_information AS ICON TO sc_buff.
+  WRITE icon_information AS ICON TO sc_ckey.
 
 * Create a range table containing all project numbers:
   ls_range_project_trkorrs-sign = 'E'.
@@ -673,50 +675,50 @@ AT SELECTION-SCREEN.
       IF s_user IS NOT INITIAL.
         FREE s_user.
         CLEAR s_user.
-        i_name = '@LD@'.
+        sc_name = '@LD@'.
       ELSE.
         s_user-option = 'EQ'.
         s_user-sign = 'I'.
         s_user-low = sy-uname.
         APPEND s_user TO s_user.
-        i_name = '@L8@'.
+        sc_name = '@L8@'.
       ENDIF.
     WHEN 'DATE'.
       IF s_date IS INITIAL.
-        i_date = 'Clear'(025).
+        sc_date = 'Clear'(025).
         IF s_date[] IS INITIAL.
           s_date-sign = 'I'.
           s_date-option = 'BT'.
           s_date-high = sy-datum.
           s_date-low = rf_ztct->go_back_months( im_currdate   = sy-datum
-                                                 im_backmonths = 6 ).
+                                                im_backmonths = 6 ).
           APPEND s_date TO s_date.
         ENDIF.
       ELSE.
-        i_date = 'Def.'(026).
+        sc_date = 'Def.'(026).
         FREE s_date.
       ENDIF.
   ENDCASE.
 
 AT SELECTION-SCREEN ON p_dev.
-  SELECT SINGLE * FROM tcesyst INTO st_tcesyst
-                  WHERE sysname = p_dev ##WARN_OK.
+  SELECT SINGLE sysname FROM tcesyst INTO tp_sysname
+                        WHERE sysname = p_dev ##WARN_OK.
   IF sy-subrc <> 0.
     MESSAGE e000(db) DISPLAY LIKE 'E'
                      WITH 'System'(057) p_dev 'does not exist...'(058).
   ENDIF.
 
 AT SELECTION-SCREEN ON p_qas.
-  SELECT SINGLE * FROM tcesyst INTO st_tcesyst
-                  WHERE sysname = p_qas ##WARN_OK.
+  SELECT SINGLE sysname FROM tcesyst INTO tp_sysname
+                        WHERE sysname = p_qas ##WARN_OK.
   IF sy-subrc <> 0.
     MESSAGE e000(db) DISPLAY LIKE 'E'
                      WITH 'System'(057) p_qas 'does not exist...'(058).
   ENDIF.
 
 AT SELECTION-SCREEN ON p_prd.
-  SELECT SINGLE * FROM tcesyst INTO st_tcesyst
-                  WHERE sysname = p_prd ##WARN_OK.
+  SELECT SINGLE sysname FROM tcesyst INTO tp_sysname
+                        WHERE sysname = p_prd ##WARN_OK.
   IF sy-subrc <> 0.
     MESSAGE e000(db) DISPLAY LIKE 'E'
                      WITH 'System'(057) p_prd 'does not exist...'(058).
@@ -786,7 +788,7 @@ AT SELECTION-SCREEN OUTPUT.
 * If the user range is initial (removed manually), set the correct Icon:
 AT SELECTION-SCREEN ON s_user.
   IF s_user[] IS INITIAL.
-    i_name = '@LD@'.
+    sc_name = '@LD@'.
   ENDIF.
 
 AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file.
@@ -1327,11 +1329,8 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
 
   METHOD on_link_click_popup.
     READ TABLE rf_ztct->conflicts INTO rf_ztct->conflict_line INDEX row.
-    IF sy-subrc = 0.
-      CASE column.
-        WHEN 'TRKORR'.
-          rf_ztct->display_transport( rf_ztct->conflict_line-trkorr ).
-      ENDCASE.
+    IF sy-subrc = 0 AND column = 'TRKORR'.
+      rf_ztct->display_transport( rf_ztct->conflict_line-trkorr ).
     ENDIF.
   ENDMETHOD.
 
@@ -2081,18 +2080,18 @@ CLASS lcl_ztct IMPLEMENTATION.
 
     LOOP AT lt_keys_main INTO ls_keys.
       SELECT object objname tabkey
-                FROM e071k
-                INNER JOIN e070 ON e070~trkorr = e071k~trkorr
-                INTO (ls_keys-keyobject,
-                      ls_keys-keyobjname,
-                      ls_keys-tabkey)
-                WHERE e071k~trkorr     = ls_keys-trkorr
-                  AND e071k~trkorr     NOT IN project_trkorrs
-                  AND e071k~trkorr     LIKE prefix
-                  AND e070~trfunction  <> 'T'
-                  AND e071k~mastertype = ls_keys-object
-                  AND e071k~mastername = ls_keys-obj_name(40)
-                  AND e071k~objname    IN excluded_objects.
+             FROM e071k
+             INNER JOIN e070 ON e070~trkorr = e071k~trkorr
+             INTO (ls_keys-keyobject,
+                   ls_keys-keyobjname,
+                   ls_keys-tabkey)
+             WHERE e071k~trkorr     = ls_keys-trkorr
+               AND e071k~trkorr     NOT IN project_trkorrs
+               AND e071k~trkorr     LIKE prefix
+               AND e070~trfunction  <> 'T'
+               AND e071k~mastertype = ls_keys-object
+               AND e071k~mastername = ls_keys-obj_name(40)
+               AND e071k~objname    IN excluded_objects.
         APPEND ls_keys TO ch_table.
       ENDSELECT.
     ENDLOOP.
@@ -2227,11 +2226,9 @@ CLASS lcl_ztct IMPLEMENTATION.
             DELETE main_list INDEX sy-tabix.
             CONTINUE.
           ENDIF.
-        ELSE.
-          IF main_list_line-tr_descr NS search_string.
-            DELETE main_list INDEX sy-tabix.
-            CONTINUE.
-          ENDIF.
+        ELSEIF main_list_line-tr_descr NS search_string.
+          DELETE main_list INDEX sy-tabix.
+          CONTINUE.
         ENDIF.
       ENDLOOP.
     ENDIF.
@@ -2531,11 +2528,11 @@ CLASS lcl_ztct IMPLEMENTATION.
         ENDSELECT.
 *       Retrieve the description of the status
         SELECT SINGLE ddtext
-               FROM dd07t
-               INTO main_list_line-trstatus
-              WHERE domname    = 'TRSTATUS'
-                AND ddlanguage = co_langu
-                AND domvalue_l = main_list_line-trstatus. "#EC CI_SEL_NESTED
+                 FROM dd07t
+                 INTO main_list_line-trstatus
+                WHERE domname    = 'TRSTATUS'
+                  AND ddlanguage = co_langu
+                  AND domvalue_l = main_list_line-trstatus. "#EC CI_SEL_NESTED
 *       Check if transport has been released.
 *       D - Modifiable
 *       L - Modifiable, protected
@@ -2988,13 +2985,11 @@ CLASS lcl_ztct IMPLEMENTATION.
         IF sy-subrc <> 0.
           EXIT.
         ELSE.
+          DESCRIBE FIELD <lf_string> TYPE lp_type.
           IF sy-index = 1.
             lp_string = <lf_string>.
-          ELSE.
-            DESCRIBE FIELD <lf_string> TYPE lp_type.
-            IF lp_type NA co_non_charlike.
-              CONCATENATE lp_string tp_tab <lf_string> INTO lp_string.
-            ENDIF.
+          ELSEIF lp_type NA co_non_charlike.
+            CONCATENATE lp_string tp_tab <lf_string> INTO lp_string.
           ENDIF.
         ENDIF.
       ENDDO.
@@ -4279,12 +4274,10 @@ CLASS lcl_ztct IMPLEMENTATION.
         ELSE.
           APPEND ls_tp_same_object TO ex_older.
         ENDIF.
+      ELSEIF ls_tp_same_object-as4date  > im_line-as4date.
+        APPEND ls_tp_same_object TO ex_newer.
       ELSE.
-        IF ls_tp_same_object-as4date  > im_line-as4date.
-          APPEND ls_tp_same_object TO ex_newer.
-        ELSE.
-          APPEND ls_tp_same_object TO ex_older.
-        ENDIF.
+        APPEND ls_tp_same_object TO ex_older.
       ENDIF.
     ENDLOOP.
 
@@ -4935,11 +4928,9 @@ CLASS lcl_ztct IMPLEMENTATION.
                                                           warning_txt
                                                           t_color.
             total = total + 1.
-          ELSE.
-            IF ls_main-warning_rank = co_ddic_rank.
-              ls_main-flag         = abap_true.
-              MODIFY ch_main_list FROM ls_main TRANSPORTING flag.
-            ENDIF.
+          ELSEIF ls_main-warning_rank = co_ddic_rank.
+            ls_main-flag         = abap_true.
+            MODIFY ch_main_list FROM ls_main TRANSPORTING flag.
           ENDIF.
         ENDIF.
       ENDLOOP.
@@ -5066,17 +5057,16 @@ CLASS lcl_ztct IMPLEMENTATION.
 *         Now check in which environments the transport can be found
           LOOP AT st_request-cofile-systems INTO ls_systems.
 *           For each environment, set the status icon:
-            CASE ls_systems-systemid.
-              WHEN prd_system.
-                READ TABLE ls_systems-steps INTO st_steps
-                                            INDEX lines( ls_systems-steps ).
-                CHECK st_steps-stepid <> '<'.
+            IF ls_systems-systemid = prd_system.
+              READ TABLE ls_systems-steps INTO st_steps
+                                          INDEX lines( ls_systems-steps ).
+              CHECK st_steps-stepid <> '<'.
 *               Transported to production, check not required on this
 *               object. Delete all records for this object (not only
 *               for this transport but for all transports)
-                DELETE ddic_e071 INDEX lp_index.
-                lp_deleted = abap_true.
-            ENDCASE.
+              DELETE ddic_e071 INDEX lp_index.
+              lp_deleted = abap_true.
+            ENDIF.
           ENDLOOP.
         ENDIF.
       ENDIF.
@@ -5229,13 +5219,11 @@ CLASS lcl_ztct IMPLEMENTATION.
       IF ls_dat-tt = '31'.
         re_date = ls_hdat.
         re_date = re_date - 1.
+      ELSEIF ls_dat-mm = '02'.
+        re_date = ls_hdat.
+        re_date = re_date - 1.
       ELSE.
-        IF ls_dat-mm = '02'.
-          re_date = ls_hdat.
-          re_date = re_date - 1.
-        ELSE.
-          re_date = ls_dat.
-        ENDIF.
+        re_date = ls_dat.
       ENDIF.
     ELSE.
       re_date = ls_dat.
@@ -5302,11 +5290,9 @@ START-OF-SELECTION.
             DELETE ta_trkorr_range INDEX sy-tabix.
             CONTINUE.
           ENDIF.
-        ELSE.
-          IF tp_transport_descr NS p_str.
-            DELETE ta_trkorr_range INDEX sy-tabix.
-            CONTINUE.
-          ENDIF.
+        ELSEIF tp_transport_descr NS p_str.
+          DELETE ta_trkorr_range INDEX sy-tabix.
+          CONTINUE.
         ENDIF.
 *       Check if the project is in the selection range
         SELECT reference FROM e070a UP TO 1 ROWS
