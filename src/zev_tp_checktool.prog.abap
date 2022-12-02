@@ -53,7 +53,10 @@ DATA ta_trkorr_range        TYPE RANGE OF e070-trkorr ##NEEDED.
 DATA st_trkorr_range        LIKE LINE OF ta_trkorr_range ##NEEDED.
 DATA ta_project_range       TYPE RANGE OF ctsproject-trkorr ##NEEDED.
 DATA lt_excluded_objects    TYPE RANGE OF trobj_name ##NEEDED.
+DATA ta_transport_descr     TYPE STANDARD TABLE OF as4text ##NEEDED.
 DATA tp_transport_descr     TYPE as4text ##NEEDED.
+DATA tp_descr_exists        TYPE abap_bool ##NEEDED.
+DATA tp_tabix               TYPE sytabix ##NEEDED.
 DATA tp_project_reference   TYPE trvalue ##NEEDED.
 * Process type is used to identify if a list is build (1),
 * uploaded (2) or the program is used for version checking (3)
@@ -5003,8 +5006,8 @@ CLASS lcl_ztct IMPLEMENTATION.
       FREE lt_stms_wbo_requests.
       CLEAR lt_stms_wbo_requests.
       READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
-                      WITH TABLE KEY request          = ddic_e071_line-trkorr
-                                     target_system    = dev_system.
+                      WITH TABLE KEY request       = ddic_e071_line-trkorr
+                                     target_system = dev_system.
       IF sy-subrc = 0.
         lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
       ELSE.
@@ -5033,41 +5036,44 @@ CLASS lcl_ztct IMPLEMENTATION.
       ENDIF.
       READ TABLE lt_stms_wbo_requests INDEX 1
                                       INTO ls_stms_wbo_requests.
-      IF ls_stms_wbo_requests-e070-trstatus NA 'NR'.
+      IF sy-subrc = 0.
+        IF ls_stms_wbo_requests-e070-trstatus NA 'NR'.
 *       Transport not released, check not required
-        DELETE ddic_e071 INDEX lp_index.
-        lp_deleted = abap_true.
-      ELSEIF ls_stms_wbo_requests-e070-trstatus = 'O'.
-        MESSAGE e000(db) DISPLAY LIKE 'E'
-                         WITH 'Transport being released. Recheck needed!'(060).
-      ELSE.
+          DELETE ddic_e071 INDEX lp_index.
+          lp_deleted = abap_true.
+        ELSEIF ls_stms_wbo_requests-e070-trstatus = 'O'.
+          MESSAGE e000(db) DISPLAY LIKE 'E'
+                           WITH 'Transport being released. Recheck needed!'(060).
+        ELSE.
 *       Retrieve the environments where the transport can be found.
 *       Read the info of the request (transport log) to determine the
 *       highest environment the transport has been moved to.
-        CALL FUNCTION 'TR_READ_GLOBAL_INFO_OF_REQUEST'
-          EXPORTING
-            iv_trkorr = ddic_e071_line-trkorr
-          IMPORTING
-            es_cofile = st_request-cofile.
-        IF st_request-cofile-systems IS INITIAL.
+          CALL FUNCTION 'TR_READ_GLOBAL_INFO_OF_REQUEST'
+            EXPORTING
+              iv_trkorr = ddic_e071_line-trkorr
+            IMPORTING
+              es_cofile = st_request-cofile.
+          IF st_request-cofile-systems IS INITIAL.
 *         Transport log does not exist: not released or log deleted
-          DELETE ddic_e071 INDEX lp_index.
-          lp_deleted = abap_true.
-        ELSE.
+            DELETE ddic_e071 INDEX lp_index.
+            lp_deleted = abap_true.
+          ELSE.
 *         Now check in which environments the transport can be found
-          LOOP AT st_request-cofile-systems INTO ls_systems.
+            LOOP AT st_request-cofile-systems INTO ls_systems.
 *           For each environment, set the status icon:
-            IF ls_systems-systemid = prd_system.
-              READ TABLE ls_systems-steps INTO st_steps
-                                          INDEX lines( ls_systems-steps ).
-              CHECK st_steps-stepid <> '<'.
+              IF ls_systems-systemid = prd_system.
+                READ TABLE ls_systems-steps INTO st_steps
+                                            INDEX lines( ls_systems-steps ).
+                IF sy-subrc = 0 AND st_steps-stepid <> '<'.
 *               Transported to production, check not required on this
 *               object. Delete all records for this object (not only
 *               for this transport but for all transports)
-              DELETE ddic_e071 INDEX lp_index.
-              lp_deleted = abap_true.
-            ENDIF.
-          ENDLOOP.
+                  DELETE ddic_e071 INDEX lp_index.
+                  lp_deleted = abap_true.
+                ENDIF.
+              ENDIF.
+            ENDLOOP.
+          ENDIF.
         ENDIF.
       ENDIF.
 *     Show the progress indicator
@@ -5168,10 +5174,14 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     Get the latest import date:
       READ TABLE ls_systems-steps INTO st_steps
                                   INDEX lines( ls_systems-steps ).
-      READ TABLE st_steps-actions INTO st_actions
-                                  INDEX lines( st_steps-actions ).
-      ex_as4time = st_actions-time.
-      ex_as4date = st_actions-date.
+      IF sy-subrc = 0.
+        READ TABLE st_steps-actions INTO st_actions
+                                    INDEX lines( st_steps-actions ).
+        IF sy-subrc = 0.
+          ex_as4time = st_actions-time.
+          ex_as4date = st_actions-date.
+        ENDIF.
+      ENDIF.
     ENDLOOP.
     ex_return = sy-subrc.
   ENDMETHOD.
@@ -5281,18 +5291,25 @@ START-OF-SELECTION.
 *   Read transport description:
     IF ta_trkorr_range[] IS NOT INITIAL.
       LOOP AT ta_trkorr_range INTO st_trkorr_range.
+        tp_tabix = sy-tabix.
 *       Check if the description contains the search string
-        SELECT SINGLE as4text
-                      FROM e07t INTO tp_transport_descr
-                      WHERE trkorr = st_trkorr_range-low ##WARN_OK.
-        IF p_str CS '*'.
-          IF tp_transport_descr NP p_str.
-            DELETE ta_trkorr_range INDEX sy-tabix.
+        SELECT as4text FROM e07t INTO TABLE ta_transport_descr
+                       WHERE trkorr = st_trkorr_range-low ##WARN_OK.
+        IF sy-subrc = 0.
+          tp_descr_exists = abap_false.
+          LOOP AT ta_transport_descr INTO tp_transport_descr.
+            IF p_str CS '*'.
+              IF tp_transport_descr CP p_str.
+                tp_descr_exists = abap_true.
+              ENDIF.
+            ELSEIF tp_transport_descr CS p_str.
+              tp_descr_exists = abap_true.
+            ENDIF.
+          ENDLOOP.
+          IF tp_descr_exists = abap_false.
+            DELETE ta_trkorr_range INDEX tp_tabix.
             CONTINUE.
           ENDIF.
-        ELSEIF tp_transport_descr NS p_str.
-          DELETE ta_trkorr_range INDEX sy-tabix.
-          CONTINUE.
         ENDIF.
 *       Check if the project is in the selection range
         SELECT reference FROM e070a UP TO 1 ROWS
