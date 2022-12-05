@@ -610,7 +610,7 @@ INITIALIZATION.
   ls_range_project_trkorrs-sign = 'E'.
   ls_range_project_trkorrs-option = 'EQ'.
   SELECT trkorr FROM ctsproject
-                INTO ls_range_project_trkorrs-low.    "#EC CI_SGLSELECT
+                INTO @ls_range_project_trkorrs-low.    "#EC CI_SGLSELECT
     APPEND ls_range_project_trkorrs TO lt_range_project_trkorrs.
   ENDSELECT.
 
@@ -704,24 +704,24 @@ AT SELECTION-SCREEN.
   ENDCASE.
 
 AT SELECTION-SCREEN ON p_dev.
-  SELECT SINGLE sysname FROM tcesyst INTO tp_sysname
-                        WHERE sysname = p_dev ##WARN_OK.
+  SELECT SINGLE sysname FROM tcesyst INTO @tp_sysname
+                        WHERE sysname = @p_dev ##WARN_OK.
   IF sy-subrc <> 0.
     MESSAGE e000(db) DISPLAY LIKE 'E'
                      WITH 'System'(057) p_dev 'does not exist...'(058).
   ENDIF.
 
 AT SELECTION-SCREEN ON p_qas.
-  SELECT SINGLE sysname FROM tcesyst INTO tp_sysname
-                        WHERE sysname = p_qas ##WARN_OK.
+  SELECT SINGLE sysname FROM tcesyst INTO @tp_sysname
+                        WHERE sysname = @p_qas ##WARN_OK.
   IF sy-subrc <> 0.
     MESSAGE e000(db) DISPLAY LIKE 'E'
                      WITH 'System'(057) p_qas 'does not exist...'(058).
   ENDIF.
 
 AT SELECTION-SCREEN ON p_prd.
-  SELECT SINGLE sysname FROM tcesyst INTO tp_sysname
-                        WHERE sysname = p_prd ##WARN_OK.
+  SELECT SINGLE sysname FROM tcesyst INTO @tp_sysname
+                        WHERE sysname = @p_prd ##WARN_OK.
   IF sy-subrc <> 0.
     MESSAGE e000(db) DISPLAY LIKE 'E'
                      WITH 'System'(057) p_prd 'does not exist...'(058).
@@ -1366,7 +1366,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     ls_range_project_trkorrs-sign   = 'I'.
     ls_range_project_trkorrs-option = 'EQ'.
     SELECT trkorr FROM ctsproject
-                  INTO ls_range_project_trkorrs-low.  "#EC CI_SGLSELECT
+                  INTO @ls_range_project_trkorrs-low.  "#EC CI_SGLSELECT
       APPEND ls_range_project_trkorrs TO project_trkorrs.
     ENDSELECT.
 *   Ensure that the range cannot be empty
@@ -1574,8 +1574,8 @@ CLASS lcl_ztct IMPLEMENTATION.
         LOOP AT lt_newer_transports INTO ls_newer_line.
 *         Get transport description:
           SELECT SINGLE as4text FROM  e07t
-                                INTO  ls_newer_line-tr_descr
-                                WHERE trkorr = ls_newer_line-trkorr ##WARN_OK. "#EC CI_SUBRC
+                                INTO  @ls_newer_line-tr_descr
+                                WHERE trkorr = @ls_newer_line-trkorr ##WARN_OK. "#EC CI_SUBRC
 *         Check if it has been transported to the target system:
           FREE lt_stms_wbo_requests.
           CLEAR lt_stms_wbo_requests.
@@ -1694,8 +1694,8 @@ CLASS lcl_ztct IMPLEMENTATION.
         LOOP AT lt_older_transports INTO ls_older_line.
 *         Get transport description:
           SELECT SINGLE as4text FROM  e07t
-                                INTO  ls_older_line-tr_descr
-                                WHERE trkorr = ls_older_line-trkorr ##WARN_OK. "#EC CI_SUBRC
+                                INTO  @ls_older_line-tr_descr
+                                WHERE trkorr = @ls_older_line-trkorr ##WARN_OK. "#EC CI_SUBRC
 *         Check if it has been transported to QAS
           FREE lt_stms_wbo_requests.
           CLEAR lt_stms_wbo_requests.
@@ -1874,9 +1874,9 @@ CLASS lcl_ztct IMPLEMENTATION.
                             im_text    = 'Checking buffer'(050)
                             im_flag    = ' ' ).
         CLEAR lp_domnam.
-        SELECT SINGLE domnam INTO lp_domnam FROM tmsbuffer
-                            WHERE trkorr = <lf_main_list>-trkorr
-                              AND sysnam = prd_system ##WARN_OK.
+        SELECT SINGLE domnam INTO @lp_domnam FROM tmsbuffer
+                            WHERE trkorr = @<lf_main_list>-trkorr
+                              AND sysnam = @prd_system ##WARN_OK.
         IF sy-subrc = 4.
           IF buffer_remove_tp = abap_true.
             DELETE ch_main_list INDEX sy-tabix.
@@ -1942,17 +1942,17 @@ CLASS lcl_ztct IMPLEMENTATION.
                        AND obj_name   IN excluded_objects.
       CLEAR table_keys_line.
       SELECT SINGLE ddtext FROM dd02t
-                           INTO table_keys_line-ddtext
-                          WHERE ddlanguage = co_langu
-                            AND tabname    = main_list_line-obj_name.
+                           INTO @table_keys_line-ddtext
+                          WHERE ddlanguage = @co_langu
+                            AND tabname    = @main_list_line-obj_name.
 *     Count the keys...
       SELECT COUNT(*)
-              FROM e071k INTO table_keys_line-counter
-             WHERE trkorr     = main_list_line-trkorr
-               AND mastertype = main_list_line-object
-               AND trkorr NOT IN project_trkorrs
-               AND trkorr     LIKE lp_tp_prefix
-               AND objname    IN excluded_objects.
+              FROM e071k INTO @table_keys_line-counter
+             WHERE trkorr     = @main_list_line-trkorr
+               AND mastertype = @main_list_line-object
+               AND trkorr NOT IN @project_trkorrs
+               AND trkorr     LIKE @lp_tp_prefix
+               AND objname    IN @excluded_objects.
       table_keys_line-tabname = main_list_line-obj_name.
       COLLECT table_keys_line INTO table_keys.
     ENDLOOP.
@@ -2082,19 +2082,19 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDLOOP.
 
     LOOP AT lt_keys_main INTO ls_keys.
-      SELECT object objname tabkey
+      SELECT object, objname, tabkey
              FROM e071k
              INNER JOIN e070 ON e070~trkorr = e071k~trkorr
-             INTO (ls_keys-keyobject,
-                   ls_keys-keyobjname,
-                   ls_keys-tabkey)
-             WHERE e071k~trkorr     = ls_keys-trkorr
-               AND e071k~trkorr     NOT IN project_trkorrs
-               AND e071k~trkorr     LIKE prefix
+             INTO (@ls_keys-keyobject,
+                   @ls_keys-keyobjname,
+                   @ls_keys-tabkey)
+             WHERE e071k~trkorr     = @ls_keys-trkorr
+               AND e071k~trkorr     NOT IN @project_trkorrs
+               AND e071k~trkorr     LIKE @prefix
                AND e070~trfunction  <> 'T'
-               AND e071k~mastertype = ls_keys-object
-               AND e071k~mastername = ls_keys-obj_name(40)
-               AND e071k~objname    IN excluded_objects.
+               AND e071k~mastertype = @ls_keys-object
+               AND e071k~mastername = @ls_keys-obj_name(40)
+               AND e071k~objname    IN @excluded_objects.
         APPEND ls_keys TO ch_table.
       ENDSELECT.
     ENDLOOP.
@@ -2177,15 +2177,16 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Join over E070, E071:
 *   Description is read later to prevent complicated join and
 *   increased runtime
-    SELECT a~trkorr   a~trfunction a~trstatus
-           a~as4user  a~as4date    a~as4time
-           b~pgmid b~object   b~obj_name   b~objfunc
-           INTO CORRESPONDING FIELDS OF TABLE main_list
+    SELECT a~trkorr,   a~trfunction, a~trstatus,
+           a~as4user,  a~as4date,    a~as4time,
+           b~pgmid,    b~object,     b~obj_name,
+           b~objfunc
+           INTO CORRESPONDING FIELDS OF TABLE @main_list
            FROM  e070 AS a JOIN e071 AS b
              ON  a~trkorr  = b~trkorr
-           WHERE a~trkorr  IN im_trkorr_range
+           WHERE a~trkorr  IN @im_trkorr_range
              AND strkorr   = ''
-             AND a~trkorr  LIKE prefix
+             AND a~trkorr  LIKE @prefix
              AND ( pgmid   = 'LIMU' OR
                    pgmid   = 'R3TR' )
            ORDER BY a~trkorr ##TOO_MANY_ITAB_FIELDS.
@@ -2197,8 +2198,8 @@ CLASS lcl_ztct IMPLEMENTATION.
 *       Read transport description:
         SELECT SINGLE  as4text
                  FROM  e07t
-                 INTO <lf_main_list>-tr_descr
-                 WHERE trkorr = <lf_main_list>-trkorr ##WARN_OK.
+                 INTO @<lf_main_list>-tr_descr
+                 WHERE trkorr = @<lf_main_list>-trkorr ##WARN_OK.
       ENDLOOP.
     ENDIF.
     SORT main_list.
@@ -2212,10 +2213,10 @@ CLASS lcl_ztct IMPLEMENTATION.
       LOOP AT main_list ASSIGNING <lf_main_list>.
         SELECT SINGLE reference
                FROM e070a
-               INTO  <lf_main_list>-project
-               WHERE trkorr = <lf_main_list>-trkorr
+               INTO  @<lf_main_list>-project
+               WHERE trkorr = @<lf_main_list>-trkorr
                AND   attribute = 'SAP_CTS_PROJECT'
-               AND   reference IN project_range ##WARN_OK.
+               AND   reference IN @project_range ##WARN_OK.
         IF sy-subrc <> 0.
           DELETE main_list INDEX sy-tabix.
         ENDIF.
@@ -2241,17 +2242,17 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Also read from the version table VRSD. This table contains all
 *   dependent objects. For example: If from E071 a function group
 *   is retrieved, VRSD will contain all functions too.
-    SELECT korrnum objtype objname
-           author  datum zeit
+    SELECT korrnum, objtype, objname,
+           author,  datum, zeit
            FROM vrsd
-           INTO (ls_main_list_vrsd-trkorr,
-                 ls_main_list_vrsd-object,
-                 ls_main_list_vrsd-obj_name,
-                 ls_main_list_vrsd-as4user,
-                 ls_main_list_vrsd-as4date,
-                 ls_main_list_vrsd-as4time)
-           FOR ALL ENTRIES IN main_list
-           WHERE korrnum = main_list-trkorr.
+           INTO (@ls_main_list_vrsd-trkorr,
+                 @ls_main_list_vrsd-object,
+                 @ls_main_list_vrsd-obj_name,
+                 @ls_main_list_vrsd-as4user,
+                 @ls_main_list_vrsd-as4date,
+                 @ls_main_list_vrsd-as4time)
+           FOR ALL ENTRIES IN @main_list
+           WHERE korrnum = @main_list-trkorr.
       READ TABLE main_list INTO main_list_line
                            WITH KEY trkorr = ls_main_list_vrsd-trkorr.
       main_list_line-object   = ls_main_list_vrsd-object.
@@ -2284,67 +2285,67 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Join over E070, E071:
 *   Description is read later to prevent complicated join and
 *   increased runtime
-    SELECT SINGLE a~trkorr  a~trfunction a~trstatus
-                  a~as4user a~as4date  a~as4time
-                  b~object  b~obj_name
-           INTO (re_line-trkorr,
-                 re_line-trfunction,
-                 re_line-trstatus,
-                 re_line-as4user,
-                 re_line-as4date,
-                 re_line-as4time,
-                 re_line-object,
-                 re_line-obj_name)
+    SELECT SINGLE a~trkorr,  a~trfunction, a~trstatus,
+                  a~as4user, a~as4date,  a~as4time,
+                  b~object,  b~obj_name
+           INTO (@re_line-trkorr,
+                 @re_line-trfunction,
+                 @re_line-trstatus,
+                 @re_line-as4user,
+                 @re_line-as4date,
+                 @re_line-as4time,
+                 @re_line-object,
+                 @re_line-obj_name)
            FROM  e070 AS a JOIN e071 AS b
            ON    a~trkorr   = b~trkorr
-           WHERE a~trkorr   = im_trkorr
+           WHERE a~trkorr   = @im_trkorr
            AND   strkorr    = ''
-           AND   b~obj_name = im_obj_name ##WARN_OK.
+           AND   b~obj_name = @im_obj_name ##WARN_OK.
 *   Read transport description:
     SELECT SINGLE as4text
                   FROM  e07t
-                  INTO  re_line-tr_descr
-                  WHERE trkorr = im_trkorr ##WARN_OK.
+                  INTO  @re_line-tr_descr
+                  WHERE trkorr = @im_trkorr ##WARN_OK.
     re_line-checked_by = sy-uname.
 *   First get the descriptions (Status/Type/Project):
 *   Retrieve texts for Status Description
     SELECT ddtext
            FROM dd07t
-           INTO re_line-status_text UP TO 1 ROWS
+           INTO @re_line-status_text UP TO 1 ROWS
           WHERE domname    = 'TRSTATUS'
-            AND ddlanguage = co_langu
-            AND domvalue_l = re_line-trstatus.
+            AND ddlanguage = @co_langu
+            AND domvalue_l = @re_line-trstatus.
       EXIT.
     ENDSELECT.
 *   Retrieve texts for Description of request/task type
     SELECT ddtext
            FROM dd07t
-           INTO re_line-trfunction_txt UP TO 1 ROWS
+           INTO @re_line-trfunction_txt UP TO 1 ROWS
           WHERE domname    = 'TRFUNCTION'
-            AND ddlanguage = co_langu
-            AND domvalue_l = re_line-trfunction.
+            AND ddlanguage = @co_langu
+            AND domvalue_l = @re_line-trfunction.
       EXIT.
     ENDSELECT.
 *   Retrieve the project number (and description):
     SELECT reference
            FROM e070a UP TO 1 ROWS
-           INTO re_line-project
-          WHERE trkorr    = re_line-trkorr
+           INTO @re_line-project
+          WHERE trkorr    = @re_line-trkorr
             AND attribute = 'SAP_CTS_PROJECT'.
       SELECT descriptn
              FROM ctsproject UP TO 1 ROWS
-             INTO re_line-project_descr
-            WHERE trkorr  = re_line-project.
+             INTO @re_line-project_descr
+            WHERE trkorr  = @re_line-project.
         EXIT.
       ENDSELECT.
     ENDSELECT.
 *   Retrieve the description of the status
     SELECT ddtext
            FROM dd07t UP TO 1 ROWS
-           INTO re_line-trstatus
+           INTO @re_line-trstatus
           WHERE domname    = 'TRSTATUS'
-            AND ddlanguage = co_langu
-            AND domvalue_l = re_line-trstatus.
+            AND ddlanguage = @co_langu
+            AND domvalue_l = @re_line-trstatus.
       EXIT.
     ENDSELECT.
 
@@ -2362,14 +2363,14 @@ CLASS lcl_ztct IMPLEMENTATION.
     CLEAR ls_main.
 *   Select all requests (not tasks) in the range. Objects belonging to
 *   the request are included in the table.
-    SELECT a~trkorr  a~trfunction a~trstatus
-           a~as4user a~as4date    a~as4time
-           b~pgmid   b~object     b~obj_name
+    SELECT a~trkorr,  a~trfunction, a~trstatus,
+           a~as4user, a~as4date,    a~as4time,
+           b~pgmid,   b~object,     b~obj_name,
            b~objfunc
-           INTO CORRESPONDING FIELDS OF TABLE ex_to_add
+           INTO CORRESPONDING FIELDS OF TABLE @ex_to_add
            FROM  e070 AS a JOIN e071 AS b
              ON  a~trkorr = b~trkorr
-           WHERE a~trkorr IN im_to_add
+           WHERE a~trkorr IN @im_to_add
            AND   a~strkorr = ''
            AND   ( b~pgmid = 'LIMU' OR
                    b~pgmid = 'R3TR' OR
@@ -2381,25 +2382,25 @@ CLASS lcl_ztct IMPLEMENTATION.
         <lf_main_list>-flag = abap_true.
         SELECT SINGLE as4text
                       FROM  e07t
-                      INTO <lf_main_list>-tr_descr
-                      WHERE trkorr = <lf_main_list>-trkorr ##WARN_OK.
+                      INTO @<lf_main_list>-tr_descr
+                      WHERE trkorr = @<lf_main_list>-trkorr ##WARN_OK.
       ENDLOOP.
     ENDIF.
 *   Also read from the version table VRSD. This table contains all
 *   dependent objects. For example: If from E071 a function group
 *   is retrieved, VRSD will contain all functions too.
     IF ex_to_add[] IS NOT INITIAL.
-      SELECT korrnum objtype objname
-             author  datum zeit
+      SELECT korrnum, objtype, objname,
+             author,  datum, zeit
              FROM vrsd
-             INTO (ls_main_list_vrsd-trkorr,
-                   ls_main_list_vrsd-object,
-                   ls_main_list_vrsd-obj_name,
-                   ls_main_list_vrsd-as4user,
-                   ls_main_list_vrsd-as4date,
-                   ls_main_list_vrsd-as4time)
-             FOR ALL ENTRIES IN ex_to_add
-             WHERE korrnum = ex_to_add-trkorr.
+             INTO (@ls_main_list_vrsd-trkorr,
+                   @ls_main_list_vrsd-object,
+                   @ls_main_list_vrsd-obj_name,
+                   @ls_main_list_vrsd-as4user,
+                   @ls_main_list_vrsd-as4date,
+                   @ls_main_list_vrsd-as4time)
+             FOR ALL ENTRIES IN @ex_to_add
+             WHERE korrnum = @ex_to_add-trkorr.
         READ TABLE ex_to_add
                    INTO ls_main
                    WITH KEY trkorr = ls_main_list_vrsd-trkorr.
@@ -2507,35 +2508,35 @@ CLASS lcl_ztct IMPLEMENTATION.
 *       Retrieve texts for Status Description
         SELECT SINGLE ddtext
                  FROM dd07t
-                 INTO main_list_line-status_text
+                 INTO @main_list_line-status_text
                 WHERE domname    = 'TRSTATUS'
-                  AND ddlanguage = co_langu
-                  AND domvalue_l = main_list_line-trstatus. "#EC CI_SEL_NESTED
+                  AND ddlanguage = @co_langu
+                  AND domvalue_l = @main_list_line-trstatus. "#EC CI_SEL_NESTED
 *       Retrieve texts for Description of request/task type
         SELECT SINGLE ddtext
                  FROM dd07t
-                 INTO main_list_line-trfunction_txt
+                 INTO @main_list_line-trfunction_txt
                 WHERE domname    = 'TRFUNCTION'
-                  AND ddlanguage = co_langu
-                  AND domvalue_l = main_list_line-trfunction. "#EC CI_SEL_NESTED
+                  AND ddlanguage = @co_langu
+                  AND domvalue_l = @main_list_line-trfunction. "#EC CI_SEL_NESTED
 *       Retrieve the project number (and description):
         SELECT reference
                FROM e070a UP TO 1 ROWS
-               INTO main_list_line-project
-              WHERE trkorr    = main_list_line-trkorr
+               INTO @main_list_line-project
+              WHERE trkorr    = @main_list_line-trkorr
                 AND attribute = 'SAP_CTS_PROJECT'.   "#EC CI_SEL_NESTED
           SELECT SINGLE descriptn
                    FROM ctsproject
-                   INTO main_list_line-project_descr  "#EC CI_SGLSELECT
-                  WHERE trkorr = main_list_line-project. "#EC CI_SEL_NESTED
+                   INTO @main_list_line-project_descr  "#EC CI_SGLSELECT
+                  WHERE trkorr = @main_list_line-project. "#EC CI_SEL_NESTED
         ENDSELECT.
 *       Retrieve the description of the status
         SELECT SINGLE ddtext
                  FROM dd07t
-                 INTO main_list_line-trstatus
+                 INTO @main_list_line-trstatus
                 WHERE domname    = 'TRSTATUS'
-                  AND ddlanguage = co_langu
-                  AND domvalue_l = main_list_line-trstatus. "#EC CI_SEL_NESTED
+                  AND ddlanguage = @co_langu
+                  AND domvalue_l = @main_list_line-trstatus. "#EC CI_SEL_NESTED
 *       Check if transport has been released.
 *       D - Modifiable
 *       L - Modifiable, protected
@@ -3297,9 +3298,9 @@ CLASS lcl_ztct IMPLEMENTATION.
       WHEN 'K'.
 *       Key fields available
         SELECT SINGLE * FROM e071k
-                 INTO ls_e071k
-                WHERE trkorr = im_newer_older-trkorr
-                  AND tabkey = im_line-tabkey.
+                 INTO @ls_e071k
+                WHERE trkorr = @im_newer_older-trkorr
+                  AND tabkey = @im_line-tabkey.
 *       Now check if in both transports, an object exists with the
 *       same key:
         IF ls_e071k IS INITIAL.
@@ -3329,9 +3330,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_doktl  TYPE doktl.
     tp_dokl_object = im_trkorr.
     SELECT SINGLE * FROM doktl
-             INTO ls_doktl
+             INTO @ls_doktl
             WHERE id        = 'TA'
-              AND object    = tp_dokl_object
+              AND object    = @tp_dokl_object
               AND typ       = 'T'
               AND dokformat <> 'L'
               AND doktext   <> ''.
@@ -3590,8 +3591,8 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   If the user is part of a specific class, then the user can
 *   maintain all layouts. Otherwise only the user specific layout.
     SELECT SINGLE class FROM usr02
-                        INTO lp_class
-                       WHERE bname = sy-uname.
+                        INTO @lp_class
+                       WHERE bname = @sy-uname.
 *   Hardcoded: Change this to allow certain group of users to change
 *   the default layout for all users
     IF lp_class = 'NLD_T_040'.
@@ -4067,9 +4068,9 @@ CLASS lcl_ztct IMPLEMENTATION.
 * Get used language for existing documentation
     SELECT SINGLE langu
            FROM   dokil
-           INTO   lv_langu
-           WHERE  object = im_object
-           AND    id     = im_id ##WARN_OK.
+           INTO   @lv_langu
+           WHERE  object = @im_object
+           AND    id     = @im_id ##WARN_OK.
     IF sy-subrc <> 0.
       lv_langu = co_langu.
     ENDIF.
@@ -4179,24 +4180,24 @@ CLASS lcl_ztct IMPLEMENTATION.
     IF sy-subrc <> 0.
 *     The transports for this object have not been retrieved yet, so we
 *     do that now:
-      SELECT a~trkorr b~object  b~obj_name b~objfunc
-             a~as4user a~as4date a~as4time
+      SELECT a~trkorr, b~object,  b~obj_name, b~objfunc,
+             a~as4user, a~as4date, a~as4time
              FROM e070 AS a JOIN e071 AS b
                        ON a~trkorr = b~trkorr
-             INTO (ls_tp_same_object-trkorr,
-                   ls_tp_same_object-object,
-                   ls_tp_same_object-obj_name,
-                   ls_tp_same_object-objfunc,
-                   ls_tp_same_object-as4user,
-                   ls_tp_same_object-as4date,
-                   ls_tp_same_object-as4time)
-             WHERE a~trkorr NOT IN project_trkorrs
+             INTO (@ls_tp_same_object-trkorr,
+                   @ls_tp_same_object-object,
+                   @ls_tp_same_object-obj_name,
+                   @ls_tp_same_object-objfunc,
+                   @ls_tp_same_object-as4user,
+                   @ls_tp_same_object-as4date,
+                   @ls_tp_same_object-as4time)
+             WHERE a~trkorr NOT IN @project_trkorrs
                AND a~trfunction <> 'T'
-               AND b~obj_name   IN excluded_objects
+               AND b~obj_name   IN @excluded_objects
                AND a~strkorr    = ''
-               AND a~trkorr     LIKE prefix
-               AND b~object     = im_line-object
-               AND b~obj_name   = im_line-obj_name.
+               AND a~trkorr     LIKE @prefix
+               AND b~object     = @im_line-object
+               AND b~obj_name   = @im_line-obj_name.
         APPEND ls_tp_same_object TO lt_aggr_tp_list_of_objects.
       ENDSELECT.
 
@@ -4207,21 +4208,21 @@ CLASS lcl_ztct IMPLEMENTATION.
 *                another (this also transports the FM)
 *   Example 2: - A table (TABL) is part of a table definition (TABD), so
 *                should also be treated as the same object.
-      SELECT korrnum objtype objname
+      SELECT korrnum, objtype, objname,
              author
              FROM vrsd
              INNER JOIN e070 ON vrsd~korrnum = e070~trkorr
-             INTO (ls_tp_same_object-trkorr,
-                   ls_tp_same_object-object,
-                   ls_tp_same_object-obj_name,
-                   ls_tp_same_object-as4user)
-             WHERE korrnum NOT IN project_trkorrs
-               AND objname IN excluded_objects
-               AND korrnum <> im_line-trkorr
-               AND korrnum LIKE prefix
+             INTO (@ls_tp_same_object-trkorr,
+                   @ls_tp_same_object-object,
+                   @ls_tp_same_object-obj_name,
+                   @ls_tp_same_object-as4user)
+             WHERE korrnum NOT IN @project_trkorrs
+               AND objname IN @excluded_objects
+               AND korrnum <> @im_line-trkorr
+               AND korrnum LIKE @prefix
                AND korrnum <> ''
-               AND objtype = im_line-object
-               AND objname = im_line-obj_name           "#EC CI_NOFIELD
+               AND objtype = @im_line-object
+               AND objname = @im_line-obj_name           "#EC CI_NOFIELD
                AND e070~trfunction <> 'T'.
         APPEND ls_tp_same_object TO lt_aggr_tp_list_of_objects.
       ENDSELECT.
@@ -4300,19 +4301,19 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_as4text   TYPE as4text.
     DATA lp_len       TYPE i.
     SELECT SINGLE scrtext_s
-                  FROM dd04t INTO lp_as4text
-                  WHERE rollname   = im_name
-                  AND   ddlanguage = co_langu ##WARN_OK.
+                  FROM dd04t INTO @lp_as4text
+                  WHERE rollname   = @im_name
+                  AND   ddlanguage = @co_langu ##WARN_OK.
     IF lp_as4text IS INITIAL.
       SELECT SINGLE scrtext_m
-                    FROM dd04t INTO lp_as4text
-                    WHERE rollname   = im_name
-                    AND   ddlanguage = co_langu ##WARN_OK.
+                    FROM dd04t INTO @lp_as4text
+                    WHERE rollname   = @im_name
+                    AND   ddlanguage = @co_langu ##WARN_OK.
       IF lp_as4text IS INITIAL.
         SELECT SINGLE scrtext_l
-                      FROM dd04t INTO lp_as4text
-                      WHERE rollname   = im_name
-                      AND   ddlanguage = co_langu ##WARN_OK.
+                      FROM dd04t INTO @lp_as4text
+                      WHERE rollname   = @im_name
+                      AND   ddlanguage = @co_langu ##WARN_OK.
       ENDIF.
     ENDIF.
     lp_len = strlen( lp_as4text ).
@@ -4862,23 +4863,23 @@ CLASS lcl_ztct IMPLEMENTATION.
 
     FREE ddic_objects.
 *   Get all objects in Z-devclasses
-    SELECT devclass obj_name FROM tadir INTO TABLE lt_tadir
-                            WHERE devclass LIKE 'Z%'.
+    SELECT devclass, obj_name FROM tadir INTO TABLE @lt_tadir
+                             WHERE devclass LIKE 'Z%'.
     IF lt_tadir IS NOT INITIAL.
 *     DD01L (Domains)
-      SELECT domname APPENDING TABLE ddic_objects
-             FROM dd01l FOR ALL ENTRIES IN lt_tadir
-            WHERE domname = lt_tadir-obj_name(30).
+      SELECT domname APPENDING TABLE @ddic_objects
+             FROM dd01l FOR ALL ENTRIES IN @lt_tadir
+            WHERE domname = @lt_tadir-obj_name(30).
 *     DD02L (SAP-tables)
       SELECT tabname
-             APPENDING TABLE ddic_objects
-             FROM dd02l FOR ALL ENTRIES IN lt_tadir
-             WHERE tabname = lt_tadir-obj_name(30).
+             APPENDING TABLE @ddic_objects
+             FROM dd02l FOR ALL ENTRIES IN @lt_tadir
+             WHERE tabname = @lt_tadir-obj_name(30).
 *     DD04L (Data elements)
       SELECT rollname
-             APPENDING TABLE ddic_objects
-             FROM dd04l FOR ALL ENTRIES IN lt_tadir
-             WHERE rollname = lt_tadir-obj_name(30).
+             APPENDING TABLE @ddic_objects
+             FROM dd04l FOR ALL ENTRIES IN @lt_tadir
+             WHERE rollname = @lt_tadir-obj_name(30).
       SORT ddic_objects.
       DELETE ADJACENT DUPLICATES FROM ddic_objects.
     ENDIF.
@@ -4963,7 +4964,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_chars         TYPE string VALUE '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
 
 * Get all object types that have been transported before
-    SELECT DISTINCT object FROM e071 INTO TABLE lt_objtype.
+    SELECT DISTINCT object FROM e071 INTO TABLE @lt_objtype.
     ls_objtyprang-sign   = 'I'.
     ls_objtyprang-option = 'EQ'.
     LOOP AT lt_objtype INTO ls_objtyprang-low.
@@ -4985,11 +4986,11 @@ CLASS lcl_ztct IMPLEMENTATION.
                           im_total   = lp_total
                           im_text    = 'Collecting DDIC transports'(053)
                           im_flag    = ' ' ).
-      SELECT trkorr pgmid object obj_name
-             FROM e071 APPENDING CORRESPONDING FIELDS OF TABLE ddic_e071
+      SELECT trkorr, pgmid, object, obj_name
+             FROM e071 APPENDING CORRESPONDING FIELDS OF TABLE @ddic_e071
             WHERE pgmid    = 'R3TR'
-              AND object   IN lt_objrangtab
-              AND obj_name = ls_ddic_object.         "#EC CI_SEL_NESTED
+              AND object   IN @lt_objrangtab
+              AND obj_name = @ls_ddic_object.         "#EC CI_SEL_NESTED
     ENDLOOP.
 
 *   Check if the transport is in production, if it is, then the
@@ -5139,18 +5140,18 @@ CLASS lcl_ztct IMPLEMENTATION.
     LOOP AT where_used INTO where_used_line.
 * DD01L (Domains)
       SELECT SINGLE domname
-                    FROM dd01l INTO lp_string
-                    WHERE domname = where_used_line-used_obj ##WARN_OK.
+                    FROM dd01l INTO @lp_string
+                    WHERE domname = @where_used_line-used_obj ##WARN_OK.
       IF sy-subrc <> 0.
 * DD02L (SAP-tables)
         SELECT SINGLE tabname
-                      FROM dd02l INTO lp_string
-                      WHERE tabname = where_used_line-used_obj ##WARN_OK.
+                      FROM dd02l INTO @lp_string
+                      WHERE tabname = @where_used_line-used_obj ##WARN_OK.
         IF sy-subrc <> 0.
 * DD04L (Data elements)
           SELECT SINGLE rollname
-                        FROM dd04l INTO lp_string
-                        WHERE rollname = where_used_line-used_obj ##WARN_OK.
+                        FROM dd04l INTO @lp_string
+                        WHERE rollname = @where_used_line-used_obj ##WARN_OK.
         ENDIF.
       ENDIF.
       IF sy-subrc <> 0.
@@ -5274,16 +5275,16 @@ START-OF-SELECTION.
     st_trkorr_range-sign   = 'I'.
     st_trkorr_range-option = 'EQ'.
     SELECT a~trkorr
-           INTO st_trkorr_range-low
+           INTO @st_trkorr_range-low
            FROM e070 AS a JOIN e071 AS b
              ON a~trkorr   = b~trkorr
-          WHERE a~trkorr   IN s_korr
-            AND a~as4user  IN s_user
-            AND a~as4date  IN s_date
-            AND b~obj_name IN s_exobj
+          WHERE a~trkorr   IN @s_korr
+            AND a~as4user  IN @s_user
+            AND a~as4date  IN @s_date
+            AND b~obj_name IN @s_exobj
             AND strkorr    = ''
-            AND a~trkorr   LIKE tp_prefix
-            AND a~trkorr   IN lt_range_project_trkorrs
+            AND a~trkorr   LIKE @tp_prefix
+            AND a~trkorr   IN @lt_range_project_trkorrs
             AND ( pgmid    = 'LIMU' OR
                   pgmid    = 'R3TR' ).
       APPEND st_trkorr_range TO ta_trkorr_range.
@@ -5293,8 +5294,8 @@ START-OF-SELECTION.
       LOOP AT ta_trkorr_range INTO st_trkorr_range.
         tp_tabix = sy-tabix.
 *       Check if the description contains the search string
-        SELECT as4text FROM e07t INTO TABLE ta_transport_descr
-                       WHERE trkorr = st_trkorr_range-low ##WARN_OK.
+        SELECT as4text FROM e07t INTO TABLE @ta_transport_descr
+                       WHERE trkorr = @st_trkorr_range-low ##WARN_OK.
         IF sy-subrc = 0.
           tp_descr_exists = abap_false.
           LOOP AT ta_transport_descr INTO tp_transport_descr.
@@ -5313,8 +5314,8 @@ START-OF-SELECTION.
         ENDIF.
 *       Check if the project is in the selection range
         SELECT reference FROM e070a UP TO 1 ROWS
-               INTO tp_project_reference
-              WHERE trkorr = st_trkorr_range-low
+               INTO @tp_project_reference
+              WHERE trkorr = @st_trkorr_range-low
                 AND attribute = 'SAP_CTS_PROJECT'.
           IF tp_project_reference NOT IN s_proj.
             DELETE ta_trkorr_range INDEX sy-tabix.
