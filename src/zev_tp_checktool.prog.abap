@@ -123,7 +123,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
   PUBLIC SECTION.
 
     TYPES ty_range_trkorr           TYPE RANGE OF trkorr.
-    TYPES ra_excluded_objects       TYPE RANGE OF trobj_name.
+    TYPES ty_range_excluded_objects TYPE RANGE OF trobj_name.
     TYPES: BEGIN OF ty_request_details,
              trkorr         TYPE trkorr,
              checked        TYPE icon_l4,
@@ -187,7 +187,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS set_buffer_remove_tp        IMPORTING im_buffer_remove_tp TYPE abap_bool OPTIONAL.
     METHODS set_trkorr_range            IMPORTING im_trkorr_range TYPE ty_range_trkorr OPTIONAL.
     METHODS set_project_range           IMPORTING im_project_range TYPE ty_range_trkorr OPTIONAL.
-    METHODS set_excluded_objects        IMPORTING im_excluded_objects TYPE ra_excluded_objects OPTIONAL.
+    METHODS set_excluded_objects        IMPORTING im_excluded_objects TYPE ty_range_excluded_objects OPTIONAL.
     METHODS set_search_string           IMPORTING im_search_string TYPE as4text OPTIONAL.
     METHODS set_user_layout             IMPORTING im_user_layout TYPE abap_bool OPTIONAL.
     METHODS set_process_type            IMPORTING im_process_type TYPE i.
@@ -325,7 +325,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     DATA buffer_remove_tp            TYPE abap_bool.
     DATA trkorr_range                TYPE ty_range_trkorr.
     DATA project_range               TYPE ty_range_trkorr.
-    DATA excluded_objects            TYPE ra_excluded_objects.
+    DATA excluded_objects            TYPE ty_range_excluded_objects.
     DATA search_string               TYPE as4text.
     DATA user_layout                 TYPE abap_bool.
     DATA process_type                TYPE i.
@@ -556,7 +556,7 @@ INITIALIZATION.
 * To be able to use methods on the selection screen
   IF rf_ztct IS NOT BOUND.
     TRY.
-        CREATE OBJECT rf_ztct.
+        rf_ztct = NEW #(  ).
       CATCH cx_root INTO rf_root ##CATCH_ALL.
         tp_msg = rf_root->get_text( ).
         CONCATENATE 'ERROR:'(038) tp_msg INTO tp_msg SEPARATED BY space.
@@ -610,7 +610,7 @@ INITIALIZATION.
   ls_range_project_trkorrs-sign = 'E'.
   ls_range_project_trkorrs-option = 'EQ'.
   SELECT trkorr FROM ctsproject
-                INTO @ls_range_project_trkorrs-low.    "#EC CI_SGLSELECT
+                INTO @ls_range_project_trkorrs-low.   "#EC CI_SGLSELECT
     APPEND ls_range_project_trkorrs TO lt_range_project_trkorrs.
   ENDSELECT.
 
@@ -907,8 +907,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
             rf_table_keys->close_screen( ).
             IF lt_rows[] IS NOT INITIAL.
               LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
-                READ TABLE lt_rows WITH KEY table_line = sy-tabix TRANSPORTING NO FIELDS.
-                IF sy-subrc <> 0.
+                IF NOT line_exists( lt_rows[ table_line = sy-tabix ] ).
                   ls_excluded_objects-sign   = 'E'.
                   ls_excluded_objects-option = 'EQ'.
                   ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
@@ -1036,9 +1035,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
             RETURN.
           ENDIF.
 *         Is it already in the list?
-          READ TABLE rf_ztct->main_list WITH KEY trkorr = ls_fields-value(20)
-                                        TRANSPORTING NO FIELDS.
-          IF sy-subrc = 0.
+          IF line_exists( rf_ztct->main_list[ trkorr = ls_fields-value(20) ] ).
             RETURN.
           ENDIF.
 *         Add transport number to the internal table to add:
@@ -1366,7 +1363,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     ls_range_project_trkorrs-sign   = 'I'.
     ls_range_project_trkorrs-option = 'EQ'.
     SELECT trkorr FROM ctsproject
-                  INTO @ls_range_project_trkorrs-low.  "#EC CI_SGLSELECT
+                  INTO @ls_range_project_trkorrs-low. "#EC CI_SGLSELECT
       APPEND ls_range_project_trkorrs TO project_trkorrs.
     ENDSELECT.
 *   Ensure that the range cannot be empty
@@ -1750,10 +1747,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *             Check if the transport is in the list
 *             Display the warning if the preceding transport is not
 *             in the main list. If it is, then display the hint icon.
-              READ TABLE ch_main_list
-                   WITH KEY trkorr = ls_older_line-trkorr
-                   TRANSPORTING NO FIELDS.
-              IF sy-subrc = 0.
+              IF line_exists( ch_main_list[ trkorr = ls_older_line-trkorr ] ).
 *               There is a warning but the conflicting transport is
 *               ALSO in the list. Display the HINT Icon. The other
 *               transport will be checked too, sooner or later...
@@ -2262,11 +2256,9 @@ CLASS lcl_ztct IMPLEMENTATION.
       main_list_line-as4time  = ls_main_list_vrsd-as4time.
 *     Only append if the object from VRSD does not already exist in the
 *     main list:
-      READ TABLE main_list WITH KEY trkorr   = main_list_line-trkorr
-                                    object   = main_list_line-object
-                                    obj_name = main_list_line-obj_name
-                                    TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
+      IF NOT line_exists( main_list[ trkorr   = main_list_line-trkorr
+                                     object   = main_list_line-object
+                                     obj_name = main_list_line-obj_name ] ).
         main_list_line-flag = abap_true.
         APPEND main_list_line TO lt_main_list_vrsd.
       ENDIF.
@@ -2411,11 +2403,9 @@ CLASS lcl_ztct IMPLEMENTATION.
         ls_main-as4time  = ls_main_list_vrsd-as4time.
 *       Only append if the object from VRSD does not already exist
 *       in the main list:
-        READ TABLE ex_to_add WITH KEY trkorr   = ls_main-trkorr
-                                      object   = ls_main-object
-                                      obj_name = ls_main-obj_name
-                             TRANSPORTING NO FIELDS.
-        IF sy-subrc <> 0.
+        IF NOT line_exists( ex_to_add[ trkorr   = ls_main-trkorr
+                                       object   = ls_main-object
+                                       obj_name = ls_main-obj_name ] ).
           ls_main-flag = abap_true.
           APPEND ls_main TO lt_main_list_vrsd.
         ENDIF.
@@ -2424,22 +2414,20 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Now add all VRSD entries to the main list:
     APPEND LINES OF lt_main_list_vrsd TO ex_to_add.
     add_table_keys_to_list( CHANGING ch_table = ex_to_add ).
-*   Only add the records that are not existing in the main list, so we
-*   do not add the records that already exist in the main list.
+*   Only add the records that are not yet existing in the main list.
+*   Do not add the records that already exist in the main list.
     LOOP AT ex_to_add INTO ls_added.
       lp_tabix = sy-tabix.
-      READ TABLE main_list WITH KEY trkorr     = ls_added-trkorr
-                                    object     = ls_added-object
-                                    obj_name   = ls_added-obj_name
-                                    keyobject  = ls_added-keyobject
-                                    keyobjname = ls_added-keyobjname
-                                    tabkey     = ls_added-tabkey
-                           TRANSPORTING NO FIELDS.
-      IF sy-subrc = 0.
+      IF line_exists( main_list[ trkorr     = ls_added-trkorr
+                                 object     = ls_added-object
+                                 obj_name   = ls_added-obj_name
+                                 keyobject  = ls_added-keyobject
+                                 keyobjname = ls_added-keyobjname
+                                 tabkey     = ls_added-tabkey ] ).
 *       If the added transports are already in the list, but in prd, they
 *       will be 'invisible', because the records with prd icon = co_okay
 *       are filtered out. So, the prd icon needs to be changed to co_scrap
-*       to become visible. We just make sure that all records for this
+*       to become visible. Make sure that all records for this
 *       transport are made visible.
         LOOP AT main_list INTO main_list_line
                          WHERE trkorr     = ls_added-trkorr
@@ -2527,7 +2515,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                 AND attribute = 'SAP_CTS_PROJECT'.   "#EC CI_SEL_NESTED
           SELECT SINGLE descriptn
                    FROM ctsproject
-                   INTO @main_list_line-project_descr  "#EC CI_SGLSELECT
+                   INTO @main_list_line-project_descr "#EC CI_SGLSELECT
                   WHERE trkorr = @main_list_line-project. "#EC CI_SEL_NESTED
         ENDSELECT.
 *       Retrieve the description of the status
@@ -3155,14 +3143,12 @@ CLASS lcl_ztct IMPLEMENTATION.
                           im_text    = 'records read and added.'(022)
                           im_flag    = abap_true ).
 *     Check if the record is already in the main list:
-      READ TABLE main_list WITH KEY trkorr     = ls_main-trkorr
-                                    object     = ls_main-object
-                                    obj_name   = ls_main-obj_name
-                                    keyobject  = ls_main-keyobject
-                                    keyobjname = ls_main-keyobjname
-                                    tabkey     = ls_main-tabkey
-                           TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
+      IF NOT line_exists( main_list[ trkorr     = ls_main-trkorr
+                                     object     = ls_main-object
+                                     obj_name   = ls_main-obj_name
+                                     keyobject  = ls_main-keyobject
+                                     keyobjname = ls_main-keyobjname
+                                     tabkey     = ls_main-tabkey ] ).
 *       If a file is uploaded to be merged (&ADD_FILE), then we need to
 *       check all the records that are going to be added to the main list,
 *       as well as all the records in the main list that contain an object
@@ -3557,7 +3543,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lr_display_settings    TYPE REF TO cl_salv_display_settings.
     DATA lp_class               TYPE xuclass.
 
-    FIELD-SYMBOLS: <lf_table>      TYPE REF TO cl_salv_table.
+    FIELD-SYMBOLS <lf_table>      TYPE REF TO cl_salv_table.
     ASSIGN im_table TO <lf_table>.
 *   Set status
 *   Copy the status from program SAPLSLVC_FULLSCREEN and delete the
@@ -3656,7 +3642,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDIF.
 *   Event Register settings
     rf_events_table = <lf_table>->get_event( ).
-    CREATE OBJECT rf_handle_events.
+    rf_handle_events = NEW #( ).
     SET HANDLER rf_handle_events->on_function_click FOR rf_events_table.
     SET HANDLER rf_handle_events->on_double_click   FOR rf_events_table.
     SET HANDLER rf_handle_events->on_link_click     FOR rf_events_table.
@@ -4222,7 +4208,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND korrnum LIKE @prefix
                AND korrnum <> ''
                AND objtype = @im_line-object
-               AND objname = @im_line-obj_name           "#EC CI_NOFIELD
+               AND objname = @im_line-obj_name          "#EC CI_NOFIELD
                AND e070~trfunction <> 'T'.
         APPEND ls_tp_same_object TO lt_aggr_tp_list_of_objects.
       ENDSELECT.
@@ -4353,7 +4339,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lr_rows             TYPE REF TO cl_salv_form_layout_grid.
     DATA lr_rows_flow        TYPE REF TO cl_salv_form_layout_flow.
     DATA lr_row              TYPE REF TO cl_salv_form_layout_flow.
-    CREATE OBJECT lr_rows_flow.
+    lr_rows_flow = NEW #( ).
     lr_rows = lr_rows_flow->create_grid( ).
     lr_rows->create_grid( row     = 4
                           column  = 0
@@ -4397,7 +4383,7 @@ CLASS lcl_ztct IMPLEMENTATION.
             text    = lp_records_found
             tooltip = lp_records_found ).
 *   Create logo layout, set grid content on left and logo image on right
-    CREATE OBJECT lr_logo.
+    lr_logo = NEW #( ).
     lr_logo->set_left_content( lr_rows_flow ).
     lr_logo->set_right_logo( lp_picture ).
     re_form_element = lr_logo.
@@ -4686,7 +4672,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDIF.
 *   Event Register settings
     rf_events_table = rf_conflicts->get_event( ).
-    CREATE OBJECT rf_handle_events.
+    rf_handle_events = NEW #( ).
     SET HANDLER rf_handle_events->on_function_click     FOR rf_events_table.
     SET HANDLER rf_handle_events->on_double_click_popup FOR rf_events_table.
     SET HANDLER rf_handle_events->on_link_click_popup   FOR rf_events_table.
@@ -4910,9 +4896,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *       as an object in the transport list!
         IF sy-subrc = 0.
 *         Check if the used object can be found in the main list
-          READ TABLE ch_main_list WITH KEY obj_name = where_used_line-used_obj
-                                  TRANSPORTING NO FIELDS.
-          IF sy-subrc <> 0.
+          IF NOT line_exists( ch_main_list[ obj_name = where_used_line-used_obj ] ).
             IF ls_main-flag = abap_true.
               lp_obj_name = where_used_line-used_obj.
               ls_ddic_conflict_info = get_tp_info( im_trkorr   = ddic_e071_line-trkorr
@@ -4990,7 +4974,7 @@ CLASS lcl_ztct IMPLEMENTATION.
              FROM e071 APPENDING CORRESPONDING FIELDS OF TABLE @ddic_e071
             WHERE pgmid    = 'R3TR'
               AND object   IN @lt_objrangtab
-              AND obj_name = @ls_ddic_object.         "#EC CI_SEL_NESTED
+              AND obj_name = @ls_ddic_object.        "#EC CI_SEL_NESTED
     ENDLOOP.
 
 *   Check if the transport is in production, if it is, then the
@@ -5250,7 +5234,7 @@ START-OF-SELECTION.
 
   IF rf_ztct IS NOT BOUND.
     TRY.
-        CREATE OBJECT rf_ztct.
+        rf_ztct = NEW #( ).
       CATCH cx_root INTO rf_root ##CATCH_ALL.
         tp_msg = rf_root->get_text( ).
         CONCATENATE 'ERROR:'(038) tp_msg INTO tp_msg SEPARATED BY space.
