@@ -4475,7 +4475,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       ENDIF.
 *     Apply the changes
       TRY.
-          MODIFY main_list_xls FROM main_list_line_xls.
+          MODIFY TABLE main_list_xls FROM main_list_line_xls.
         CATCH cx_root INTO rf_root ##CATCH_ALL.
           handle_error( rf_root ).
       ENDTRY.
@@ -4857,21 +4857,21 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Get all objects in Z-devclasses
     SELECT devclass, obj_name FROM tadir INTO TABLE @lt_tadir
                              WHERE devclass LIKE 'Z%'.
-    IF lt_tadir IS NOT INITIAL.
+    IF sy-subrc = 0 AND lt_tadir IS NOT INITIAL.
 *     DD01L (Domains)
       SELECT domname APPENDING TABLE @ddic_objects
              FROM dd01l FOR ALL ENTRIES IN @lt_tadir
-            WHERE domname = @lt_tadir-obj_name(30).
+            WHERE domname = @lt_tadir-obj_name(30).       "#EC CI_SUBRC
 *     DD02L (SAP-tables)
       SELECT tabname
              APPENDING TABLE @ddic_objects
              FROM dd02l FOR ALL ENTRIES IN @lt_tadir
-             WHERE tabname = @lt_tadir-obj_name(30).
+            WHERE tabname = @lt_tadir-obj_name(30).       "#EC CI_SUBRC
 *     DD04L (Data elements)
       SELECT rollname
              APPENDING TABLE @ddic_objects
              FROM dd04l FOR ALL ENTRIES IN @lt_tadir
-             WHERE rollname = @lt_tadir-obj_name(30).
+            WHERE rollname = @lt_tadir-obj_name(30).      "#EC CI_SUBRC
       SORT ddic_objects.
       DELETE ADJACENT DUPLICATES FROM ddic_objects.
     ENDIF.
@@ -4955,15 +4955,16 @@ CLASS lcl_ztct IMPLEMENTATION.
 
 * Get all object types that have been transported before
     SELECT DISTINCT object FROM e071 INTO TABLE @lt_objtype.
-    ls_objtyprang-sign   = 'I'.
-    ls_objtyprang-option = 'EQ'.
-    LOOP AT lt_objtype INTO ls_objtyprang-low.
-      IF ls_objtyprang-low CN lp_chars.
-        CONTINUE.
-      ENDIF.
-      APPEND ls_objtyprang TO lt_objrangtab.
-    ENDLOOP.
-
+    IF sy-subrc = 0.
+      ls_objtyprang-sign   = 'I'.
+      ls_objtyprang-option = 'EQ'.
+      LOOP AT lt_objtype INTO ls_objtyprang-low.
+        IF ls_objtyprang-low CN lp_chars.
+          CONTINUE.
+        ENDIF.
+        APPEND ls_objtyprang TO lt_objrangtab.
+      ENDLOOP.
+    ENDIF.
 * Now find ALL transports for the DDIC objects with Program ID R3TR,
 * for the object types found
     CLEAR: lp_counter.
@@ -4980,7 +4981,7 @@ CLASS lcl_ztct IMPLEMENTATION.
              FROM e071 APPENDING CORRESPONDING FIELDS OF TABLE @ddic_e071
             WHERE pgmid    = 'R3TR'
               AND object   IN @lt_objrangtab
-              AND obj_name = @ls_ddic_object.        "#EC CI_SEL_NESTED
+              AND obj_name = @ls_ddic_object. "#EC CI_SEL_NESTED #EC CI_SUBRC
     ENDLOOP.
 
 *   Check if the transport is in production, if it is, then the
