@@ -597,10 +597,8 @@ INITIALIZATION.
   sc_c43 = 'Check table keys'(c43).
   sc_c44 = 'Reset `Checked` field'(c44).
   sc_c45 = 'Remove transports not in buffer'(c45).
-  sc_c51 = 'Objects in the range will not be taken into account ' &
-           'when checking the'(c51).
-  sc_c52 = 'transports. Useful to exclude common customizing tables ' &
-           '(like SWOTICE for'(c52).
+  sc_c51 = 'Objects in the range will not be taken into account when checking the'(c51).
+  sc_c52 = 'transports. Useful to exclude common customizing tables (like SWOTICE for'(c52).
   sc_c53 = 'workflow or the tables for Pricing procedures).'(c53).
 
   WRITE icon_information AS ICON TO sc_buff.
@@ -1942,7 +1940,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       SELECT SINGLE ddtext FROM dd02t
                            INTO @table_keys_line-ddtext
                           WHERE ddlanguage = @co_langu
-                            AND tabname    = @main_list_line-obj_name.
+                            AND tabname    = @main_list_line-obj_name. "#EC CI_SUBRC
 *     Count the keys...
       SELECT COUNT(*)
               FROM e071k INTO @table_keys_line-counter
@@ -1950,7 +1948,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND mastertype = @main_list_line-object
                AND trkorr NOT IN @project_trkorrs
                AND trkorr     LIKE @lp_tp_prefix
-               AND objname    IN @excluded_objects.
+               AND objname    IN @excluded_objects. "#EC CI_SUBRC
       table_keys_line-tabname = main_list_line-obj_name.
       COLLECT table_keys_line INTO table_keys.
     ENDLOOP.
@@ -2187,8 +2185,10 @@ CLASS lcl_ztct IMPLEMENTATION.
              AND a~trkorr  LIKE @prefix
              AND ( pgmid   = 'LIMU' OR
                    pgmid   = 'R3TR' )
-           ORDER BY a~trkorr ##TOO_MANY_ITAB_FIELDS.
-
+           ORDER BY a~trkorr ##TOO_MANY_ITAB_FIELDS. "#EC CI_SUBRC
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
     IF main_list[] IS NOT INITIAL.
       LOOP AT main_list ASSIGNING <lf_main_list>.
 *       If the transports should be checked, flag it.
@@ -2197,15 +2197,11 @@ CLASS lcl_ztct IMPLEMENTATION.
         SELECT SINGLE  as4text
                  FROM  e07t
                  INTO @<lf_main_list>-tr_descr
-                 WHERE trkorr = @<lf_main_list>-trkorr ##WARN_OK.
+                 WHERE trkorr = @<lf_main_list>-trkorr. "#EC CI_SUBRC
       ENDLOOP.
     ENDIF.
     SORT main_list.
     DELETE ADJACENT DUPLICATES FROM main_list.
-*   Only continue if there are transports to check...
-    IF main_list[] IS INITIAL.
-      RETURN.
-    ENDIF.
 *   Check if project is in selection range:
     IF project_range IS NOT INITIAL.
       LOOP AT main_list ASSIGNING <lf_main_list>.
@@ -2214,27 +2210,14 @@ CLASS lcl_ztct IMPLEMENTATION.
                INTO  @<lf_main_list>-project
                WHERE trkorr = @<lf_main_list>-trkorr
                AND   attribute = 'SAP_CTS_PROJECT'
-               AND   reference IN @project_range ##WARN_OK.
+               AND   reference IN @project_range. "#EC CI_SUBRC
         IF sy-subrc <> 0.
           DELETE main_list INDEX sy-tabix.
         ENDIF.
       ENDLOOP.
     ENDIF.
-*   Check if the searchstring is in the transport description:
-    IF search_string IS NOT INITIAL.
-      LOOP AT main_list INTO main_list_line.
-        IF search_string CS '*'.
-          IF main_list_line-tr_descr NP search_string.
-            DELETE main_list INDEX sy-tabix.
-            CONTINUE.
-          ENDIF.
-        ELSEIF main_list_line-tr_descr NS search_string.
-          DELETE main_list INDEX sy-tabix.
-          CONTINUE.
-        ENDIF.
-      ENDLOOP.
-    ENDIF.
-    IF main_list[] IS INITIAL.
+*   Only continue if there are transports left to check
+    IF main_list IS INITIAL.
       RETURN.
     ENDIF.
 *   Also read from the version table VRSD. This table contains all
@@ -2253,18 +2236,20 @@ CLASS lcl_ztct IMPLEMENTATION.
            WHERE korrnum = @main_list-trkorr.
       READ TABLE main_list INTO main_list_line
                            WITH KEY trkorr = ls_main_list_vrsd-trkorr.
-      main_list_line-object   = ls_main_list_vrsd-object.
-      main_list_line-obj_name = ls_main_list_vrsd-obj_name.
-      main_list_line-as4user  = ls_main_list_vrsd-as4user.
-      main_list_line-as4date  = ls_main_list_vrsd-as4date.
-      main_list_line-as4time  = ls_main_list_vrsd-as4time.
-*     Only append if the object from VRSD does not already exist in the
-*     main list:
-      IF NOT line_exists( main_list[ trkorr   = main_list_line-trkorr
-                                     object   = main_list_line-object
-                                     obj_name = main_list_line-obj_name ] ).
-        main_list_line-flag = abap_true.
-        APPEND main_list_line TO lt_main_list_vrsd.
+      IF sy-subrc = 0.
+        main_list_line-object   = ls_main_list_vrsd-object.
+        main_list_line-obj_name = ls_main_list_vrsd-obj_name.
+        main_list_line-as4user  = ls_main_list_vrsd-as4user.
+        main_list_line-as4date  = ls_main_list_vrsd-as4date.
+        main_list_line-as4time  = ls_main_list_vrsd-as4time.
+*       Only append if the object from VRSD does not already exist in the
+*       main list:
+        IF NOT line_exists( main_list[ trkorr   = main_list_line-trkorr
+                                       object   = main_list_line-object
+                                       obj_name = main_list_line-obj_name ] ).
+          main_list_line-flag = abap_true.
+          APPEND main_list_line TO lt_main_list_vrsd.
+        ENDIF.
       ENDIF.
     ENDSELECT.
 *   Duplicates may exist if the same object exists in different tasks
@@ -2284,24 +2269,24 @@ CLASS lcl_ztct IMPLEMENTATION.
     SELECT SINGLE a~trkorr,  a~trfunction, a~trstatus,
                   a~as4user, a~as4date,  a~as4time,
                   b~object,  b~obj_name
-           INTO (@re_line-trkorr,
-                 @re_line-trfunction,
-                 @re_line-trstatus,
-                 @re_line-as4user,
-                 @re_line-as4date,
-                 @re_line-as4time,
-                 @re_line-object,
-                 @re_line-obj_name)
-           FROM  e070 AS a JOIN e071 AS b
-           ON    a~trkorr   = b~trkorr
+            INTO (@re_line-trkorr,
+                  @re_line-trfunction,
+                  @re_line-trstatus,
+                  @re_line-as4user,
+                  @re_line-as4date,
+                  @re_line-as4time,
+                  @re_line-object,
+                  @re_line-obj_name)
+            FROM e070 AS a JOIN e071 AS b
+              ON a~trkorr   = b~trkorr
            WHERE a~trkorr   = @im_trkorr
-           AND   strkorr    = ''
-           AND   b~obj_name = @im_obj_name ##WARN_OK.
+             AND strkorr    = ''
+             AND b~obj_name = @im_obj_name.               "#EC CI_SUBRC
 *   Read transport description:
     SELECT SINGLE as4text
-                  FROM  e07t
-                  INTO  @re_line-tr_descr
-                  WHERE trkorr = @im_trkorr ##WARN_OK.
+                  FROM e07t
+                  INTO @re_line-tr_descr
+                 WHERE trkorr = @im_trkorr.               "#EC CI_SUBRC
     re_line-checked_by = sy-uname.
 *   First get the descriptions (Status/Type/Project):
 *   Retrieve texts for Status Description
@@ -2372,6 +2357,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                    b~pgmid = 'R3TR' OR
                    b~pgmid = 'R3OB' OR
                    b~pgmid = 'LANG' ) ##TOO_MANY_ITAB_FIELDS.
+    CHECK sy-subrc = 0.
 *   Read transport description:
     IF ex_to_add[] IS NOT INITIAL.
       LOOP AT ex_to_add ASSIGNING <lf_main_list>.
@@ -2379,7 +2365,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         SELECT SINGLE as4text
                       FROM  e07t
                       INTO @<lf_main_list>-tr_descr
-                      WHERE trkorr = @<lf_main_list>-trkorr ##WARN_OK.
+                      WHERE trkorr = @<lf_main_list>-trkorr. "#EC CI_SUBRC
       ENDLOOP.
     ENDIF.
 *   Also read from the version table VRSD. This table contains all
@@ -2400,23 +2386,25 @@ CLASS lcl_ztct IMPLEMENTATION.
         READ TABLE ex_to_add
                    INTO ls_main
                    WITH KEY trkorr = ls_main_list_vrsd-trkorr.
-        ls_main-object   = ls_main_list_vrsd-object.
-        ls_main-obj_name = ls_main_list_vrsd-obj_name.
-        ls_main-as4user  = ls_main_list_vrsd-as4user.
-        ls_main-as4date  = ls_main_list_vrsd-as4date.
-        ls_main-as4time  = ls_main_list_vrsd-as4time.
+        IF sy-subrc = 0.
+          ls_main-object   = ls_main_list_vrsd-object.
+          ls_main-obj_name = ls_main_list_vrsd-obj_name.
+          ls_main-as4user  = ls_main_list_vrsd-as4user.
+          ls_main-as4date  = ls_main_list_vrsd-as4date.
+          ls_main-as4time  = ls_main_list_vrsd-as4time.
 *       Only append if the object from VRSD does not already exist
 *       in the main list:
-        IF NOT line_exists( ex_to_add[ trkorr   = ls_main-trkorr
-                                       object   = ls_main-object
-                                       obj_name = ls_main-obj_name ] ).
-          ls_main-flag = abap_true.
-          APPEND ls_main TO lt_main_list_vrsd.
+          IF NOT line_exists( ex_to_add[ trkorr   = ls_main-trkorr
+                                         object   = ls_main-object
+                                         obj_name = ls_main-obj_name ] ).
+            ls_main-flag = abap_true.
+            APPEND ls_main TO lt_main_list_vrsd.
+          ENDIF.
         ENDIF.
       ENDSELECT.
+*     Now add all VRSD entries to the main list
+      APPEND LINES OF lt_main_list_vrsd TO ex_to_add.
     ENDIF.
-*   Now add all VRSD entries to the main list:
-    APPEND LINES OF lt_main_list_vrsd TO ex_to_add.
     add_table_keys_to_list( CHANGING ch_table = ex_to_add ).
 *   Only add the records that are not yet existing in the main list.
 *   Do not add the records that already exist in the main list.
@@ -2503,24 +2491,26 @@ CLASS lcl_ztct IMPLEMENTATION.
                  INTO @main_list_line-status_text
                 WHERE domname    = 'TRSTATUS'
                   AND ddlanguage = @co_langu
-                  AND domvalue_l = @main_list_line-trstatus. "#EC CI_SEL_NESTED
+                  AND domvalue_l = @main_list_line-trstatus. "#EC CI_SEL_NESTED #EC CI_SUBRC
 *       Retrieve texts for Description of request/task type
         SELECT SINGLE ddtext
                  FROM dd07t
                  INTO @main_list_line-trfunction_txt
                 WHERE domname    = 'TRFUNCTION'
                   AND ddlanguage = @co_langu
-                  AND domvalue_l = @main_list_line-trfunction. "#EC CI_SEL_NESTED
+                  AND domvalue_l = @main_list_line-trfunction. "#EC CI_SEL_NESTED #EC CI_SUBRC
 *       Retrieve the project number (and description):
         SELECT reference
                FROM e070a UP TO 1 ROWS
                INTO @main_list_line-project
               WHERE trkorr    = @main_list_line-trkorr
                 AND attribute = 'SAP_CTS_PROJECT'.   "#EC CI_SEL_NESTED
-          SELECT SINGLE descriptn
-                   FROM ctsproject
-                   INTO @main_list_line-project_descr "#EC CI_SGLSELECT
-                  WHERE trkorr = @main_list_line-project. "#EC CI_SEL_NESTED
+          IF sy-subrc = 0.
+            SELECT SINGLE descriptn
+                     FROM ctsproject
+                     INTO @main_list_line-project_descr "#EC CI_SGLSELECT
+                    WHERE trkorr = @main_list_line-project. "#EC CI_SEL_NESTED #EC CI_SUBRC
+          ENDIF.
         ENDSELECT.
 *       Retrieve the description of the status
         SELECT SINGLE ddtext
@@ -2528,7 +2518,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                  INTO @main_list_line-trstatus
                 WHERE domname    = 'TRSTATUS'
                   AND ddlanguage = @co_langu
-                  AND domvalue_l = @main_list_line-trstatus. "#EC CI_SEL_NESTED
+                  AND domvalue_l = @main_list_line-trstatus. "#EC CI_SEL_NESTED #EC CI_SUBRC
 *       Check if transport has been released.
 *       D - Modifiable
 *       L - Modifiable, protected
@@ -2568,7 +2558,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           ENDIF.
         ENDIF.
         READ TABLE lt_stms_wbo_requests INDEX 1
-                                        INTO ls_stms_wbo_requests.
+                                        INTO ls_stms_wbo_requests. "#EC CI_SUBRC
 *       Check if there is documentation available
         CLEAR main_list_line-info.
         IF ls_stms_wbo_requests-docu[] IS NOT INITIAL.
@@ -2591,7 +2581,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         ENDIF.
         READ TABLE lt_tr_cofilines INTO ls_tstrfcofil
                                    WITH KEY tarsystem = qas_system
-                                            function  = 'G' ##WARN_OK.
+                                            function  = 'G'. "#EC CI_SUBRC
         main_list_line-retcode = ls_tstrfcofil-retcode.
         IF ls_stms_wbo_requests-e070-trstatus NA 'NR'.
           main_list_line-warning_lvl  = co_alert.
@@ -2656,17 +2646,23 @@ CLASS lcl_ztct IMPLEMENTATION.
 *                 Get the latest date/time stamp
                   READ TABLE ls_systems-steps INTO st_steps
                                               INDEX lines( ls_systems-steps ).
-                  CHECK st_steps-stepid <> '<'.
-                  READ TABLE st_steps-actions INTO st_actions
-                                              INDEX lines( st_steps-actions ).
-                  main_list_line-as4time = st_actions-time.
-                  main_list_line-as4date = st_actions-date.
+                  IF sy-subrc = 0.
+                    CHECK st_steps-stepid <> '<'.
+                    READ TABLE st_steps-actions INTO st_actions
+                                                INDEX lines( st_steps-actions ).
+                    IF sy-subrc = 0.
+                      main_list_line-as4time = st_actions-time.
+                      main_list_line-as4date = st_actions-date.
+                    ENDIF.
+                  ENDIF.
                 WHEN prd_system.
                   READ TABLE ls_systems-steps INTO st_steps
                                              INDEX lines( ls_systems-steps ).
-                  CHECK st_steps-stepid <> '<'.
-*                 Green - Exists
-                  main_list_line-prd = co_okay.
+                  IF sy-subrc = 0.
+                    CHECK st_steps-stepid <> '<'.
+*                   Green - Exists
+                    main_list_line-prd = co_okay.
+                  ENDIF.
               ENDCASE.
             ENDLOOP.
           ENDIF.
@@ -2813,8 +2809,10 @@ CLASS lcl_ztct IMPLEMENTATION.
     LOOP AT im_rows INTO ls_row.
       READ TABLE main_list INTO main_list_line
                           INDEX ls_row.
-      ls_range_trkorr-low = main_list_line-trkorr.
-      APPEND ls_range_trkorr TO lt_range_trkorr.
+      IF sy-subrc = 0.
+        ls_range_trkorr-low = main_list_line-trkorr.
+        APPEND ls_range_trkorr TO lt_range_trkorr.
+      ENDIF.
     ENDLOOP.
     SORT lt_range_trkorr.
     DELETE ADJACENT DUPLICATES FROM lt_range_trkorr.
@@ -2863,15 +2861,19 @@ CLASS lcl_ztct IMPLEMENTATION.
     LOOP AT ch_rows INTO ls_row.
       READ TABLE main_list INTO main_list_line
                            INDEX ls_row.
-      ls_range_trkorr-low = main_list_line-trkorr.
-      APPEND ls_range_trkorr TO lt_range_trkorr.
+      IF sy-subrc = 0.
+        ls_range_trkorr-low = main_list_line-trkorr.
+        APPEND ls_range_trkorr TO lt_range_trkorr.
+      ENDIF.
     ENDLOOP.
 * If no rows were selected, take the current cell instead
     IF sy-subrc <> 0.
       READ TABLE main_list INTO main_list_line
                            INDEX im_cell-row.
-      ls_range_trkorr-low = main_list_line-trkorr.
-      APPEND ls_range_trkorr TO lt_range_trkorr.
+      IF sy-subrc = 0.
+        ls_range_trkorr-low = main_list_line-trkorr.
+        APPEND ls_range_trkorr TO lt_range_trkorr.
+      ENDIF.
     ENDIF.
     IF lt_range_trkorr IS INITIAL.
       RETURN.
@@ -2901,6 +2903,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_rc           TYPE i.
     DATA lp_desktop      TYPE string.
     DATA lt_filetable    TYPE filetable.
+    DATA lp_file         TYPE string.
 * Finding desktop
     cl_gui_frontend_services=>get_desktop_directory(
       CHANGING
@@ -2940,7 +2943,12 @@ CLASS lcl_ztct IMPLEMENTATION.
       MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
               WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
     ENDIF.
-    READ TABLE lt_filetable INDEX 1 INTO re_file.
+    READ TABLE lt_filetable INDEX 1 INTO lp_file.
+    IF sy-subrc = 0.
+      re_file = lp_file.
+    ELSE.
+      re_file = 'No file selected'(061).
+    ENDIF.
   ENDMETHOD.
 
   METHOD main_to_tab_delimited.
@@ -3046,14 +3054,14 @@ CLASS lcl_ztct IMPLEMENTATION.
              field TYPE fieldname,
              value TYPE string,
            END OF ty_upl_line.
-    DATA lt_upl_line           TYPE TABLE OF ty_upl_line.
-    DATA ls_upl_line           TYPE ty_upl_line.
+    DATA lt_items              TYPE TABLE OF ty_upl_line.
+    DATA ls_item               TYPE ty_upl_line.
     DATA lt_main_upl           TYPE ty_request_details_tt.
     DATA ls_main_line_upl      TYPE ty_request_details.
-    DATA lp_record             TYPE string.
+    DATA lp_header             TYPE string.
     DATA ls_main               TYPE ty_request_details.
     DATA lp_type               TYPE char01.
-    FIELD-SYMBOLS <lf_string> TYPE any.
+    FIELD-SYMBOLS <lf_string>  TYPE any.
 *   Determine the number of fields in the structure
     DATA lr_o_tabledescr       TYPE REF TO cl_abap_tabledescr.
     DATA lr_o_typedescr        TYPE REF TO cl_abap_typedescr.
@@ -3071,41 +3079,42 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   First line contains the name of the fields
 *   Now modify the lines of the main list to a tab delimited list
     READ TABLE im_tab_delimited INDEX 1
-                                INTO lp_record.
+                                INTO lp_header.
+    CHECK sy-subrc = 0.
 *   Build list of fields, in order of uploaded file
     DO.
-      SPLIT lp_record AT tp_tab INTO ls_upl_line-field lp_record.
-      IF lp_record IS INITIAL.
+      SPLIT lp_header AT tp_tab INTO ls_item-field lp_header.
+      IF ls_item-field IS INITIAL.
         EXIT.
       ENDIF.
-      APPEND ls_upl_line TO lt_upl_line.
+      APPEND ls_item TO lt_items.
     ENDDO.
 *   Skip the header line, start at line 2
     LOOP AT im_tab_delimited FROM 2
-                             INTO lp_record.
-      CLEAR ls_upl_line.
+                             INTO lp_header.
+      CLEAR ls_item.
 *     First put all values for this record in the value table
 *     Build list of fields, in order of uploaded file
       DO.
 *       Get the corresponding line from the table containing
 *       the fields and values (to be updated with the value)
-        READ TABLE lt_upl_line INDEX sy-index
-                               INTO ls_upl_line.
-        SPLIT lp_record AT tp_tab INTO ls_upl_line-value lp_record.
-        IF lp_record IS INITIAL.
+        READ TABLE lt_items INDEX sy-index
+                            INTO ls_item.
+        IF sy-subrc <> 0.
           EXIT.
         ELSE.
-          MODIFY lt_upl_line FROM ls_upl_line
-                             INDEX sy-tabix
-                             TRANSPORTING value.
+          SPLIT lp_header AT tp_tab INTO ls_item-value lp_header.
+          MODIFY lt_items FROM ls_item
+                          INDEX sy-tabix
+                          TRANSPORTING value.
         ENDIF.
       ENDDO.
 *     Map the fields from the uploaded line to the correct component
 *     of the main list
       DO.
 *       Get corresponding fieldname for file column
-        READ TABLE lt_upl_line INTO ls_upl_line
-                               INDEX sy-index.
+        READ TABLE lt_items INTO ls_item
+                            INDEX sy-index.
         IF sy-subrc <> 0.
           EXIT.
         ENDIF.
@@ -3113,19 +3122,16 @@ CLASS lcl_ztct IMPLEMENTATION.
 *       Get the lenght and position from the structure definition:
         READ TABLE lr_o_structdescr->components
                    INTO ls_component
-                   WITH KEY name = ls_upl_line-field.
+                   WITH KEY name = ls_item-field.
         IF sy-subrc = 0.
-          TRY.
-              ASSIGN COMPONENT ls_component-name OF STRUCTURE ls_main_line_upl TO <lf_string>.
-            CATCH cx_root INTO rf_root  ##CATCH_ALL ##NO_HANDLER.
-          ENDTRY.
+          ASSIGN COMPONENT ls_component-name OF STRUCTURE ls_main_line_upl TO <lf_string>.
           IF sy-subrc <> 0.
             EXIT.
           ELSE.
             DESCRIBE FIELD <lf_string> TYPE lp_type.
             IF lp_type NA co_non_charlike.
               TRY.
-                  <lf_string> = ls_upl_line-value.
+                  <lf_string> = ls_item-value.
                 CATCH cx_root INTO rf_root  ##CATCH_ALL ##NO_HANDLER.
               ENDTRY.
             ENDIF.
@@ -3290,12 +3296,12 @@ CLASS lcl_ztct IMPLEMENTATION.
         SELECT SINGLE * FROM e071k
                  INTO @ls_e071k
                 WHERE trkorr = @im_newer_older-trkorr
-                  AND tabkey = @im_line-tabkey.
-*       Now check if in both transports, an object exists with the
-*       same key:
+                  AND tabkey = @im_line-tabkey.           "#EC CI_SUBRC
+*       Now check if in both transports an object exists with the
+*       same key
         IF ls_e071k IS INITIAL.
 *         No key found. Treat as if it's the same object...
-          IF im_newer_older-object   = im_line-object
+          IF im_newer_older-object = im_line-object
               AND im_newer_older-obj_name = im_line-obj_name.
             ex_return = abap_true.
           ENDIF.
@@ -3308,7 +3314,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                       INTO ex_tabkey.
         ENDIF.
       WHEN OTHERS.
-        IF im_newer_older-object   = im_line-object
+        IF im_newer_older-object = im_line-object
             AND im_newer_older-obj_name = im_line-obj_name.
           ex_return = abap_true.
         ENDIF.
@@ -3326,7 +3332,7 @@ CLASS lcl_ztct IMPLEMENTATION.
               AND typ       = 'T'
               AND dokformat <> 'L'
               AND doktext   <> ''.
-    IF ls_doktl IS NOT INITIAL.
+    IF sy-subrc = 0.
 *     There is documentation: Display Doc Icon
       main_list_line-info = co_docu.
     ELSE.
@@ -3547,8 +3553,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lr_display_settings    TYPE REF TO cl_salv_display_settings.
     DATA lp_class               TYPE xuclass.
 
-    FIELD-SYMBOLS <lf_table>      TYPE REF TO cl_salv_table.
+    FIELD-SYMBOLS <lf_table>    TYPE REF TO cl_salv_table.
     ASSIGN im_table TO <lf_table>.
+    CHECK <lf_table> IS ASSIGNED.
 *   Set status
 *   Copy the status from program SAPLSLVC_FULLSCREEN and delete the
 *   buttons you do not need. Add extra buttons for use in USER_COMMAND
@@ -3585,7 +3592,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                        WHERE bname = @sy-uname.
 *   Hardcoded: Change this to allow certain group of users to change
 *   the default layout for all users
-    IF lp_class = 'NLD_T_040'.
+    IF sy-subrc = 0 AND lp_class = 'NLD_T_040'.
       lp_save_restriction = if_salv_c_layout=>restrict_none.
     ELSE.
       lp_save_restriction = if_salv_c_layout=>restrict_user_dependant.
@@ -3647,9 +3654,9 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Event Register settings
     rf_events_table = <lf_table>->get_event( ).
     rf_handle_events = NEW #( ).
-    SET HANDLER rf_handle_events->on_function_click FOR rf_events_table.
-    SET HANDLER rf_handle_events->on_double_click   FOR rf_events_table.
-    SET HANDLER rf_handle_events->on_link_click     FOR rf_events_table.
+    SET HANDLER lcl_eventhandler_ztct=>on_function_click FOR rf_events_table.
+    SET HANDLER lcl_eventhandler_ztct=>on_double_click   FOR rf_events_table.
+    SET HANDLER lcl_eventhandler_ztct=>on_link_click     FOR rf_events_table.
 *   Get the columns from ALV Table
     lr_columns_table = <lf_table>->get_columns( ).
     IF lr_columns_table IS NOT INITIAL.
@@ -3667,12 +3674,6 @@ CLASS lcl_ztct IMPLEMENTATION.
       column_settings( im_column_ref       = lt_t_column_ref
                        im_rf_columns_table = lr_columns_table
                        im_table            = <lf_table> ).
-    ENDIF.
-*   Skip the following code for the conflicts popups
-    IF <lf_table> <> rf_conflicts.
-*     Top of List settings
-      lr_form_element = top_of_page( ).
-      <lf_table>->set_top_of_list( lr_form_element ).
     ENDIF.
   ENDMETHOD.
 
@@ -3768,9 +3769,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_sys_s TYPE REF TO data.
     DATA lp_sys_m TYPE REF TO data.
     DATA lp_sys_l TYPE REF TO data.
-    FIELD-SYMBOLS <lf_text_s> TYPE scrtext_s.
-    FIELD-SYMBOLS <lf_text_m> TYPE scrtext_m.
-    FIELD-SYMBOLS <lf_text_l> TYPE scrtext_l.
+    FIELD-SYMBOLS <lf_text_s> TYPE scrtext_s.             "#EC CI_SUBRC
+    FIELD-SYMBOLS <lf_text_m> TYPE scrtext_m.             "#EC CI_SUBRC
+    FIELD-SYMBOLS <lf_text_l> TYPE scrtext_l.             "#EC CI_SUBRC
 
 * Instantiate data references for column headers
     CREATE DATA lp_sys_s TYPE scrtext_s.
@@ -4044,7 +4045,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     re_is_empty = abap_true.
     LOOP AT im_table INTO ls_line.
       ASSIGN COMPONENT im_column OF STRUCTURE ls_line TO <lf_column>.
-      IF <lf_column> IS NOT INITIAL.
+      IF sy-subrc = 0 AND <lf_column> IS NOT INITIAL.
         re_is_empty = abap_false.
         EXIT.
       ENDIF.
@@ -4246,7 +4247,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                            ex_as4date = ls_tp_same_object-as4date
                                            ex_return  = lp_return ).
         IF lp_return = 0.
-          MODIFY lt_aggr_tp_list_of_objects FROM ls_tp_same_object.
+          MODIFY TABLE lt_aggr_tp_list_of_objects FROM ls_tp_same_object. "#EC CI_SUBRC
         ELSE.
           DELETE lt_aggr_tp_list_of_objects INDEX lp_index.
         ENDIF.
@@ -4295,17 +4296,17 @@ CLASS lcl_ztct IMPLEMENTATION.
     SELECT SINGLE scrtext_s
                   FROM dd04t INTO @lp_as4text
                   WHERE rollname   = @im_name
-                  AND   ddlanguage = @co_langu ##WARN_OK.
+                  AND   ddlanguage = @co_langu.           "#EC CI_SUBRC
     IF lp_as4text IS INITIAL.
       SELECT SINGLE scrtext_m
                     FROM dd04t INTO @lp_as4text
                     WHERE rollname   = @im_name
-                    AND   ddlanguage = @co_langu ##WARN_OK.
+                    AND   ddlanguage = @co_langu.         "#EC CI_SUBRC
       IF lp_as4text IS INITIAL.
         SELECT SINGLE scrtext_l
                       FROM dd04t INTO @lp_as4text
                       WHERE rollname   = @im_name
-                      AND   ddlanguage = @co_langu ##WARN_OK.
+                      AND   ddlanguage = @co_langu.       "#EC CI_SUBRC
       ENDIF.
     ENDIF.
     lp_len = strlen( lp_as4text ).
@@ -4679,9 +4680,9 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Event Register settings
     rf_events_table = rf_conflicts->get_event( ).
     rf_handle_events = NEW #( ).
-    SET HANDLER rf_handle_events->on_function_click     FOR rf_events_table.
-    SET HANDLER rf_handle_events->on_double_click_popup FOR rf_events_table.
-    SET HANDLER rf_handle_events->on_link_click_popup   FOR rf_events_table.
+    SET HANDLER lcl_eventhandler_ztct=>on_function_click     FOR rf_events_table.
+    SET HANDLER lcl_eventhandler_ztct=>on_double_click_popup FOR rf_events_table.
+    SET HANDLER lcl_eventhandler_ztct=>on_link_click_popup   FOR rf_events_table.
 *   Get the columns from ALV Table
     lr_columns_table = rf_conflicts->get_columns( ).
     IF lr_columns_table IS NOT INITIAL.

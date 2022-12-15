@@ -2297,6 +2297,12 @@
     </item>
     <item>
      <ID>I</ID>
+     <KEY>061</KEY>
+     <ENTRY>No file selected</ENTRY>
+     <LENGTH>50</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
      <KEY>B10</KEY>
      <ENTRY>Selection range / Upload file</ENTRY>
      <LENGTH>29</LENGTH>
@@ -2395,13 +2401,13 @@
      <ID>I</ID>
      <KEY>C51</KEY>
      <ENTRY>Objects in the range will not be taken into account when checking the</ENTRY>
-     <LENGTH>69</LENGTH>
+     <LENGTH>132</LENGTH>
     </item>
     <item>
      <ID>I</ID>
      <KEY>C52</KEY>
      <ENTRY>transports. Useful to exclude common customizing tables (like SWOTICE for</ENTRY>
-     <LENGTH>73</LENGTH>
+     <LENGTH>132</LENGTH>
     </item>
     <item>
      <ID>I</ID>
@@ -2991,6 +2997,12 @@
       </item>
       <item>
        <ID>I</ID>
+       <KEY>061</KEY>
+       <ENTRY>No file selected</ENTRY>
+       <LENGTH>50</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
        <KEY>B10</KEY>
        <ENTRY>Selection range / Upload file</ENTRY>
        <LENGTH>29</LENGTH>
@@ -3089,13 +3101,13 @@
        <ID>I</ID>
        <KEY>C51</KEY>
        <ENTRY>Objects in the range will not be taken into account when checking the</ENTRY>
-       <LENGTH>69</LENGTH>
+       <LENGTH>132</LENGTH>
       </item>
       <item>
        <ID>I</ID>
        <KEY>C52</KEY>
        <ENTRY>transports. Useful to exclude common customizing tables (like SWOTICE for</ENTRY>
-       <LENGTH>73</LENGTH>
+       <LENGTH>132</LENGTH>
       </item>
       <item>
        <ID>I</ID>
