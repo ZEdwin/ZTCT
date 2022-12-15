@@ -1948,7 +1948,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND mastertype = @main_list_line-object
                AND trkorr NOT IN @project_trkorrs
                AND trkorr     LIKE @lp_tp_prefix
-               AND objname    IN @excluded_objects. "#EC CI_SUBRC
+               AND objname    IN @excluded_objects.       "#EC CI_SUBRC
       table_keys_line-tabname = main_list_line-obj_name.
       COLLECT table_keys_line INTO table_keys.
     ENDLOOP.
@@ -2185,7 +2185,7 @@ CLASS lcl_ztct IMPLEMENTATION.
              AND a~trkorr  LIKE @prefix
              AND ( pgmid   = 'LIMU' OR
                    pgmid   = 'R3TR' )
-           ORDER BY a~trkorr ##TOO_MANY_ITAB_FIELDS. "#EC CI_SUBRC
+           ORDER BY a~trkorr ##TOO_MANY_ITAB_FIELDS.      "#EC CI_SUBRC
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
@@ -2197,7 +2197,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         SELECT SINGLE  as4text
                  FROM  e07t
                  INTO @<lf_main_list>-tr_descr
-                 WHERE trkorr = @<lf_main_list>-trkorr. "#EC CI_SUBRC
+                 WHERE trkorr = @<lf_main_list>-trkorr.   "#EC CI_SUBRC
       ENDLOOP.
     ENDIF.
     SORT main_list.
@@ -2210,7 +2210,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                INTO  @<lf_main_list>-project
                WHERE trkorr = @<lf_main_list>-trkorr
                AND   attribute = 'SAP_CTS_PROJECT'
-               AND   reference IN @project_range. "#EC CI_SUBRC
+               AND   reference IN @project_range.         "#EC CI_SUBRC
         IF sy-subrc <> 0.
           DELETE main_list INDEX sy-tabix.
         ENDIF.
@@ -3552,9 +3552,12 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Declaration for Global Display Settings
     DATA lr_display_settings    TYPE REF TO cl_salv_display_settings.
     DATA lp_class               TYPE xuclass.
+    DATA lp_accnt               TYPE xuaccnt.
 
-    FIELD-SYMBOLS <lf_table>    TYPE REF TO cl_salv_table.
-    ASSIGN im_table TO <lf_table>.
+    CONSTANTS: co_class         TYPE xuclass VALUE 'NLD_T_040',
+               co_accnt         TYPE xuaccnt VALUE 'I210218 0079'.
+
+    ASSIGN im_table TO FIELD-SYMBOL(<lf_table>).
     CHECK <lf_table> IS ASSIGNED.
 *   Set status
 *   Copy the status from program SAPLSLVC_FULLSCREEN and delete the
@@ -3587,12 +3590,14 @@ CLASS lcl_ztct IMPLEMENTATION.
     lr_layout->set_key( ls_layout_key ).
 *   If the user is part of a specific class, then the user can
 *   maintain all layouts. Otherwise only the user specific layout.
-    SELECT SINGLE class FROM usr02
-                        INTO @lp_class
-                       WHERE bname = @sy-uname.
+    SELECT SINGLE class, accnt
+                  FROM usr02
+                  INTO (@lp_class,
+                        @lp_accnt)
+                 WHERE bname = @sy-uname.
 *   Hardcoded: Change this to allow certain group of users to change
 *   the default layout for all users
-    IF sy-subrc = 0 AND lp_class = 'NLD_T_040'.
+    IF sy-subrc = 0 AND lp_class = co_class AND lp_accnt = co_accnt.
       lp_save_restriction = if_salv_c_layout=>restrict_none.
     ELSE.
       lp_save_restriction = if_salv_c_layout=>restrict_user_dependant.
