@@ -832,15 +832,14 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     DATA lp_question         TYPE string.
     DATA lp_answer           TYPE char01.
 
-    FIELD-SYMBOLS <lf_ref_table> TYPE REF TO cl_salv_table.
-
 *   Which popup are we displaying? Conflicts or Table keys?
+    FIELD-SYMBOLS <lf_ref_table> TYPE REF TO cl_salv_table.
     IF rf_conflicts IS BOUND.
-      ASSIGN rf_conflicts TO <lf_ref_table>.              "#EC CI_SUBRC
+      ASSIGN rf_conflicts TO <lf_ref_table>.   "#EC CI_SUBRC
     ELSEIF rf_table_keys IS BOUND.
-      ASSIGN rf_table_keys TO <lf_ref_table>.             "#EC CI_SUBRC
+      ASSIGN rf_table_keys TO <lf_ref_table>.  "#EC CI_SUBRC
     ELSE.
-      ASSIGN rf_table TO <lf_ref_table>.                  "#EC CI_SUBRC
+      ASSIGN rf_table TO <lf_ref_table>.       "#EC CI_SUBRC
     ENDIF.
     IF <lf_ref_table> IS ASSIGNED.
 *     Get current row
@@ -3384,8 +3383,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lt_scol                     TYPE lvc_t_scol.
     DATA ls_scol                     TYPE lvc_s_scol.
 
-    FIELD-SYMBOLS <lf_main> TYPE ty_request_details.
-    LOOP AT main_list ASSIGNING <lf_main>.
+    LOOP AT main_list ASSIGNING FIELD-SYMBOL(<lf_main>).
 *     Init
       FREE lt_scol.
       CLEAR ls_scol.
@@ -3774,17 +3772,14 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_sys_s TYPE REF TO data.
     DATA lp_sys_m TYPE REF TO data.
     DATA lp_sys_l TYPE REF TO data.
-    FIELD-SYMBOLS <lf_text_s> TYPE scrtext_s.             "#EC CI_SUBRC
-    FIELD-SYMBOLS <lf_text_m> TYPE scrtext_m.             "#EC CI_SUBRC
-    FIELD-SYMBOLS <lf_text_l> TYPE scrtext_l.             "#EC CI_SUBRC
 
 * Instantiate data references for column headers
     CREATE DATA lp_sys_s TYPE scrtext_s.
     CREATE DATA lp_sys_m TYPE scrtext_m.
     CREATE DATA lp_sys_l TYPE scrtext_l.
-    ASSIGN lp_sys_s->* TO <lf_text_s>.
-    ASSIGN lp_sys_m->* TO <lf_text_m>.
-    ASSIGN lp_sys_l->* TO <lf_text_l>.
+    ASSIGN lp_sys_s->* TO FIELD-SYMBOL(<lf_text_s>). "#EC CI_SUBRC
+    ASSIGN lp_sys_m->* TO FIELD-SYMBOL(<lf_text_m>). "#EC CI_SUBRC
+    ASSIGN lp_sys_l->* TO FIELD-SYMBOL(<lf_text_l>). "#EC CI_SUBRC
 
 *   Build range for all unwanted columns:
     CASE im_table.
@@ -4408,8 +4403,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_highest_text  TYPE text74.
     DATA lp_highest_col   TYPE lvc_t_scol.
 
-    FIELD-SYMBOLS <lf_main_list> TYPE ty_request_details.
-
 *   Only when called from the Main Screen (Object Level). Do not build again
 *   when the XLS list has been build already.
     IF main_list_xls IS NOT INITIAL.
@@ -4434,7 +4427,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       IF main_list_line_xls-qas <> co_okay
           OR main_list_line_xls-prd = co_okay.
         lp_return = abap_true.
-        LOOP AT main_list ASSIGNING <lf_main_list>
+        LOOP AT main_list ASSIGNING FIELD-SYMBOL(<lf_main_list>)
                           WHERE trkorr = main_list_line_xls-trkorr.
           <lf_main_list>-warning_lvl  = co_tp_fail.
           <lf_main_list>-warning_rank = co_tp_fail_rank.
