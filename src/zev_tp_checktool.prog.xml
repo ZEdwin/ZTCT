@@ -2045,6 +2045,12 @@
     </item>
     <item>
      <ID>I</ID>
+     <KEY>012</KEY>
+     <ENTRY>Desktop not found</ENTRY>
+     <LENGTH>50</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
      <KEY>013</KEY>
      <ENTRY>Select a transportlist</ENTRY>
      <LENGTH>50</LENGTH>
@@ -2147,8 +2153,20 @@
     </item>
     <item>
      <ID>I</ID>
+     <KEY>030</KEY>
+     <ENTRY>Documentation for</ENTRY>
+     <LENGTH>50</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
      <KEY>031</KEY>
      <ENTRY>Cancelled by user</ENTRY>
+     <LENGTH>50</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>032</KEY>
+     <ENTRY>Hints and Tips for</ENTRY>
      <LENGTH>50</LENGTH>
     </item>
     <item>
@@ -2161,6 +2179,18 @@
      <ID>I</ID>
      <KEY>034</KEY>
      <ENTRY>Warn</ENTRY>
+     <LENGTH>50</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>035</KEY>
+     <ENTRY>The file has been saved</ENTRY>
+     <LENGTH>50</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>036</KEY>
+     <ENTRY>Cancelled by user</ENTRY>
      <LENGTH>50</LENGTH>
     </item>
     <item>
@@ -2225,6 +2255,18 @@
     </item>
     <item>
      <ID>I</ID>
+     <KEY>047</KEY>
+     <ENTRY>Sts</ENTRY>
+     <LENGTH>3</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>048</KEY>
+     <ENTRY>Status</ENTRY>
+     <LENGTH>6</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
      <KEY>049</KEY>
      <ENTRY>File uploaded:</ENTRY>
      <LENGTH>14</LENGTH>
@@ -2273,36 +2315,6 @@
     </item>
     <item>
      <ID>I</ID>
-     <KEY>057</KEY>
-     <ENTRY>System</ENTRY>
-     <LENGTH>6</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>058</KEY>
-     <ENTRY>does not exist...</ENTRY>
-     <LENGTH>17</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>059</KEY>
-     <ENTRY>Import again</ENTRY>
-     <LENGTH>12</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>060</KEY>
-     <ENTRY>Transport being released. Recheck needed!</ENTRY>
-     <LENGTH>50</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>061</KEY>
-     <ENTRY>No file selected</ENTRY>
-     <LENGTH>50</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
      <KEY>B10</KEY>
      <ENTRY>Selection range / Upload file</ENTRY>
      <LENGTH>29</LENGTH>
@@ -2336,6 +2348,12 @@
      <KEY>B50</KEY>
      <ENTRY>Exclude from check</ENTRY>
      <LENGTH>18</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>B60</KEY>
+     <ENTRY>Overview of used Icons</ENTRY>
+     <LENGTH>50</LENGTH>
     </item>
     <item>
      <ID>I</ID>
@@ -2399,15 +2417,27 @@
     </item>
     <item>
      <ID>I</ID>
+     <KEY>C46</KEY>
+     <ENTRY>Check ON</ENTRY>
+     <LENGTH>20</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>C47</KEY>
+     <ENTRY>Check OFF</ENTRY>
+     <LENGTH>9</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
      <KEY>C51</KEY>
      <ENTRY>Objects in the range will not be taken into account when checking the</ENTRY>
-     <LENGTH>132</LENGTH>
+     <LENGTH>69</LENGTH>
     </item>
     <item>
      <ID>I</ID>
      <KEY>C52</KEY>
      <ENTRY>transports. Useful to exclude common customizing tables (like SWOTICE for</ENTRY>
-     <LENGTH>132</LENGTH>
+     <LENGTH>73</LENGTH>
     </item>
     <item>
      <ID>I</ID>
@@ -2418,38 +2448,44 @@
     <item>
      <ID>I</ID>
      <KEY>H01</KEY>
-     <ENTRY>If there is a warning icon in column `Warning`, double-clicking on the icon will display a list of objects that should be checked.</ENTRY>
+     <ENTRY>If there is a warning icon in column `Warning`, double-clicking on the icon will display a list of objects that should be checked</ENTRY>
      <LENGTH>132</LENGTH>
     </item>
     <item>
      <ID>I</ID>
      <KEY>H02</KEY>
-     <ENTRY>You can add these conflicts by means of the button &apos;Add Conflicts&apos; in the application toolbar or doubleclicking the warning.</ENTRY>
+     <ENTRY>You can add these conflicts by means of the button &apos;Add Conflicts&apos; in the application toolbar or doubleclicking the warning</ENTRY>
      <LENGTH>132</LENGTH>
     </item>
     <item>
      <ID>I</ID>
+     <KEY>M01</KEY>
+     <ENTRY>Select the row to delete</ENTRY>
+     <LENGTH>24</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
      <KEY>M02</KEY>
-     <ENTRY>Some transports will be deleted from the list</ENTRY>
+     <ENTRY>Some transports were deleted from the list because</ENTRY>
      <LENGTH>50</LENGTH>
     </item>
     <item>
      <ID>I</ID>
      <KEY>M03</KEY>
-     <ENTRY>because they are missing in Acceptance or are</ENTRY>
+     <ENTRY>they are missing in Acceptance or are already in</ENTRY>
      <LENGTH>48</LENGTH>
     </item>
     <item>
      <ID>I</ID>
      <KEY>M04</KEY>
-     <ENTRY>already in Production but not marked for</ENTRY>
-     <LENGTH>43</LENGTH>
+     <ENTRY>Production but not marked for re-import.</ENTRY>
+     <LENGTH>40</LENGTH>
     </item>
     <item>
      <ID>I</ID>
      <KEY>M05</KEY>
-     <ENTRY>re-import. Please check the main list.</ENTRY>
-     <LENGTH>41</LENGTH>
+     <ENTRY>Please check the main list.</ENTRY>
+     <LENGTH>27</LENGTH>
     </item>
     <item>
      <ID>I</ID>
@@ -2507,12 +2543,6 @@
     </item>
     <item>
      <ID>I</ID>
-     <KEY>M15</KEY>
-     <ENTRY>Data Dictionary check finished...</ENTRY>
-     <LENGTH>33</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
      <KEY>T01</KEY>
      <ENTRY>Selected transports</ENTRY>
      <LENGTH>19</LENGTH>
@@ -2538,8 +2568,14 @@
     <item>
      <ID>I</ID>
      <KEY>T06</KEY>
-     <ENTRY>Select the tables for which the keys must be checked</ENTRY>
-     <LENGTH>55</LENGTH>
+     <ENTRY>Select the tables for which</ENTRY>
+     <LENGTH>40</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>T07</KEY>
+     <ENTRY> the keys must be checked</ENTRY>
+     <LENGTH>40</LENGTH>
     </item>
     <item>
      <ID>I</ID>
@@ -2549,9 +2585,15 @@
     </item>
     <item>
      <ID>I</ID>
+     <KEY>W02</KEY>
+     <ENTRY>No version found to compare</ENTRY>
+     <LENGTH>27</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
      <KEY>W03</KEY>
-     <ENTRY>Uses object not in list or target environment</ENTRY>
-     <LENGTH>50</LENGTH>
+     <ENTRY>Uses object not in list or production</ENTRY>
+     <LENGTH>40</LENGTH>
     </item>
     <item>
      <ID>I</ID>
@@ -2610,8 +2652,8 @@
     <item>
      <ID>I</ID>
      <KEY>W22</KEY>
-     <ENTRY>Newer version in test environment, but in list</ENTRY>
-     <LENGTH>49</LENGTH>
+     <ENTRY>Newer version in Acceptance, but in list</ENTRY>
+     <LENGTH>40</LENGTH>
     </item>
     <item>
      <ID>I</ID>
@@ -2620,97 +2662,91 @@
      <LENGTH>41</LENGTH>
     </item>
     <item>
-     <ID>I</ID>
-     <KEY>W24</KEY>
-     <ENTRY>Transport not possible</ENTRY>
-     <LENGTH>22</LENGTH>
-    </item>
-    <item>
      <ID>R</ID>
      <ENTRY>Transport Checking Tool (Object level)</ENTRY>
      <LENGTH>38</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>P_CHD</KEY>
+     <KEY>PA_CHD</KEY>
      <ENTRY>Reset &apos;Checked&apos; field</ENTRY>
      <LENGTH>29</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>P_CHKKY</KEY>
+     <KEY>PA_CHKKY</KEY>
      <ENTRY>Check table keys</ENTRY>
      <LENGTH>24</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>P_FILE</KEY>
+     <KEY>PA_FILE</KEY>
      <ENTRY>File name</ENTRY>
      <LENGTH>17</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>P_PRD</KEY>
+     <KEY>PA_PRD</KEY>
      <ENTRY>Production</ENTRY>
      <LENGTH>18</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>P_QAS</KEY>
+     <KEY>PA_QAS</KEY>
      <ENTRY>Acceptance</ENTRY>
      <LENGTH>18</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>P_SEL</KEY>
+     <KEY>PA_SEL</KEY>
      <ENTRY>Build transport list</ENTRY>
      <LENGTH>28</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>P_STR</KEY>
+     <KEY>PA_STR</KEY>
      <ENTRY>Short Description</ENTRY>
      <LENGTH>25</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>P_UPL</KEY>
+     <KEY>PA_UPL</KEY>
      <ENTRY>Upload transport list</ENTRY>
      <LENGTH>29</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>P_USER</KEY>
+     <KEY>PA_USER</KEY>
      <ENTRY>Use User specific layout</ENTRY>
      <LENGTH>32</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>S_DATE</KEY>
+     <KEY>SO_DATE</KEY>
      <ENTRY>Date</ENTRY>
      <LENGTH>12</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>S_EXOBJ</KEY>
+     <KEY>SO_EXOBJ</KEY>
      <ENTRY>Obj. Name</ENTRY>
      <LENGTH>17</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>S_KORR</KEY>
+     <KEY>SO_KORR</KEY>
      <ENTRY>Request number</ENTRY>
      <LENGTH>22</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>S_PROJ</KEY>
+     <KEY>SO_PROJ</KEY>
      <ENTRY>CTS Project</ENTRY>
      <LENGTH>19</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>S_USER</KEY>
+     <KEY>SO_USER</KEY>
      <ENTRY>User Name</ENTRY>
      <LENGTH>17</LENGTH>
     </item>
@@ -2741,6 +2777,12 @@
        <ID>I</ID>
        <KEY>011</KEY>
        <ENTRY>Objects checked</ENTRY>
+       <LENGTH>50</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>012</KEY>
+       <ENTRY>Desktop not found</ENTRY>
        <LENGTH>50</LENGTH>
       </item>
       <item>
@@ -2847,8 +2889,20 @@
       </item>
       <item>
        <ID>I</ID>
+       <KEY>030</KEY>
+       <ENTRY>Documentation for</ENTRY>
+       <LENGTH>50</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
        <KEY>031</KEY>
        <ENTRY>Cancelled by user</ENTRY>
+       <LENGTH>50</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>032</KEY>
+       <ENTRY>Hints and Tips for</ENTRY>
        <LENGTH>50</LENGTH>
       </item>
       <item>
@@ -2861,6 +2915,18 @@
        <ID>I</ID>
        <KEY>034</KEY>
        <ENTRY>Warn</ENTRY>
+       <LENGTH>50</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>035</KEY>
+       <ENTRY>The file has been saved</ENTRY>
+       <LENGTH>50</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>036</KEY>
+       <ENTRY>Cancelled by user</ENTRY>
        <LENGTH>50</LENGTH>
       </item>
       <item>
@@ -2925,6 +2991,18 @@
       </item>
       <item>
        <ID>I</ID>
+       <KEY>047</KEY>
+       <ENTRY>Sts</ENTRY>
+       <LENGTH>3</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>048</KEY>
+       <ENTRY>Status</ENTRY>
+       <LENGTH>6</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
        <KEY>049</KEY>
        <ENTRY>File uploaded:</ENTRY>
        <LENGTH>14</LENGTH>
@@ -2973,36 +3051,6 @@
       </item>
       <item>
        <ID>I</ID>
-       <KEY>057</KEY>
-       <ENTRY>System</ENTRY>
-       <LENGTH>6</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
-       <KEY>058</KEY>
-       <ENTRY>does not exist...</ENTRY>
-       <LENGTH>17</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
-       <KEY>059</KEY>
-       <ENTRY>Import again</ENTRY>
-       <LENGTH>12</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
-       <KEY>060</KEY>
-       <ENTRY>Transport being released. Recheck needed!</ENTRY>
-       <LENGTH>50</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
-       <KEY>061</KEY>
-       <ENTRY>No file selected</ENTRY>
-       <LENGTH>50</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
        <KEY>B10</KEY>
        <ENTRY>Selection range / Upload file</ENTRY>
        <LENGTH>29</LENGTH>
@@ -3039,6 +3087,12 @@
       </item>
       <item>
        <ID>I</ID>
+       <KEY>B60</KEY>
+       <ENTRY>Overview of used Icons</ENTRY>
+       <LENGTH>50</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
        <KEY>C21</KEY>
        <ENTRY>User</ENTRY>
        <LENGTH>4</LENGTH>
@@ -3058,6 +3112,12 @@
       <item>
        <ID>I</ID>
        <KEY>C32</KEY>
+       <ENTRY>--&gt;</ENTRY>
+       <LENGTH>3</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>C33</KEY>
        <ENTRY>--&gt;</ENTRY>
        <LENGTH>3</LENGTH>
       </item>
@@ -3093,21 +3153,27 @@
       </item>
       <item>
        <ID>I</ID>
-       <KEY>C45</KEY>
-       <ENTRY>Remove transports not in buffer</ENTRY>
-       <LENGTH>50</LENGTH>
+       <KEY>C46</KEY>
+       <ENTRY>Check ON</ENTRY>
+       <LENGTH>20</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>C47</KEY>
+       <ENTRY>Check OFF</ENTRY>
+       <LENGTH>9</LENGTH>
       </item>
       <item>
        <ID>I</ID>
        <KEY>C51</KEY>
        <ENTRY>Objects in the range will not be taken into account when checking the</ENTRY>
-       <LENGTH>132</LENGTH>
+       <LENGTH>69</LENGTH>
       </item>
       <item>
        <ID>I</ID>
        <KEY>C52</KEY>
        <ENTRY>transports. Useful to exclude common customizing tables (like SWOTICE for</ENTRY>
-       <LENGTH>132</LENGTH>
+       <LENGTH>73</LENGTH>
       </item>
       <item>
        <ID>I</ID>
@@ -3117,15 +3183,33 @@
       </item>
       <item>
        <ID>I</ID>
+       <KEY>C61</KEY>
+       <ENTRY>Show</ENTRY>
+       <LENGTH>4</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>C62</KEY>
+       <ENTRY>Hide</ENTRY>
+       <LENGTH>4</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
        <KEY>H01</KEY>
-       <ENTRY>If there is a warning icon in column `Warning`, double-clicking on the icon will display a list of objects that should be checked.</ENTRY>
+       <ENTRY>If there is a warning icon in column `Warning`, double-clicking on the icon will display a list of objects that should be checked</ENTRY>
        <LENGTH>132</LENGTH>
       </item>
       <item>
        <ID>I</ID>
        <KEY>H02</KEY>
-       <ENTRY>You can add these conflicts by means of the button &apos;Add Conflicts&apos; in the application toolbar or doubleclicking the warning.</ENTRY>
+       <ENTRY>You can add these conflicts by means of the button &apos;Add Conflicts&apos; in the application toolbar or doubleclicking the warning</ENTRY>
        <LENGTH>132</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>M01</KEY>
+       <ENTRY>Select the row to delete</ENTRY>
+       <LENGTH>24</LENGTH>
       </item>
       <item>
        <ID>I</ID>
@@ -3143,13 +3227,13 @@
        <ID>I</ID>
        <KEY>M04</KEY>
        <ENTRY>Production but not marked for re-import.</ENTRY>
-       <LENGTH>43</LENGTH>
+       <LENGTH>40</LENGTH>
       </item>
       <item>
        <ID>I</ID>
        <KEY>M05</KEY>
        <ENTRY>Please check the main list.</ENTRY>
-       <LENGTH>41</LENGTH>
+       <LENGTH>27</LENGTH>
       </item>
       <item>
        <ID>I</ID>
@@ -3207,12 +3291,6 @@
       </item>
       <item>
        <ID>I</ID>
-       <KEY>M15</KEY>
-       <ENTRY>Data Dictionary check finished...</ENTRY>
-       <LENGTH>33</LENGTH>
-      </item>
-      <item>
-       <ID>I</ID>
        <KEY>T01</KEY>
        <ENTRY>Selected transports</ENTRY>
        <LENGTH>19</LENGTH>
@@ -3239,7 +3317,13 @@
        <ID>I</ID>
        <KEY>T06</KEY>
        <ENTRY>Select the tables for which</ENTRY>
-       <LENGTH>55</LENGTH>
+       <LENGTH>40</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>T07</KEY>
+       <ENTRY> the keys must be checked</ENTRY>
+       <LENGTH>40</LENGTH>
       </item>
       <item>
        <ID>I</ID>
@@ -3249,9 +3333,15 @@
       </item>
       <item>
        <ID>I</ID>
+       <KEY>W02</KEY>
+       <ENTRY>No version found to compare</ENTRY>
+       <LENGTH>27</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
        <KEY>W03</KEY>
        <ENTRY>Uses object not in list or production</ENTRY>
-       <LENGTH>50</LENGTH>
+       <LENGTH>40</LENGTH>
       </item>
       <item>
        <ID>I</ID>
@@ -3311,7 +3401,7 @@
        <ID>I</ID>
        <KEY>W22</KEY>
        <ENTRY>Newer version in Acceptance, but in list</ENTRY>
-       <LENGTH>49</LENGTH>
+       <LENGTH>40</LENGTH>
       </item>
       <item>
        <ID>I</ID>
@@ -3320,97 +3410,115 @@
        <LENGTH>41</LENGTH>
       </item>
       <item>
-       <ID>I</ID>
-       <KEY>W24</KEY>
-       <ENTRY>Transport not possible</ENTRY>
-       <LENGTH>22</LENGTH>
-      </item>
-      <item>
        <ID>R</ID>
        <ENTRY>Transport Checking Tool (Object level)</ENTRY>
        <LENGTH>70</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>P_CHD</KEY>
+       <KEY>PA_CHD</KEY>
        <ENTRY>Reset &apos;Checked&apos; field</ENTRY>
        <LENGTH>29</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>P_CHKKY</KEY>
+       <KEY>PA_CHECK</KEY>
+       <ENTRY>Check ON</ENTRY>
+       <LENGTH>16</LENGTH>
+      </item>
+      <item>
+       <ID>S</ID>
+       <KEY>PA_CHKKY</KEY>
        <ENTRY>Check table keys</ENTRY>
        <LENGTH>24</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>P_FILE</KEY>
+       <KEY>PA_FILE</KEY>
        <ENTRY>File name</ENTRY>
        <LENGTH>17</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>P_PRD</KEY>
+       <KEY>PA_ICON</KEY>
+       <ENTRY>Show</ENTRY>
+       <LENGTH>12</LENGTH>
+      </item>
+      <item>
+       <ID>S</ID>
+       <KEY>PA_NOCHK</KEY>
+       <ENTRY>Check OFF</ENTRY>
+       <LENGTH>17</LENGTH>
+      </item>
+      <item>
+       <ID>S</ID>
+       <KEY>PA_NOICN</KEY>
+       <ENTRY>Hide</ENTRY>
+       <LENGTH>12</LENGTH>
+      </item>
+      <item>
+       <ID>S</ID>
+       <KEY>PA_PRD</KEY>
        <ENTRY>Production</ENTRY>
        <LENGTH>18</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>P_QAS</KEY>
+       <KEY>PA_QAS</KEY>
        <ENTRY>Acceptance</ENTRY>
        <LENGTH>18</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>P_SEL</KEY>
+       <KEY>PA_SEL</KEY>
        <ENTRY>Build transport list</ENTRY>
        <LENGTH>28</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>P_STR</KEY>
+       <KEY>PA_STR</KEY>
        <ENTRY>Short Description</ENTRY>
        <LENGTH>25</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>P_UPL</KEY>
+       <KEY>PA_UPL</KEY>
        <ENTRY>Upload transport list</ENTRY>
        <LENGTH>29</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>P_USER</KEY>
+       <KEY>PA_USER</KEY>
        <ENTRY>Use User specific layout</ENTRY>
        <LENGTH>32</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>S_DATE</KEY>
+       <KEY>SO_DATE</KEY>
        <ENTRY>Date</ENTRY>
        <LENGTH>12</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>S_EXOBJ</KEY>
+       <KEY>SO_EXOBJ</KEY>
        <ENTRY>Obj. Name</ENTRY>
        <LENGTH>17</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>S_KORR</KEY>
+       <KEY>SO_KORR</KEY>
        <ENTRY>Request number</ENTRY>
        <LENGTH>22</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>S_PROJ</KEY>
+       <KEY>SO_PROJ</KEY>
        <ENTRY>CTS Project</ENTRY>
        <LENGTH>19</LENGTH>
       </item>
       <item>
        <ID>S</ID>
-       <KEY>S_USER</KEY>
+       <KEY>SO_USER</KEY>
        <ENTRY>User Name</ENTRY>
        <LENGTH>17</LENGTH>
       </item>
