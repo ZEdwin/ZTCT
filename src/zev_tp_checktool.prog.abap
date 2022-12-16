@@ -422,6 +422,10 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
                                      EXPORTING ex_as4time TYPE as4time
                                                ex_as4date TYPE as4date
                                                ex_return  TYPE sysubrc.
+    METHODS exclude_all_tables.
+    METHODS ofc_goon                 IMPORTING im_rows    TYPE salv_t_row.
+    METHODS ofc_abr.
+    METHODS ofc_ddic.
 ENDCLASS.
 
 *--------------------------------------------------------------------*
@@ -803,8 +807,6 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
   METHOD on_function_click.
     TYPES ty_sval TYPE sval.
     TYPES ty_field_tt TYPE STANDARD TABLE OF ty_sval.
-
-
     DATA lt_range_transports_to_add TYPE RANGE OF e070-trkorr.
     DATA ls_range_transports_to_add LIKE LINE OF lt_range_transports_to_add.
     DATA lt_excluded_objects  TYPE RANGE OF trobj_name.
@@ -829,17 +831,15 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     DATA lp_desktop          TYPE string.
     DATA lp_timestamp        TYPE tzntstmps.
     DATA lp_default_filename TYPE string.
-    DATA lp_question         TYPE string.
-    DATA lp_answer           TYPE char01.
 
 *   Which popup are we displaying? Conflicts or Table keys?
     FIELD-SYMBOLS <lf_ref_table> TYPE REF TO cl_salv_table.
     IF rf_conflicts IS BOUND.
-      ASSIGN rf_conflicts TO <lf_ref_table>.   "#EC CI_SUBRC
+      ASSIGN rf_conflicts TO <lf_ref_table>.              "#EC CI_SUBRC
     ELSEIF rf_table_keys IS BOUND.
-      ASSIGN rf_table_keys TO <lf_ref_table>.  "#EC CI_SUBRC
+      ASSIGN rf_table_keys TO <lf_ref_table>.             "#EC CI_SUBRC
     ELSE.
-      ASSIGN rf_table TO <lf_ref_table>.       "#EC CI_SUBRC
+      ASSIGN rf_table TO <lf_ref_table>.                  "#EC CI_SUBRC
     ENDIF.
     IF <lf_ref_table> IS ASSIGNED.
 *     Get current row
@@ -852,95 +852,9 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
       ENDIF.
       CASE e_salv_function.
         WHEN 'GOON'.
-          IF rf_conflicts IS BOUND.
-            rf_conflicts->close_screen( ).
-*           Move the conflicts to a range. The transports in this range will
-*           be added to the main list:
-            FREE lt_range_transports_to_add.
-            rf_ztct->set_building_conflict_popup( abap_false ).
-            CLEAR ls_range_transports_to_add.
-            ls_range_transports_to_add-sign = 'I'.
-            ls_range_transports_to_add-option = 'EQ'.
-*           If row(s) are selected, use the table
-            LOOP AT lt_rows INTO ls_row.
-              READ TABLE rf_ztct->conflicts INTO rf_ztct->conflict_line
-                                           INDEX ls_row.
-              IF sy-subrc = 0.
-                ls_range_transports_to_add-low = rf_ztct->conflict_line-trkorr.
-                APPEND ls_range_transports_to_add TO lt_range_transports_to_add.
-              ENDIF.
-            ENDLOOP.
-*           Rows MUST be selected, take the current cell instead
-            IF lt_rows[] IS INITIAL.
-              MESSAGE i000(db) WITH 'No rows selected: No transports will be added'(m06).
-            ENDIF.
-            IF lt_range_transports_to_add[] IS NOT INITIAL.
-              rf_ztct->get_added_objects( EXPORTING im_to_add = lt_range_transports_to_add
-                                          IMPORTING ex_to_add = rf_ztct->add_to_main ).
-              rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
-              rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
-                                    IMPORTING ex_main   = rf_ztct->main_list ).
-*             After the transports have been added, check if there are added
-*             transports that are already in prd. If so, make them visible by
-*             changing the prd icon to co_scrap.
-              LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
-                                         WHERE prd    = rf_ztct->co_okay
-                                           AND trkorr IN lt_range_transports_to_add.
-                rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
-                MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
-              ENDLOOP.
-*             After the transports have been added, we need to check again
-              rf_ztct->flag_same_objects( CHANGING ch_main_list = rf_ztct->main_list ).
-              rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-              rf_ztct->refresh_alv( ).
-            ENDIF.
-            FREE rf_conflicts.
-          ELSEIF rf_table_keys IS BOUND.
-* Not in the Conflicts Popup, but in the Table Key popup. Based on the user decision,
-* the tables that do NOT have to be checked, are added to the excluded object list.
-* If no tables are selected, all tables are excluded from the check.
-*           If row(s) are selected, determine the tables to be check from the selected
-*           rows. All rows that weren't selected will be added to the excluded object list.
-            rf_table_keys->close_screen( ).
-            IF lt_rows[] IS NOT INITIAL.
-              LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
-                IF NOT line_exists( lt_rows[ table_line = sy-tabix ] ).
-                  ls_excluded_objects-sign   = 'E'.
-                  ls_excluded_objects-option = 'EQ'.
-                  ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
-                  APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
-                ENDIF.
-              ENDLOOP.
-*           If user pressed cancel, then add all tables to the excluded object list
-            ELSE.
-              LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
-                ls_excluded_objects-sign   = 'E'.
-                ls_excluded_objects-option = 'EQ'.
-                ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
-                APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
-              ENDLOOP.
-              MESSAGE i000(db) WITH 'No rows selected: Table keys will not be checked'(m07).
-              rf_ztct->check_tabkeys = abap_false.
-            ENDIF.
-            FREE rf_table_keys.
-          ENDIF.
+          rf_ztct->ofc_goon( lt_rows ).
         WHEN 'ABR'.
-          IF rf_table_keys IS BOUND.
-            rf_table_keys->close_screen( ).
-*           If user pressed cancel (Add all tables, do not check any)
-            LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
-              ls_excluded_objects-sign   = 'E'.
-              ls_excluded_objects-option = 'EQ'.
-              ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
-              APPEND ls_excluded_objects TO lt_excluded_objects.
-            ENDLOOP.
-            MESSAGE i000(db) WITH 'Cancelled: Table keys will not be checked'(m09).
-            FREE rf_table_keys.
-            rf_ztct->check_tabkeys = abap_false.
-          ELSE.
-            rf_conflicts->close_screen( ).
-            FREE rf_conflicts.
-          ENDIF.
+          rf_ztct->ofc_abr( ).
         WHEN 'RECHECK'.
           rf_ztct->set_building_conflict_popup( abap_false ).
           rf_ztct->refresh_import_queues( ).
@@ -952,38 +866,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
           rf_ztct->refresh_alv( ).
         WHEN 'DDIC'.
-          IF rf_ztct->where_used[] IS INITIAL.
-            lp_question = 'This will take approx. 5-15 minutes... Continue?'(041).
-          ELSE.
-            lp_question = 'This has already been done. Do again?'(042).
-          ENDIF.
-
-          CALL FUNCTION 'POPUP_TO_CONFIRM'
-            EXPORTING
-              titlebar              = 'Runtime Alert'(039)
-              text_question         = lp_question
-              text_button_1         = 'Yes'(037)
-              icon_button_1         = 'ICON_OKAY'
-              text_button_2         = 'No'(043)
-              icon_button_2         = 'ICON_CANCEL'
-              default_button        = '2'
-              display_cancel_button = ' '
-            IMPORTING
-              answer                = lp_answer
-            EXCEPTIONS
-              text_not_found        = 1
-              OTHERS                = 2.
-          IF sy-subrc <> 0.
-*           Implement suitable error handling here
-          ENDIF.
-          IF lp_answer = '1'.
-            rf_ztct->check_ddic = abap_true.
-            rf_ztct->set_ddic_objects( ).
-            rf_ztct->set_where_used( ).
-          ENDIF.
-          rf_ztct->do_ddic_check( CHANGING ch_main_list = rf_ztct->main_list ).
-          rf_ztct->refresh_alv( ).
-          MESSAGE i000(db) WITH 'Data Dictionary check finished...'(m15).
+          rf_ztct->ofc_ddic( ).
         WHEN '&ADD'.
           rf_ztct->set_building_conflict_popup( ).
 *         Here, we want to give the option to the user to select the
@@ -3552,8 +3435,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_class               TYPE xuclass.
     DATA lp_accnt               TYPE xuaccnt.
 
-    CONSTANTS: co_class         TYPE xuclass VALUE 'NLD_T_040',
-               co_accnt         TYPE xuaccnt VALUE 'I210218 0079'.
+    CONSTANTS: co_class TYPE xuclass VALUE 'NLD_T_040',
+               co_accnt TYPE xuaccnt VALUE 'I210218 0079'.
 
     ASSIGN im_table TO FIELD-SYMBOL(<lf_table>).
     CHECK <lf_table> IS ASSIGNED.
@@ -3777,9 +3660,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     CREATE DATA lp_sys_s TYPE scrtext_s.
     CREATE DATA lp_sys_m TYPE scrtext_m.
     CREATE DATA lp_sys_l TYPE scrtext_l.
-    ASSIGN lp_sys_s->* TO FIELD-SYMBOL(<lf_text_s>). "#EC CI_SUBRC
-    ASSIGN lp_sys_m->* TO FIELD-SYMBOL(<lf_text_m>). "#EC CI_SUBRC
-    ASSIGN lp_sys_l->* TO FIELD-SYMBOL(<lf_text_l>). "#EC CI_SUBRC
+    ASSIGN lp_sys_s->* TO FIELD-SYMBOL(<lf_text_s>).      "#EC CI_SUBRC
+    ASSIGN lp_sys_m->* TO FIELD-SYMBOL(<lf_text_m>).      "#EC CI_SUBRC
+    ASSIGN lp_sys_l->* TO FIELD-SYMBOL(<lf_text_l>).      "#EC CI_SUBRC
 
 *   Build range for all unwanted columns:
     CASE im_table.
@@ -5177,6 +5060,137 @@ CLASS lcl_ztct IMPLEMENTATION.
     ex_return = sy-subrc.
   ENDMETHOD.
 
+  METHOD exclude_all_tables.
+    LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
+      ls_excluded_objects-sign   = 'E'.
+      ls_excluded_objects-option = 'EQ'.
+      ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
+      APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD ofc_goon.
+    DATA lt_range_transports_to_add TYPE RANGE OF e070-trkorr.
+    DATA ls_range_transports_to_add LIKE LINE OF lt_range_transports_to_add.
+    DATA ls_row                     TYPE int4.
+    IF rf_conflicts IS BOUND.
+      rf_conflicts->close_screen( ).
+*     Move the conflicts to a range. The transports in this range will
+*     be added to the main list:
+      FREE lt_range_transports_to_add.
+      rf_ztct->set_building_conflict_popup( abap_false ).
+      CLEAR ls_range_transports_to_add.
+      ls_range_transports_to_add-sign = 'I'.
+      ls_range_transports_to_add-option = 'EQ'.
+*     If row(s) are selected, use the table
+      LOOP AT im_rows INTO ls_row.
+        READ TABLE rf_ztct->conflicts INTO rf_ztct->conflict_line
+                                     INDEX ls_row.
+        IF sy-subrc = 0.
+          ls_range_transports_to_add-low = rf_ztct->conflict_line-trkorr.
+          APPEND ls_range_transports_to_add TO lt_range_transports_to_add.
+        ENDIF.
+      ENDLOOP.
+*     Rows MUST be selected
+      IF im_rows[] IS INITIAL.
+        MESSAGE i000(db) WITH 'No rows selected: No transports will be added'(m06).
+      ENDIF.
+      IF lt_range_transports_to_add[] IS NOT INITIAL.
+        rf_ztct->get_added_objects( EXPORTING im_to_add = lt_range_transports_to_add
+                                    IMPORTING ex_to_add = rf_ztct->add_to_main ).
+        rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
+        rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
+                              IMPORTING ex_main   = rf_ztct->main_list ).
+*       After the transports have been added, check if there are added
+*       transports that are already in prd. If so, make them visible by
+*       changing the prd icon to co_scrap.
+        LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
+                                   WHERE prd    = rf_ztct->co_okay
+                                     AND trkorr IN lt_range_transports_to_add.
+          rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
+          MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
+        ENDLOOP.
+*       After the transports have been added, we need to check again
+        rf_ztct->flag_same_objects( CHANGING ch_main_list = rf_ztct->main_list ).
+        rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
+        rf_ztct->refresh_alv( ).
+      ENDIF.
+      FREE rf_conflicts.
+    ELSEIF rf_table_keys IS BOUND.
+*     Not in the Conflicts Popup, but in the Table Key popup. Based on the user decision,
+*     the tables that do NOT have to be checked, are added to the excluded object list.
+*     If no tables are selected, all tables are excluded from the check.
+*     If row(s) are selected, determine the tables to be check from the selected
+*     rows. All rows that weren't selected will be added to the excluded object list.
+      rf_table_keys->close_screen( ).
+      IF im_rows[] IS NOT INITIAL.
+        LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
+          IF NOT line_exists( im_rows[ table_line = sy-tabix ] ).
+            ls_excluded_objects-sign   = 'E'.
+            ls_excluded_objects-option = 'EQ'.
+            ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
+            APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
+          ENDIF.
+        ENDLOOP.
+      ELSE.
+*       If user pressed cancel, then add all tables to the excluded object list
+        rf_ztct->exclude_all_tables( ).
+        MESSAGE i000(db) WITH 'No rows selected: Table keys will not be checked'(m07).
+        rf_ztct->check_tabkeys = abap_false.
+      ENDIF.
+      FREE rf_table_keys.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD ofc_abr.
+    IF rf_table_keys IS BOUND.
+      rf_table_keys->close_screen( ).
+*     If user pressed cancel (Add all tables, do not check any)
+      rf_ztct->exclude_all_tables( ).
+      MESSAGE i000(db) WITH 'Cancelled: Table keys will not be checked'(m09).
+      FREE rf_table_keys.
+      rf_ztct->check_tabkeys = abap_false.
+    ELSE.
+      rf_conflicts->close_screen( ).
+      FREE rf_conflicts.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD ofc_ddic.
+    DATA lp_question         TYPE string.
+    DATA lp_answer           TYPE char01.
+    IF rf_ztct->where_used[] IS INITIAL.
+      lp_question = 'This will take approx. 5-15 minutes... Continue?'(041).
+    ELSE.
+      lp_question = 'This has already been done. Do again?'(042).
+    ENDIF.
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = 'Runtime Alert'(039)
+        text_question         = lp_question
+        text_button_1         = 'Yes'(037)
+        icon_button_1         = 'ICON_OKAY'
+        text_button_2         = 'No'(043)
+        icon_button_2         = 'ICON_CANCEL'
+        default_button        = '2'
+        display_cancel_button = ' '
+      IMPORTING
+        answer                = lp_answer
+      EXCEPTIONS
+        text_not_found        = 1
+        OTHERS                = 2.
+    IF sy-subrc <> 0.
+*           Implement suitable error handling here
+    ENDIF.
+    IF lp_answer = '1'.
+      rf_ztct->check_ddic = abap_true.
+      rf_ztct->set_ddic_objects( ).
+      rf_ztct->set_where_used( ).
+    ENDIF.
+    rf_ztct->do_ddic_check( CHANGING ch_main_list = rf_ztct->main_list ).
+    rf_ztct->refresh_alv( ).
+    MESSAGE i000(db) WITH 'Data Dictionary check finished...'(m15).
+  ENDMETHOD.
   METHOD go_back_months.
     DATA: BEGIN OF ls_dat,
             jjjj TYPE char4,
