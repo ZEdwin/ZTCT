@@ -2076,10 +2076,10 @@ CLASS lcl_ztct IMPLEMENTATION.
 *       If the transports should be checked, flag it.
         <lf_main_list>-flag = abap_true.
 *       Read transport description:
-        SELECT SINGLE  as4text
-                 FROM  e07t
+        SELECT SINGLE as4text
+                 FROM e07t
                  INTO @<lf_main_list>-tr_descr
-                 WHERE trkorr = @<lf_main_list>-trkorr.   "#EC CI_SUBRC
+                WHERE trkorr = @<lf_main_list>-trkorr.    "#EC CI_SUBRC
       ENDLOOP.
     ENDIF.
     SORT main_list.
@@ -2088,11 +2088,11 @@ CLASS lcl_ztct IMPLEMENTATION.
     IF project_range IS NOT INITIAL.
       LOOP AT main_list ASSIGNING <lf_main_list>.
         SELECT SINGLE reference
-               FROM e070a
-               INTO  @<lf_main_list>-project
-               WHERE trkorr = @<lf_main_list>-trkorr
-               AND   attribute = 'SAP_CTS_PROJECT'
-               AND   reference IN @project_range.         "#EC CI_SUBRC
+                 FROM e070a
+                 INTO @<lf_main_list>-project
+                WHERE trkorr = @<lf_main_list>-trkorr
+                  AND attribute = 'SAP_CTS_PROJECT'
+                  AND reference IN @project_range.        "#EC CI_SUBRC
         IF sy-subrc <> 0.
           DELETE main_list INDEX sy-tabix.
         ENDIF.
@@ -2148,9 +2148,9 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Join over E070, E071:
 *   Description is read later to prevent complicated join and
 *   increased runtime
-    SELECT SINGLE a~trkorr,  a~trfunction, a~trstatus,
-                  a~as4user, a~as4date,  a~as4time,
-                  b~object,  b~obj_name
+    SELECT SINGLE a~trkorr, a~trfunction, a~trstatus,
+                  a~as4user, a~as4date, a~as4time,
+                  b~object, b~obj_name
             INTO (@re_line-trkorr,
                   @re_line-trfunction,
                   @re_line-trstatus,
@@ -2239,15 +2239,17 @@ CLASS lcl_ztct IMPLEMENTATION.
                    b~pgmid = 'R3TR' OR
                    b~pgmid = 'R3OB' OR
                    b~pgmid = 'LANG' ) ##TOO_MANY_ITAB_FIELDS.
-    CHECK sy-subrc = 0.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
 *   Read transport description:
     IF ex_to_add[] IS NOT INITIAL.
       LOOP AT ex_to_add ASSIGNING <lf_main_list>.
         <lf_main_list>-flag = abap_true.
         SELECT SINGLE as4text
-                      FROM  e07t
-                      INTO @<lf_main_list>-tr_descr
-                      WHERE trkorr = @<lf_main_list>-trkorr. "#EC CI_SUBRC
+                 FROM e07t
+                 INTO @<lf_main_list>-tr_descr
+                WHERE trkorr = @<lf_main_list>-trkorr.    "#EC CI_SUBRC
       ENDLOOP.
     ENDIF.
 *   Also read from the version table VRSD. This table contains all
@@ -2394,13 +2396,6 @@ CLASS lcl_ztct IMPLEMENTATION.
                     WHERE trkorr = @main_list_line-project. "#EC CI_SEL_NESTED #EC CI_SUBRC
           ENDIF.
         ENDSELECT.
-*       Retrieve the description of the status
-        SELECT SINGLE ddtext
-                 FROM dd07t
-                 INTO @main_list_line-trstatus
-                WHERE domname    = 'TRSTATUS'
-                  AND ddlanguage = @co_langu
-                  AND domvalue_l = @main_list_line-trstatus. "#EC CI_SEL_NESTED #EC CI_SUBRC
 *       Check if transport has been released.
 *       D - Modifiable
 *       L - Modifiable, protected
@@ -2962,7 +2957,9 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Now modify the lines of the main list to a tab delimited list
     READ TABLE im_tab_delimited INDEX 1
                                 INTO lp_header.
-    CHECK sy-subrc = 0.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
 *   Build list of fields, in order of uploaded file
     DO.
       SPLIT lp_header AT tp_tab INTO ls_item-field lp_header.
@@ -3439,7 +3436,9 @@ CLASS lcl_ztct IMPLEMENTATION.
                co_accnt TYPE xuaccnt VALUE 'I210218 0079'.
 
     ASSIGN im_table TO FIELD-SYMBOL(<lf_table>).
-    CHECK <lf_table> IS ASSIGNED.
+    IF <lf_table> IS NOT ASSIGNED.
+      RETURN.
+    ENDIF.
 *   Set status
 *   Copy the status from program SAPLSLVC_FULLSCREEN and delete the
 *   buttons you do not need. Add extra buttons for use in USER_COMMAND
@@ -4177,9 +4176,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_as4text   TYPE as4text.
     DATA lp_len       TYPE i.
     SELECT SINGLE scrtext_s
-                  FROM dd04t INTO @lp_as4text
-                  WHERE rollname   = @im_name
-                  AND   ddlanguage = @co_langu.           "#EC CI_SUBRC
+             FROM dd04t INTO @lp_as4text
+            WHERE rollname   = @im_name
+              AND ddlanguage = @co_langu.                 "#EC CI_SUBRC
     IF lp_as4text IS INITIAL.
       SELECT SINGLE scrtext_m
                     FROM dd04t INTO @lp_as4text
@@ -4187,9 +4186,9 @@ CLASS lcl_ztct IMPLEMENTATION.
                     AND   ddlanguage = @co_langu.         "#EC CI_SUBRC
       IF lp_as4text IS INITIAL.
         SELECT SINGLE scrtext_l
-                      FROM dd04t INTO @lp_as4text
-                      WHERE rollname   = @im_name
-                      AND   ddlanguage = @co_langu.       "#EC CI_SUBRC
+                 FROM dd04t INTO @lp_as4text
+                WHERE rollname   = @im_name
+                  AND ddlanguage = @co_langu.             "#EC CI_SUBRC
       ENDIF.
     ENDIF.
     lp_len = strlen( lp_as4text ).
@@ -5196,9 +5195,9 @@ CLASS lcl_ztct IMPLEMENTATION.
             jjjj TYPE char4,
             mm   TYPE char2,
             tt   TYPE char2,
-          END OF ls_dat,
+          END OF ls_dat.
 
-          BEGIN OF ls_hdat,
+    DATA: BEGIN OF ls_hdat,
             jjjj TYPE char4,
             mm   TYPE char2,
             tt   TYPE char2,
