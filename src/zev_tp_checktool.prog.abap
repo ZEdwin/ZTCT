@@ -423,10 +423,11 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
                                                ex_as4date TYPE as4date
                                                ex_return  TYPE sysubrc.
     METHODS exclude_all_tables.
-    METHODS ofc_goon                 IMPORTING im_rows    TYPE salv_t_row
-                                     CHANGING  im_table   TYPE REF TO cl_salv_table.
+    METHODS ofc_goon                 IMPORTING im_rows  TYPE salv_t_row
+                                     CHANGING  im_table TYPE REF TO cl_salv_table.
     METHODS ofc_abr.
     METHODS ofc_ddic.
+    METHODS ofc_add_tp.
 ENDCLASS.
 
 *--------------------------------------------------------------------*
@@ -814,14 +815,11 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     DATA ls_excluded_objects  LIKE LINE OF lt_excluded_objects.
 *   Global data declarations:
     DATA lp_title            TYPE string.
-    DATA lt_fields           TYPE ty_field_tt.
-    DATA ls_fields           TYPE sval.
     DATA lp_tabix            TYPE sytabix.
     DATA lr_selections       TYPE REF TO cl_salv_selections.
     DATA lp_filelength       TYPE i ##NEEDED.
     DATA ls_row              TYPE int4.
     DATA lp_row_found        TYPE abap_bool.
-    DATA lp_return           TYPE c.
     DATA lp_localfile        TYPE string.
     DATA lp_filename         TYPE string.
 *   Selected rows
@@ -881,66 +879,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           rf_ztct->build_conflict_popup( im_rows = lt_rows
                                          im_cell = ls_cell ).
         WHEN '&ADD_TP'.
-          FREE lt_fields.
-          CLEAR ls_fields.
-          ls_fields-tabname   = 'E070'.
-          ls_fields-fieldname = 'TRKORR'.
-          APPEND ls_fields TO lt_fields.
-          CALL FUNCTION 'POPUP_GET_VALUES_DB_CHECKED'
-            EXPORTING
-              popup_title     = 'Selected transports'(t01)
-            IMPORTING
-              returncode      = lp_return
-            TABLES
-              fields          = lt_fields
-            EXCEPTIONS
-              error_in_fields = 1
-              OTHERS          = 2.
-          CASE sy-subrc.
-            WHEN 1.
-              MESSAGE e000(db) WITH 'ERROR: ERROR_IN_FIELDS'(m08).
-            WHEN 2.
-              MESSAGE e000(db) WITH 'Error occurred'(029).
-          ENDCASE.
-*         Exit if cancelled:
-          IF lp_return = 'A'.
-            RETURN.
-          ENDIF.
-*         Move the conflicts to a range. The transports in this range will
-*         be added to the main list:
-          FREE lt_range_transports_to_add.
-          CLEAR ls_range_transports_to_add.
-          ls_range_transports_to_add-sign = 'I'.
-          ls_range_transports_to_add-option = 'EQ'.
-          READ TABLE lt_fields INTO ls_fields INDEX 1.    "#EC CI_SUBRC
-          IF ls_fields-value IS INITIAL.
-            RETURN.
-          ENDIF.
-*         Is it already in the list?
-          IF line_exists( rf_ztct->main_list[ trkorr = ls_fields-value(20) ] ).
-            RETURN.
-          ENDIF.
-*         Add transport number to the internal table to add:
-          ls_range_transports_to_add-low = ls_fields-value.
-          APPEND ls_range_transports_to_add TO lt_range_transports_to_add.
-          rf_ztct->get_added_objects( EXPORTING im_to_add = lt_range_transports_to_add
-                                      IMPORTING ex_to_add = rf_ztct->add_to_main ).
-          rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
-          rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
-                                IMPORTING ex_main   = rf_ztct->main_list ).
-*         After the transports have been added, check if there are added
-*         transports that are already in prd. If so, make them visible by
-*         changing the prd icon to co_scrap.
-          LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
-                                    WHERE prd    = rf_ztct->co_okay
-                                      AND trkorr IN lt_range_transports_to_add.
-            rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
-            MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
-          ENDLOOP.
-*         After the transports have been added, we need to check again
-          rf_ztct->flag_same_objects( CHANGING ch_main_list = rf_ztct->main_list ).
-          rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-          rf_ztct->refresh_alv( ).
+          rf_ztct->ofc_add_tp( ).
         WHEN '&ADD_FILE'.
           rf_ztct->clear_flags( ).
           lp_localfile = rf_ztct->get_filename( ).
@@ -5192,6 +5131,77 @@ CLASS lcl_ztct IMPLEMENTATION.
     rf_ztct->refresh_alv( ).
     MESSAGE i000(db) WITH 'Data Dictionary check finished...'(m15).
   ENDMETHOD.
+
+  METHOD ofc_add_tp.
+    TYPES ty_sval TYPE sval.
+    TYPES ty_field_tt TYPE STANDARD TABLE OF ty_sval.
+    DATA lt_range_transports_to_add TYPE RANGE OF e070-trkorr.
+    DATA ls_range_transports_to_add LIKE LINE OF lt_range_transports_to_add.
+    DATA lt_fields           TYPE ty_field_tt.
+    DATA ls_fields           TYPE sval.
+    DATA lp_return           TYPE c.
+    FREE lt_fields.
+    CLEAR ls_fields.
+    ls_fields-tabname   = 'E070'.
+    ls_fields-fieldname = 'TRKORR'.
+    APPEND ls_fields TO lt_fields.
+    CALL FUNCTION 'POPUP_GET_VALUES_DB_CHECKED'
+      EXPORTING
+        popup_title     = 'Selected transports'(t01)
+      IMPORTING
+        returncode      = lp_return
+      TABLES
+        fields          = lt_fields
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2.
+    CASE sy-subrc.
+      WHEN 1.
+        MESSAGE e000(db) WITH 'ERROR: ERROR_IN_FIELDS'(m08).
+      WHEN 2.
+        MESSAGE e000(db) WITH 'Error occurred'(029).
+    ENDCASE.
+*   Exit if cancelled:
+    IF lp_return = 'A'.
+      RETURN.
+    ENDIF.
+*   Move the conflicts to a range. The transports in this range will
+*   be added to the main list:
+    FREE lt_range_transports_to_add.
+    CLEAR ls_range_transports_to_add.
+    ls_range_transports_to_add-sign = 'I'.
+    ls_range_transports_to_add-option = 'EQ'.
+    READ TABLE lt_fields INTO ls_fields INDEX 1.          "#EC CI_SUBRC
+    IF ls_fields-value IS INITIAL.
+      RETURN.
+    ENDIF.
+*         Is it already in the list?
+    IF line_exists( rf_ztct->main_list[ trkorr = ls_fields-value(20) ] ).
+      RETURN.
+    ENDIF.
+*         Add transport number to the internal table to add:
+    ls_range_transports_to_add-low = ls_fields-value.
+    APPEND ls_range_transports_to_add TO lt_range_transports_to_add.
+    rf_ztct->get_added_objects( EXPORTING im_to_add = lt_range_transports_to_add
+                                IMPORTING ex_to_add = rf_ztct->add_to_main ).
+    rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
+    rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
+                          IMPORTING ex_main   = rf_ztct->main_list ).
+*         After the transports have been added, check if there are added
+*         transports that are already in prd. If so, make them visible by
+*         changing the prd icon to co_scrap.
+    LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
+                              WHERE prd    = rf_ztct->co_okay
+                                AND trkorr IN lt_range_transports_to_add.
+      rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
+      MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
+    ENDLOOP.
+*         After the transports have been added, we need to check again
+    rf_ztct->flag_same_objects( CHANGING ch_main_list = rf_ztct->main_list ).
+    rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
+    rf_ztct->refresh_alv( ).
+  ENDMETHOD.
+
   METHOD go_back_months.
     DATA: BEGIN OF ls_dat,
             jjjj TYPE char4,
