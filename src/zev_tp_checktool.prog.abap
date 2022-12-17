@@ -423,7 +423,8 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
                                                ex_as4date TYPE as4date
                                                ex_return  TYPE sysubrc.
     METHODS exclude_all_tables.
-    METHODS ofc_goon                 IMPORTING im_rows    TYPE salv_t_row.
+    METHODS ofc_goon                 IMPORTING im_rows    TYPE salv_t_row
+                                     CHANGING  im_table   TYPE REF TO cl_salv_table.
     METHODS ofc_abr.
     METHODS ofc_ddic.
 ENDCLASS.
@@ -852,7 +853,8 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
       ENDIF.
       CASE e_salv_function.
         WHEN 'GOON'.
-          rf_ztct->ofc_goon( lt_rows ).
+          rf_ztct->ofc_goon(  EXPORTING im_rows = lt_rows
+                              CHANGING  im_table = <lf_ref_table> ).
         WHEN 'ABR'.
           rf_ztct->ofc_abr( ).
         WHEN 'RECHECK'.
@@ -5114,14 +5116,14 @@ CLASS lcl_ztct IMPLEMENTATION.
         rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
         rf_ztct->refresh_alv( ).
       ENDIF.
-      FREE rf_conflicts.
+      FREE im_table.
     ELSEIF rf_table_keys IS BOUND.
 *     Not in the Conflicts Popup, but in the Table Key popup. Based on the user decision,
 *     the tables that do NOT have to be checked, are added to the excluded object list.
 *     If no tables are selected, all tables are excluded from the check.
 *     If row(s) are selected, determine the tables to be check from the selected
 *     rows. All rows that weren't selected will be added to the excluded object list.
-      rf_table_keys->close_screen( ).
+      im_table->close_screen( ).
       IF im_rows[] IS NOT INITIAL.
         LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
           IF NOT line_exists( im_rows[ table_line = sy-tabix ] ).
@@ -5137,7 +5139,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         MESSAGE i000(db) WITH 'No rows selected: Table keys will not be checked'(m07).
         rf_ztct->check_tabkeys = abap_false.
       ENDIF.
-      FREE rf_table_keys.
+      FREE im_table.
     ENDIF.
   ENDMETHOD.
 
