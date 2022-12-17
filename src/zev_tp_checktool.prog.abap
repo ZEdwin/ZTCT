@@ -428,6 +428,8 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS ofc_abr.
     METHODS ofc_ddic.
     METHODS ofc_add_tp.
+    METHODS ofc_nconf                IMPORTING im_selections TYPE REF TO cl_salv_selections
+                                     CHANGING  im_cell       TYPE salv_s_cell.
 ENDCLASS.
 
 *--------------------------------------------------------------------*
@@ -815,11 +817,9 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     DATA ls_excluded_objects  LIKE LINE OF lt_excluded_objects.
 *   Global data declarations:
     DATA lp_title            TYPE string.
-    DATA lp_tabix            TYPE sytabix.
     DATA lr_selections       TYPE REF TO cl_salv_selections.
     DATA lp_filelength       TYPE i ##NEEDED.
     DATA ls_row              TYPE int4.
-    DATA lp_row_found        TYPE abap_bool.
     DATA lp_localfile        TYPE string.
     DATA lp_filename         TYPE string.
 *   Selected rows
@@ -1025,32 +1025,8 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
                          WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
           ENDCASE.
         WHEN '&NCONF'.
-          CLEAR lp_row_found.
-          lp_tabix = ls_cell-row + 1.
-          LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line FROM lp_tabix.
-            IF lp_row_found IS INITIAL
-                AND rf_ztct->main_list_line-warning_rank >= rf_ztct->co_info_rank.
-              ls_cell-row = sy-tabix.
-              ls_cell-columnname = 'WARNING_LVL'.
-              lr_selections->set_current_cell( ls_cell ).
-              lp_row_found = abap_true.
-            ENDIF.
-          ENDLOOP.
-          IF lp_row_found IS INITIAL.
-            LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line.
-              IF lp_row_found IS INITIAL
-                  AND rf_ztct->main_list_line-warning_rank >= rf_ztct->co_info_rank.
-                ls_cell-row = sy-tabix.
-                ls_cell-columnname = 'WARNING_LVL'.
-                lr_selections->set_current_cell( ls_cell ).
-                lp_row_found = abap_true.
-              ENDIF.
-            ENDLOOP.
-            IF lp_row_found IS INITIAL.
-              MESSAGE i000(db) WITH 'No next conflict found'(021).
-            ENDIF.
-          ENDIF.
-          rf_ztct->refresh_alv( ).
+          rf_ztct->ofc_nconf( EXPORTING im_selections = lr_selections
+                              CHANGING  im_cell       = ls_cell ).
       ENDCASE.
     ENDIF.
   ENDMETHOD.
@@ -5199,6 +5175,37 @@ CLASS lcl_ztct IMPLEMENTATION.
 *         After the transports have been added, we need to check again
     rf_ztct->flag_same_objects( CHANGING ch_main_list = rf_ztct->main_list ).
     rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
+    rf_ztct->refresh_alv( ).
+  ENDMETHOD.
+
+  METHOD ofc_nconf.
+    DATA lp_row_found        TYPE abap_bool.
+    DATA lp_tabix            TYPE sytabix.
+    CLEAR lp_row_found.
+    lp_tabix = im_cell-row + 1.
+    LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line FROM lp_tabix.
+      IF lp_row_found IS INITIAL
+          AND rf_ztct->main_list_line-warning_rank >= rf_ztct->co_info_rank.
+        im_cell-row = sy-tabix.
+        im_cell-columnname = 'WARNING_LVL'.
+        im_selections->set_current_cell( im_cell ).
+        lp_row_found = abap_true.
+      ENDIF.
+    ENDLOOP.
+    IF lp_row_found IS INITIAL.
+      LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line.
+        IF lp_row_found IS INITIAL
+            AND rf_ztct->main_list_line-warning_rank >= rf_ztct->co_info_rank.
+          im_cell-row = sy-tabix.
+          im_cell-columnname = 'WARNING_LVL'.
+          im_selections->set_current_cell( im_cell ).
+          lp_row_found = abap_true.
+        ENDIF.
+      ENDLOOP.
+      IF lp_row_found IS INITIAL.
+        MESSAGE i000(db) WITH 'No next conflict found'(021).
+      ENDIF.
+    ENDIF.
     rf_ztct->refresh_alv( ).
   ENDMETHOD.
 
