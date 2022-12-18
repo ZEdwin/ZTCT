@@ -1181,6 +1181,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     Table checks not possible for version checking.
       IF process_type = 1.
         build_table_keys_popup( ).
+        FREE rf_table_keys.
         add_table_keys_to_list( CHANGING ch_table = main_list ).
       ENDIF.
 * Reason to check data dictionary objects:
@@ -1298,6 +1299,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_highest_text      TYPE text74.
     DATA lp_highest_col       TYPE lvc_t_scol.
     DATA lp_target            TYPE tmssysnam.
+    DATA lt_e07t              TYPE e07t_t.
+    DATA ls_e07t              TYPE e07t.
 
     FREE conflicts.
     CLEAR conflict_line.
@@ -1362,11 +1365,17 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     If a newer version/request is found in prd, then add a warning and
 *     continue with the next.
       IF lt_newer_transports[] IS NOT INITIAL.
+        FREE lt_e07t.
+        SELECT * FROM  e07t INTO TABLE @lt_e07t
+                    FOR ALL ENTRIES IN @lt_newer_transports
+                                 WHERE trkorr = @lt_newer_transports-trkorr ##WARN_OK.
         LOOP AT lt_newer_transports INTO ls_newer_line.
 *         Get transport description:
-          SELECT SINGLE as4text FROM  e07t
-                                INTO  @ls_newer_line-tr_descr
-                                WHERE trkorr = @ls_newer_line-trkorr ##WARN_OK. "#EC CI_SUBRC
+          READ TABLE lt_e07t INTO ls_e07t
+                         WITH KEY trkorr = ls_newer_line-trkorr.
+          IF sy-subrc = 0.
+            ls_newer_line-tr_descr = ls_e07t-as4text.
+          ENDIF.
 *         Check if it has been transported to the target system:
           FREE lt_stms_wbo_requests.
           CLEAR lt_stms_wbo_requests.
@@ -1482,11 +1491,17 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     transported, it is okay.
 *     If not, then add a warning and continue with the next record.
       IF lt_older_transports[] IS NOT INITIAL.
+        FREE lt_e07t.
+        SELECT * FROM  e07t INTO TABLE @lt_e07t
+                    FOR ALL ENTRIES IN @lt_older_transports
+                                 WHERE trkorr = @lt_older_transports-trkorr ##WARN_OK.
         LOOP AT lt_older_transports INTO ls_older_line.
 *         Get transport description:
-          SELECT SINGLE as4text FROM  e07t
-                                INTO  @ls_older_line-tr_descr
-                                WHERE trkorr = @ls_older_line-trkorr ##WARN_OK. "#EC CI_SUBRC
+          READ TABLE lt_e07t INTO ls_e07t
+                         WITH KEY trkorr = ls_older_line-trkorr.
+          IF sy-subrc = 0.
+            ls_older_line-tr_descr = ls_e07t-as4text.
+          ENDIF.
 *         Check if it has been transported to QAS
           FREE lt_stms_wbo_requests.
           CLEAR lt_stms_wbo_requests.
