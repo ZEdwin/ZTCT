@@ -424,12 +424,12 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
                                                ex_return  TYPE sysubrc.
     METHODS exclude_all_tables.
     METHODS ofc_goon                 IMPORTING im_rows  TYPE salv_t_row
-                                     CHANGING  im_table TYPE REF TO cl_salv_table.
+                                     CHANGING  ch_table TYPE REF TO cl_salv_table.
     METHODS ofc_abr.
     METHODS ofc_ddic.
     METHODS ofc_add_tp.
     METHODS ofc_nconf                IMPORTING im_selections TYPE REF TO cl_salv_selections
-                                     CHANGING  im_cell       TYPE salv_s_cell.
+                                     CHANGING  ch_cell       TYPE salv_s_cell.
 ENDCLASS.
 
 *--------------------------------------------------------------------*
@@ -810,16 +810,13 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
 
   METHOD on_function_click.
     TYPES ty_sval TYPE sval.
-    TYPES ty_field_tt TYPE STANDARD TABLE OF ty_sval.
     DATA lt_range_transports_to_add TYPE RANGE OF e070-trkorr.
     DATA ls_range_transports_to_add LIKE LINE OF lt_range_transports_to_add.
     DATA lt_excluded_objects  TYPE RANGE OF trobj_name.
-    DATA ls_excluded_objects  LIKE LINE OF lt_excluded_objects.
 *   Global data declarations:
     DATA lp_title            TYPE string.
     DATA lr_selections       TYPE REF TO cl_salv_selections.
     DATA lp_filelength       TYPE i ##NEEDED.
-    DATA ls_row              TYPE int4.
     DATA lp_localfile        TYPE string.
     DATA lp_filename         TYPE string.
 *   Selected rows
@@ -851,8 +848,8 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
       ENDIF.
       CASE e_salv_function.
         WHEN 'GOON'.
-          rf_ztct->ofc_goon(  EXPORTING im_rows = lt_rows
-                              CHANGING  im_table = <lf_ref_table> ).
+          rf_ztct->ofc_goon( EXPORTING im_rows  = lt_rows
+                              CHANGING ch_table = <lf_ref_table> ).
         WHEN 'ABR'.
           rf_ztct->ofc_abr( ).
         WHEN 'RECHECK'.
@@ -1026,7 +1023,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           ENDCASE.
         WHEN '&NCONF'.
           rf_ztct->ofc_nconf( EXPORTING im_selections = lr_selections
-                              CHANGING  im_cell       = ls_cell ).
+                              CHANGING  ch_cell       = ls_cell ).
       ENDCASE.
     ENDIF.
   ENDMETHOD.
@@ -2321,7 +2318,6 @@ CLASS lcl_ztct IMPLEMENTATION.
 *       R - Released
 *       N - Released (with import protection for repaired objects)
         FREE lt_stms_wbo_requests.
-        CLEAR lt_stms_wbo_requests.
         READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
                    WITH TABLE KEY request       = main_list_line-trkorr
                                   target_system = dev_system.
@@ -3333,8 +3329,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lr_columns_table       TYPE REF TO cl_salv_columns_table.
     DATA lt_t_column_ref        TYPE salv_t_column_ref.
     DATA lr_functions_list      TYPE REF TO cl_salv_functions_list.
-*   Declaration for Top of List settings
-    DATA lr_form_element        TYPE REF TO cl_salv_form_element.
 *   Declaration for Layout Settings
     DATA lr_layout              TYPE REF TO cl_salv_layout.
     DATA ls_layout_key          TYPE salv_s_layout_key.
@@ -3349,8 +3343,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_class               TYPE xuclass.
     DATA lp_accnt               TYPE xuaccnt.
 
-    CONSTANTS: co_class TYPE xuclass VALUE 'NLD_T_040',
-               co_accnt TYPE xuaccnt VALUE 'I210218 0079'.
+    CONSTANTS: lco_class TYPE xuclass VALUE 'NLD_T_040',
+               lco_accnt TYPE xuaccnt VALUE 'I210218 0079'.
 
     ASSIGN im_table TO FIELD-SYMBOL(<lf_table>).
     IF <lf_table> IS NOT ASSIGNED.
@@ -3394,7 +3388,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                  WHERE bname = @sy-uname.
 *   Hardcoded: Change this to allow certain group of users to change
 *   the default layout for all users
-    IF sy-subrc = 0 AND lp_class = co_class AND lp_accnt = co_accnt.
+    IF sy-subrc = 0 AND lp_class = lco_class AND lp_accnt = lco_accnt.
       lp_save_restriction = if_salv_c_layout=>restrict_none.
     ELSE.
       lp_save_restriction = if_salv_c_layout=>restrict_user_dependant.
@@ -5031,14 +5025,14 @@ CLASS lcl_ztct IMPLEMENTATION.
         rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
         rf_ztct->refresh_alv( ).
       ENDIF.
-      FREE im_table.
+      FREE ch_table.
     ELSEIF rf_table_keys IS BOUND.
 *     Not in the Conflicts Popup, but in the Table Key popup. Based on the user decision,
 *     the tables that do NOT have to be checked, are added to the excluded object list.
 *     If no tables are selected, all tables are excluded from the check.
 *     If row(s) are selected, determine the tables to be check from the selected
 *     rows. All rows that weren't selected will be added to the excluded object list.
-      im_table->close_screen( ).
+      ch_table->close_screen( ).
       IF im_rows[] IS NOT INITIAL.
         LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
           IF NOT line_exists( im_rows[ table_line = sy-tabix ] ).
@@ -5054,7 +5048,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         MESSAGE i000(db) WITH 'No rows selected: Table keys will not be checked'(m07).
         rf_ztct->check_tabkeys = abap_false.
       ENDIF.
-      FREE im_table.
+      FREE ch_table.
     ENDIF.
   ENDMETHOD.
 
@@ -5095,10 +5089,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       EXCEPTIONS
         text_not_found        = 1
         OTHERS                = 2.
-    IF sy-subrc <> 0.
-*           Implement suitable error handling here
-    ENDIF.
-    IF lp_answer = '1'.
+    IF sy-subrc = 0 AND lp_answer = '1'.
       rf_ztct->check_ddic = abap_true.
       rf_ztct->set_ddic_objects( ).
       rf_ztct->set_where_used( ).
@@ -5182,13 +5173,13 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_row_found        TYPE abap_bool.
     DATA lp_tabix            TYPE sytabix.
     CLEAR lp_row_found.
-    lp_tabix = im_cell-row + 1.
+    lp_tabix = ch_cell-row + 1.
     LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line FROM lp_tabix.
       IF lp_row_found IS INITIAL
           AND rf_ztct->main_list_line-warning_rank >= rf_ztct->co_info_rank.
-        im_cell-row = sy-tabix.
-        im_cell-columnname = 'WARNING_LVL'.
-        im_selections->set_current_cell( im_cell ).
+        ch_cell-row = sy-tabix.
+        ch_cell-columnname = 'WARNING_LVL'.
+        im_selections->set_current_cell( ch_cell ).
         lp_row_found = abap_true.
       ENDIF.
     ENDLOOP.
@@ -5196,9 +5187,9 @@ CLASS lcl_ztct IMPLEMENTATION.
       LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line.
         IF lp_row_found IS INITIAL
             AND rf_ztct->main_list_line-warning_rank >= rf_ztct->co_info_rank.
-          im_cell-row = sy-tabix.
-          im_cell-columnname = 'WARNING_LVL'.
-          im_selections->set_current_cell( im_cell ).
+          ch_cell-row = sy-tabix.
+          ch_cell-columnname = 'WARNING_LVL'.
+          im_selections->set_current_cell( ch_cell ).
           lp_row_found = abap_true.
         ENDIF.
       ENDLOOP.
