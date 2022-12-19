@@ -809,15 +809,11 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file.
 CLASS lcl_eventhandler_ztct IMPLEMENTATION.
 
   METHOD on_function_click.
-    TYPES ty_sval TYPE sval.
     DATA lt_range_transports_to_add TYPE RANGE OF e070-trkorr.
     DATA ls_range_transports_to_add LIKE LINE OF lt_range_transports_to_add.
-    DATA lt_excluded_objects  TYPE RANGE OF trobj_name.
-*   Global data declarations:
-    DATA lp_title            TYPE string.
+*   Data declarations
     DATA lr_selections       TYPE REF TO cl_salv_selections.
     DATA lp_filelength       TYPE i ##NEEDED.
-    DATA lp_localfile        TYPE string.
     DATA lp_filename         TYPE string.
 *   Selected rows
     DATA lt_rows             TYPE salv_t_row.
@@ -826,7 +822,6 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     DATA lp_fullpath         TYPE string.
     DATA lp_desktop          TYPE string.
     DATA lp_timestamp        TYPE tzntstmps.
-    DATA lp_default_filename TYPE string.
 
 *   Which popup are we displaying? Conflicts or Table keys?
     FIELD-SYMBOLS <lf_ref_table> TYPE REF TO cl_salv_table.
@@ -879,7 +874,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           rf_ztct->ofc_add_tp( ).
         WHEN '&ADD_FILE'.
           rf_ztct->clear_flags( ).
-          lp_localfile = rf_ztct->get_filename( ).
+          DATA(lp_localfile) = rf_ztct->get_filename( ).
           lp_filename  = lp_localfile.
           rf_ztct->gui_upload( lp_filename ).
           tp_dokl_object = 'ZEV_TP_CHECKTOOL_ADD_FILE'.
@@ -957,10 +952,10 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
 
           CONVERT DATE sy-datum TIME sy-uzeit
             INTO TIME STAMP lp_timestamp TIME ZONE sy-zonlo.
-          lp_default_filename = lp_timestamp.
+          DATA(lp_default_filename) = |{ lp_timestamp }|.
           CONCATENATE 'ZTCT-' lp_default_filename INTO lp_default_filename.
 
-          lp_title = 'Save Transportlist'(009).
+          DATA(lp_title) = |{ 'Save Transportlist'(009) }|.
           cl_gui_frontend_services=>file_save_dialog(
             EXPORTING
               window_title         = lp_title
@@ -1368,7 +1363,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         FREE lt_e07t.
         SELECT * FROM  e07t INTO TABLE @lt_e07t
                     FOR ALL ENTRIES IN @lt_newer_transports
-                                 WHERE trkorr = @lt_newer_transports-trkorr ##WARN_OK.
+                                 WHERE trkorr = @lt_newer_transports-trkorr. "#EC CI_SUBRC
         LOOP AT lt_newer_transports INTO ls_newer_line.
 *         Get transport description:
           READ TABLE lt_e07t INTO ls_e07t
@@ -1494,7 +1489,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         FREE lt_e07t.
         SELECT * FROM  e07t INTO TABLE @lt_e07t
                     FOR ALL ENTRIES IN @lt_older_transports
-                                 WHERE trkorr = @lt_older_transports-trkorr ##WARN_OK.
+                                 WHERE trkorr = @lt_older_transports-trkorr. "#EC CI_SUBRC
         LOOP AT lt_older_transports INTO ls_older_line.
 *         Get transport description:
           READ TABLE lt_e07t INTO ls_e07t
@@ -1724,7 +1719,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_xstart              TYPE i VALUE 26.
     DATA lp_xend                TYPE i.
     DATA lp_ystart              TYPE i VALUE 7.
-    DATA lp_yend                TYPE i.
     DATA lp_cw_tabname          TYPE lvc_outlen.
     DATA lp_cw_counter          TYPE lvc_outlen.
     DATA lp_cw_ddtext           TYPE lvc_outlen.
@@ -1850,7 +1844,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                           report   = 'SAPLKKBL' ).
 *       Determine the size of the popup window:
         lp_xend = lp_xend + lp_xstart + 5.
-        lp_yend = lines( table_keys ) + lp_ystart.
+        DATA(lp_yend) = lines( table_keys ) + lp_ystart.
         IF lp_yend > 30.
           lp_yend = 30.
         ENDIF.
@@ -1910,16 +1904,14 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD progress_indicator.
     DATA lp_gprogtext         TYPE char1024.
-    DATA lp_gproggui          TYPE i.
     DATA lp_step              TYPE i VALUE 1.
-    DATA lp_difference        TYPE i.
     DATA lp_string            TYPE string.
     DATA lp_total             TYPE numc10.
     DATA lp_counter_reset     TYPE i.
 *   IM_TOTAL cannot be changed, and we need to remove the leading
 *   zero's. That is why intermediate parameter lp_TOTAL was added
     lp_total = im_total.
-    lp_difference = lp_total - im_counter.
+    DATA(lp_difference) = lp_total - im_counter.
 *   Determine step size
     IF im_flag = abap_true.
       IF lp_difference < 100.
@@ -1934,7 +1926,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     IF lp_step = 0.
       RETURN.
     ENDIF.
-    lp_gproggui = im_counter MOD lp_step.
+    DATA(lp_gproggui) = im_counter MOD lp_step.
     IF lp_gproggui = 0.
       WRITE im_counter TO lp_gprogtext LEFT-JUSTIFIED.
       IF lp_total <> 0.
@@ -2533,7 +2525,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lr_events          TYPE REF TO cl_salv_events_table.
     DATA ls_conflict        TYPE ty_request_details ##NEEDED.
     DATA lp_xend            TYPE i.
-    DATA lp_yend            TYPE i.
     DATA lp_xstart          TYPE i VALUE 50.
     DATA lp_ystart          TYPE i VALUE 7.
 *   Prevent the conflicts popup to be build multiple times
@@ -2585,7 +2576,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                          report   = 'SAPLKKBL' ).
 *       Determine the size of the popup window:
         lp_xend = lp_xend + lp_xstart + 5.
-        lp_yend = lines( conflicts ).
+        DATA(lp_yend) = lines( conflicts ).
         IF lp_yend < 5.
           lp_yend = 5.
         ENDIF.
@@ -2704,11 +2695,9 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_filename.
-    DATA lp_window_title TYPE string.
     DATA lp_rc           TYPE i.
     DATA lp_desktop      TYPE string.
     DATA lt_filetable    TYPE filetable.
-    DATA lp_file         TYPE string.
 * Finding desktop
     cl_gui_frontend_services=>get_desktop_directory(
       CHANGING
@@ -2727,7 +2716,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         cntl_system_error = 1
         cntl_error        = 2
         OTHERS            = 3 ).
-    lp_window_title = 'Select a transportlist'(013).
+    DATA(lp_window_title) = |{ 'Select a transportlist'(013) }|.
     cl_gui_frontend_services=>file_open_dialog(
       EXPORTING
         window_title            = lp_window_title
@@ -2748,7 +2737,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
               WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
     ENDIF.
-    READ TABLE lt_filetable INDEX 1 INTO lp_file.
+    READ TABLE lt_filetable INDEX 1 INTO DATA(lp_file).
     IF sy-subrc = 0.
       re_file = lp_file.
     ELSE.
@@ -2863,7 +2852,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_item               TYPE ty_upl_line.
     DATA lt_main_upl           TYPE ty_request_details_tt.
     DATA ls_main_line_upl      TYPE ty_request_details.
-    DATA lp_header             TYPE string.
     DATA ls_main               TYPE ty_request_details.
     DATA lp_type               TYPE char01.
     FIELD-SYMBOLS <lf_string>  TYPE any.
@@ -2884,7 +2872,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   First line contains the name of the fields
 *   Now modify the lines of the main list to a tab delimited list
     READ TABLE im_tab_delimited INDEX 1
-                                INTO lp_header.
+                                INTO DATA(lp_header).
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
@@ -3069,11 +3057,10 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD check_if_in_list.
-    DATA lp_tabix TYPE i.
     CLEAR ex_line.
 * This subroutine checks if the conflicting transport/object is found
 * further down in the list (in a later transport):
-    lp_tabix = im_tabix + 1.
+    DATA(lp_tabix) = im_tabix + 1.
     LOOP AT main_list INTO ex_line FROM lp_tabix
                      WHERE trkorr     = im_line-trkorr
                        AND object     = im_line-object
@@ -3358,8 +3345,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_class               TYPE xuclass.
     DATA lp_accnt               TYPE xuaccnt.
 
-    CONSTANTS: lco_class TYPE xuclass VALUE 'NLD_T_040',
-               lco_accnt TYPE xuaccnt VALUE 'I210218 0079'.
+    CONSTANTS: lc_class TYPE xuclass VALUE 'NLD_T_040',
+               lc_accnt TYPE xuaccnt VALUE 'I210218 0079'.
 
     ASSIGN im_table TO FIELD-SYMBOL(<lf_table>).
     IF <lf_table> IS NOT ASSIGNED.
@@ -3403,7 +3390,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                  WHERE bname = @sy-uname.
 *   Hardcoded: Change this to allow certain group of users to change
 *   the default layout for all users
-    IF sy-subrc = 0 AND lp_class = lco_class AND lp_accnt = lco_accnt.
+    IF sy-subrc = 0 AND lp_class = lc_class AND lp_accnt = lc_accnt.
       lp_save_restriction = if_salv_c_layout=>restrict_none.
     ELSE.
       lp_save_restriction = if_salv_c_layout=>restrict_user_dependant.
@@ -3568,7 +3555,6 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Remove some columns for the XLS output
     DATA lt_range_fieldname  TYPE RANGE OF ty_field_ran.
     DATA ls_fieldname        TYPE ty_field_ran.
-    DATA lp_return           TYPE abap_bool.
 *   Hide columns when empty
     DATA lt_range_hide_when_empty TYPE RANGE OF ty_field_ran.
     DATA ls_hide_when_empty  TYPE ty_field_ran.
@@ -3706,7 +3692,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         ENDIF.
 *       Remove columns that are not required when empty
         IF lr_column_table->get_columnname( ) IN lt_range_hide_when_empty.
-          lp_return = is_empty_column( im_column = ls_s_column_ref-columnname
+          DATA(lp_return) = is_empty_column( im_column = ls_s_column_ref-columnname
                                        im_table  = main_list ).
           IF lp_return = abap_true.
             lr_column_table->set_technical( if_salv_c_bool_sap=>true ).
@@ -4092,15 +4078,13 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD handle_error.
-    DATA lp_msg TYPE string.
-    lp_msg = im_oref->get_text( ).
+    DATA(lp_msg) = im_oref->get_text( ).
     CONCATENATE 'ERROR:'(038) lp_msg INTO lp_msg SEPARATED BY space.
     MESSAGE lp_msg TYPE 'E'.
   ENDMETHOD.
 
   METHOD check_colwidth.
     DATA lp_as4text   TYPE as4text.
-    DATA lp_len       TYPE i.
     SELECT SINGLE scrtext_s
              FROM dd04t INTO @lp_as4text
             WHERE rollname   = @im_name
@@ -4108,8 +4092,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     IF lp_as4text IS INITIAL.
       SELECT SINGLE scrtext_m
                     FROM dd04t INTO @lp_as4text
-                    WHERE rollname   = @im_name
-                    AND   ddlanguage = @co_langu.         "#EC CI_SUBRC
+                   WHERE rollname   = @im_name
+                     AND ddlanguage = @co_langu.         "#EC CI_SUBRC
       IF lp_as4text IS INITIAL.
         SELECT SINGLE scrtext_l
                  FROM dd04t INTO @lp_as4text
@@ -4117,7 +4101,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                   AND ddlanguage = @co_langu.             "#EC CI_SUBRC
       ENDIF.
     ENDIF.
-    lp_len = strlen( lp_as4text ).
+    DATA(lp_len) = strlen( lp_as4text ).
     IF lp_len > im_colwidth.
       re_colwidth = lp_len.
     ELSE.
@@ -4336,7 +4320,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lt_details             TYPE abap_compdescr_tab.
     DATA ls_details             TYPE abap_compdescr.
     DATA lp_field               TYPE string.
-    DATA lp_bool                TYPE abap_bool.
 *   Declaration for ALV Columns
     DATA lr_columns_table       TYPE REF TO cl_salv_columns_table.
     DATA lt_t_column_ref        TYPE salv_t_column_ref.
@@ -4630,7 +4613,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 
           ENDCASE.
 *         Count the number of columns that are visible
-          lp_bool = lr_column_table->is_technical( ).
+          DATA(lp_bool) = lr_column_table->is_technical( ).
           IF lp_bool = abap_false.
             lp_cw_columns = lp_cw_columns + 1.
           ENDIF.
@@ -4744,22 +4727,19 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_systems           TYPE ctslg_system.
     DATA lp_scope             TYPE seu_obj ##NEEDED.
     DATA lp_answer            TYPE char1 ##NEEDED.
-    DATA ls_ddic_object       TYPE string.
     DATA lp_index             TYPE syindex.
     DATA lp_counter           TYPE i.
     DATA lp_total             TYPE sytabix.
-    DATA lp_deleted           TYPE abap_bool.
     DATA lp_obj_name          TYPE trobj_name.
+    DATA lt_objrangtab        TYPE objrangtab.
+    DATA ls_objtyprang        TYPE objtyprang.
+    DATA lt_objtype           TYPE TABLE OF versobjtyp.
+    DATA lp_chars             TYPE string VALUE '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
 
     FREE ddic_e071.
 
 * Get all object types
-*--select values for pgmid/object/text from database--------------------
-    DATA lt_objrangtab    TYPE objrangtab.
-    DATA ls_objtyprang    TYPE objtyprang.
-    DATA lt_objtype       TYPE TABLE OF versobjtyp.
-    DATA lp_chars         TYPE string VALUE '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
-
+* Select values for pgmid/object/text from database--------------------
 * Get all object types that have been transported before
     SELECT DISTINCT object FROM e071 INTO TABLE @lt_objtype.
     IF sy-subrc = 0.
@@ -4776,7 +4756,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 * for the object types found
     CLEAR: lp_counter.
     lp_total = lines( ddic_objects ).
-    LOOP AT ddic_objects INTO ls_ddic_object.
+    LOOP AT ddic_objects INTO DATA(ls_ddic_object).
       lp_counter = lp_counter + 1.
       lp_obj_name = ls_ddic_object.
       progress_indicator( im_counter = lp_counter
@@ -4796,7 +4776,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     CLEAR lp_counter.
     LOOP AT ddic_e071 INTO ddic_e071_line.
       lp_index = sy-tabix.
-      lp_deleted = abap_false.
+      DATA(lp_deleted) = abap_false.
       IF ddic_e071_line-trkorr(3) NS dev_system.
 *       Not a Development transport, check not required
         DELETE ddic_e071 INDEX lp_index.
@@ -4898,10 +4878,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     cl_progress_indicator=>progress_indicate( i_text = 'Retrieving Where Used list'(052) ).
 
 * Build the WHERE_USED list for all remaining objects
-    DATA ls_objects     TYPE string.
     DATA lt_where_used_sub TYPE sci_findlst.
     FREE where_used.
-    LOOP AT ddic_objects INTO ls_objects.
+    LOOP AT ddic_objects INTO DATA(ls_objects).
       FREE ddic_objects_sub.
       APPEND ls_objects TO ddic_objects_sub.
       CALL FUNCTION 'RS_EU_CROSSREF'
@@ -5226,15 +5205,13 @@ CLASS lcl_ztct IMPLEMENTATION.
             jjjj TYPE char4,
             mm   TYPE char2,
             tt   TYPE char2,
-          END OF ls_hdat,
-          lv_newmm    TYPE p,
-          lv_diffjjjj TYPE p.
+          END OF ls_hdat.
 
     WRITE: im_currdate+0(4) TO ls_dat-jjjj,
            im_currdate+4(2) TO ls_dat-mm,
            im_currdate+6(2) TO ls_dat-tt.
-    lv_diffjjjj = ( ls_dat-mm + ( - im_backmonths ) - 1 ) DIV 12.
-    lv_newmm    = ( ls_dat-mm + ( - im_backmonths ) - 1 ) MOD 12 + 1.
+    DATA(lv_diffjjjj) = ( ls_dat-mm + ( - im_backmonths ) - 1 ) DIV 12.
+    DATA(lv_newmm)    = ( ls_dat-mm + ( - im_backmonths ) - 1 ) MOD 12 + 1.
     ls_dat-jjjj = ls_dat-jjjj + lv_diffjjjj.
 
     IF lv_newmm < 10.
