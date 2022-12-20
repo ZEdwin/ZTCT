@@ -4656,7 +4656,8 @@ CLASS lcl_ztct IMPLEMENTATION.
                                    ORDER BY PRIMARY KEY.
     IF sy-subrc = 0 AND lt_tadir IS NOT INITIAL.
 *     DD01L (Domains)
-      SELECT domname APPENDING TABLE @ddic_objects
+      SELECT domname
+             APPENDING TABLE @ddic_objects
              FROM dd01l FOR ALL ENTRIES IN @lt_tadir
             WHERE domname = @lt_tadir-obj_name(30). "#EC CI_SUBRC
 *     DD02L (SAP-tables)
