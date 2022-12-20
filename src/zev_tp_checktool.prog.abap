@@ -5285,23 +5285,20 @@ START-OF-SELECTION.
 *   Join over E070, E071:
 *   Description is read later to prevent complicated join and
 *   increased runtime
-    st_trkorr_range-sign   = 'I'.
-    st_trkorr_range-option = 'EQ'.
-    SELECT a~trkorr
-           INTO @st_trkorr_range-low
-           FROM e070 AS a JOIN e071 AS b
-             ON a~trkorr   = b~trkorr
-          WHERE a~trkorr   IN @s_korr
-            AND a~as4user  IN @s_user
-            AND a~as4date  IN @s_date
-            AND b~obj_name IN @s_exobj
-            AND strkorr    = ''
-            AND a~trkorr   LIKE @tp_prefix
-            AND a~trkorr   IN @lt_range_project_trkorrs
-            AND ( pgmid    = 'LIMU' OR
-                  pgmid    = 'R3TR' ).
-      APPEND st_trkorr_range TO ta_trkorr_range.
-    ENDSELECT.
+    SELECT 'I' AS sign, 'EQ' AS option, a~trkorr AS low, ' ' AS high
+         INTO TABLE @ta_trkorr_range
+         FROM e070 AS a JOIN e071 AS b
+           ON a~trkorr   = b~trkorr
+        WHERE a~trkorr   IN @s_korr
+          AND a~as4user  IN @s_user
+          AND a~as4date  IN @s_date
+          AND b~obj_name IN @s_exobj
+          AND strkorr    = ''
+          AND a~trkorr   LIKE @tp_prefix
+          AND a~trkorr   IN @lt_range_project_trkorrs
+          AND ( pgmid    = 'LIMU' OR
+                pgmid    = 'R3TR' ).
+
 *   Read transport description:
     IF ta_trkorr_range[] IS NOT INITIAL.
       LOOP AT ta_trkorr_range INTO st_trkorr_range.
