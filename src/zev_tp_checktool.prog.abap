@@ -4652,22 +4652,23 @@ CLASS lcl_ztct IMPLEMENTATION.
     FREE ddic_objects.
 *   Get all objects in Z-devclasses
     SELECT devclass, obj_name FROM tadir INTO TABLE @lt_tadir
-                             WHERE devclass LIKE 'Z%'.
+                             WHERE devclass LIKE 'Z%'
+                                   ORDER BY PRIMARY KEY.
     IF sy-subrc = 0 AND lt_tadir IS NOT INITIAL.
 *     DD01L (Domains)
       SELECT domname APPENDING TABLE @ddic_objects
              FROM dd01l FOR ALL ENTRIES IN @lt_tadir
-            WHERE domname = @lt_tadir-obj_name(30).       "#EC CI_SUBRC
+            WHERE domname = @lt_tadir-obj_name(30). "#EC CI_SUBRC
 *     DD02L (SAP-tables)
       SELECT tabname
              APPENDING TABLE @ddic_objects
              FROM dd02l FOR ALL ENTRIES IN @lt_tadir
-            WHERE tabname = @lt_tadir-obj_name(30).       "#EC CI_SUBRC
+            WHERE tabname = @lt_tadir-obj_name(30). "#EC CI_SUBRC
 *     DD04L (Data elements)
       SELECT rollname
              APPENDING TABLE @ddic_objects
              FROM dd04l FOR ALL ENTRIES IN @lt_tadir
-            WHERE rollname = @lt_tadir-obj_name(30).      "#EC CI_SUBRC
+            WHERE rollname = @lt_tadir-obj_name(30). "#EC CI_SUBRC
       SORT ddic_objects.
       DELETE ADJACENT DUPLICATES FROM ddic_objects.
     ENDIF.
