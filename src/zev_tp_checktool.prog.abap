@@ -814,6 +814,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
 *   Data declarations
     DATA lr_selections       TYPE REF TO cl_salv_selections.
     DATA lp_filelength       TYPE i ##NEEDED.
+    DATA lp_localfile        TYPE string.
     DATA lp_filename         TYPE string.
 *   Selected rows
     DATA lt_rows             TYPE salv_t_row.
@@ -874,7 +875,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           rf_ztct->ofc_add_tp( ).
         WHEN '&ADD_FILE'.
           rf_ztct->clear_flags( ).
-          DATA(lp_localfile) = rf_ztct->get_filename( ).
+          lp_localfile = rf_ztct->get_filename( ).
           lp_filename  = lp_localfile.
           rf_ztct->gui_upload( lp_filename ).
           tp_dokl_object = 'ZEV_TP_CHECKTOOL_ADD_FILE'.
@@ -1361,9 +1362,10 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     continue with the next.
       IF lt_newer_transports[] IS NOT INITIAL.
         FREE lt_e07t.
-        SELECT * FROM  e07t INTO TABLE @lt_e07t
-                    FOR ALL ENTRIES IN @lt_newer_transports
-                                 WHERE trkorr = @lt_newer_transports-trkorr. "#EC CI_SUBRC
+        SELECT * FROM e07t INTO TABLE @lt_e07t
+                   FOR ALL ENTRIES IN @lt_newer_transports
+                                WHERE trkorr = @lt_newer_transports-trkorr
+                                      ORDER BY PRIMARY KEY. "#EC CI_SUBRC
         LOOP AT lt_newer_transports INTO ls_newer_line.
 *         Get transport description:
           READ TABLE lt_e07t INTO ls_e07t
@@ -1487,9 +1489,10 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     If not, then add a warning and continue with the next record.
       IF lt_older_transports[] IS NOT INITIAL.
         FREE lt_e07t.
-        SELECT * FROM  e07t INTO TABLE @lt_e07t
-                    FOR ALL ENTRIES IN @lt_older_transports
-                                 WHERE trkorr = @lt_older_transports-trkorr. "#EC CI_SUBRC
+        SELECT * FROM e07t INTO TABLE @lt_e07t
+                   FOR ALL ENTRIES IN @lt_older_transports
+                                WHERE trkorr = @lt_older_transports-trkorr
+                                      ORDER BY PRIMARY KEY. "#EC CI_SUBRC
         LOOP AT lt_older_transports INTO ls_older_line.
 *         Get transport description:
           READ TABLE lt_e07t INTO ls_e07t
@@ -2159,7 +2162,8 @@ CLASS lcl_ztct IMPLEMENTATION.
            AND   ( b~pgmid = 'LIMU' OR
                    b~pgmid = 'R3TR' OR
                    b~pgmid = 'R3OB' OR
-                   b~pgmid = 'LANG' ) ##TOO_MANY_ITAB_FIELDS.
+                   b~pgmid = 'LANG' )
+           ORDER BY a~trkorr ASCENDING, b~as4pos ASCENDING ##TOO_MANY_ITAB_FIELDS.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
@@ -3555,6 +3559,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Remove some columns for the XLS output
     DATA lt_range_fieldname  TYPE RANGE OF ty_field_ran.
     DATA ls_fieldname        TYPE ty_field_ran.
+    DATA lp_return           TYPE abap_bool.
 *   Hide columns when empty
     DATA lt_range_hide_when_empty TYPE RANGE OF ty_field_ran.
     DATA ls_hide_when_empty  TYPE ty_field_ran.
@@ -3692,7 +3697,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         ENDIF.
 *       Remove columns that are not required when empty
         IF lr_column_table->get_columnname( ) IN lt_range_hide_when_empty.
-          DATA(lp_return) = is_empty_column( im_column = ls_s_column_ref-columnname
+          lp_return = is_empty_column( im_column = ls_s_column_ref-columnname
                                        im_table  = main_list ).
           IF lp_return = abap_true.
             lr_column_table->set_technical( if_salv_c_bool_sap=>true ).
@@ -4093,7 +4098,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       SELECT SINGLE scrtext_m
                     FROM dd04t INTO @lp_as4text
                    WHERE rollname   = @im_name
-                     AND ddlanguage = @co_langu.         "#EC CI_SUBRC
+                     AND ddlanguage = @co_langu.          "#EC CI_SUBRC
       IF lp_as4text IS INITIAL.
         SELECT SINGLE scrtext_l
                  FROM dd04t INTO @lp_as4text
@@ -4320,6 +4325,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lt_details             TYPE abap_compdescr_tab.
     DATA ls_details             TYPE abap_compdescr.
     DATA lp_field               TYPE string.
+    DATA lp_bool                TYPE abap_bool.
 *   Declaration for ALV Columns
     DATA lr_columns_table       TYPE REF TO cl_salv_columns_table.
     DATA lt_t_column_ref        TYPE salv_t_column_ref.
@@ -4613,7 +4619,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 
           ENDCASE.
 *         Count the number of columns that are visible
-          DATA(lp_bool) = lr_column_table->is_technical( ).
+          lp_bool = lr_column_table->is_technical( ).
           IF lp_bool = abap_false.
             lp_cw_columns = lp_cw_columns + 1.
           ENDIF.
@@ -4730,11 +4736,14 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_index             TYPE syindex.
     DATA lp_counter           TYPE i.
     DATA lp_total             TYPE sytabix.
+    DATA lp_deleted           TYPE abap_bool.
     DATA lp_obj_name          TYPE trobj_name.
     DATA lt_objrangtab        TYPE objrangtab.
     DATA ls_objtyprang        TYPE objtyprang.
     DATA lt_objtype           TYPE TABLE OF versobjtyp.
     DATA lp_chars             TYPE string VALUE '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
+    DATA ls_objects           TYPE string.
+    DATA lt_where_used_sub    TYPE sci_findlst.
 
     FREE ddic_e071.
 
@@ -4754,7 +4763,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDIF.
 * Now find ALL transports for the DDIC objects with Program ID R3TR,
 * for the object types found
-    CLEAR: lp_counter.
+    CLEAR lp_counter.
     lp_total = lines( ddic_objects ).
     LOOP AT ddic_objects INTO DATA(ls_ddic_object).
       lp_counter = lp_counter + 1.
@@ -4776,7 +4785,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     CLEAR lp_counter.
     LOOP AT ddic_e071 INTO ddic_e071_line.
       lp_index = sy-tabix.
-      DATA(lp_deleted) = abap_false.
+      lp_deleted = abap_false.
       IF ddic_e071_line-trkorr(3) NS dev_system.
 *       Not a Development transport, check not required
         DELETE ddic_e071 INDEX lp_index.
@@ -4878,9 +4887,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     cl_progress_indicator=>progress_indicate( i_text = 'Retrieving Where Used list'(052) ).
 
 * Build the WHERE_USED list for all remaining objects
-    DATA lt_where_used_sub TYPE sci_findlst.
     FREE where_used.
-    LOOP AT ddic_objects INTO DATA(ls_objects).
+    LOOP AT ddic_objects INTO ls_objects.
       FREE ddic_objects_sub.
       APPEND ls_objects TO ddic_objects_sub.
       CALL FUNCTION 'RS_EU_CROSSREF'
