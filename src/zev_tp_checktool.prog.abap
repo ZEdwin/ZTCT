@@ -4659,17 +4659,17 @@ CLASS lcl_ztct IMPLEMENTATION.
       SELECT domname
              APPENDING TABLE @ddic_objects
              FROM dd01l FOR ALL ENTRIES IN @lt_tadir
-            WHERE domname = @lt_tadir-obj_name(30). "#EC CI_SUBRC
+            WHERE domname = @lt_tadir-obj_name(30).       "#EC CI_SUBRC
 *     DD02L (SAP-tables)
       SELECT tabname
              APPENDING TABLE @ddic_objects
              FROM dd02l FOR ALL ENTRIES IN @lt_tadir
-            WHERE tabname = @lt_tadir-obj_name(30). "#EC CI_SUBRC
+            WHERE tabname = @lt_tadir-obj_name(30).       "#EC CI_SUBRC
 *     DD04L (Data elements)
       SELECT rollname
              APPENDING TABLE @ddic_objects
              FROM dd04l FOR ALL ENTRIES IN @lt_tadir
-            WHERE rollname = @lt_tadir-obj_name(30). "#EC CI_SUBRC
+            WHERE rollname = @lt_tadir-obj_name(30).      "#EC CI_SUBRC
       SORT ddic_objects.
       DELETE ADJACENT DUPLICATES FROM ddic_objects.
     ENDIF.
@@ -5328,7 +5328,8 @@ START-OF-SELECTION.
         SELECT reference FROM e070a UP TO 1 ROWS
                INTO @tp_project_reference
               WHERE trkorr = @st_trkorr_range-low
-                AND attribute = 'SAP_CTS_PROJECT'.
+                AND attribute = 'SAP_CTS_PROJECT'
+                    ORDER BY PRIMARY KEY.
           IF tp_project_reference NOT IN s_proj.
             DELETE ta_trkorr_range INDEX sy-tabix.
           ENDIF.
