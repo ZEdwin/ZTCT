@@ -376,6 +376,14 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS display_excel            IMPORTING im_table TYPE ty_request_details_tt.
     METHODS set_tp_prefix            IMPORTING im_dev TYPE sysname OPTIONAL.
     METHODS top_of_page              RETURNING VALUE(re_form_element) TYPE REF TO cl_salv_form_element.
+    METHODS check_newer_transports   IMPORTING im_newer_transports TYPE ty_request_details_tt
+                                               im_main_list        TYPE ty_request_details_tt
+                                     CHANGING  ch_conflicts        TYPE ty_request_details_tt
+                                               ch_main             TYPE ty_request_details.
+    METHODS check_older_transports   IMPORTING im_older_transports TYPE ty_request_details_tt
+                                               im_main_list        TYPE ty_request_details_tt
+                                     CHANGING  ch_conflicts        TYPE ty_request_details_tt
+                                               ch_main             TYPE ty_request_details.
     METHODS check_if_same_object     IMPORTING im_line        TYPE ty_request_details
                                                im_newer_older TYPE ty_request_details
                                      EXPORTING ex_tabkey      TYPE trobj_name
@@ -428,6 +436,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS ofc_abr.
     METHODS ofc_ddic.
     METHODS ofc_add_tp.
+    METHODS ofc_save.
     METHODS ofc_nconf                IMPORTING im_selections TYPE REF TO cl_salv_selections
                                      CHANGING  ch_cell       TYPE salv_s_cell.
 ENDCLASS.
@@ -812,18 +821,12 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     DATA lt_range_transports_to_add TYPE RANGE OF e070-trkorr.
     DATA ls_range_transports_to_add LIKE LINE OF lt_range_transports_to_add.
 *   Data declarations
-    DATA lr_selections       TYPE REF TO cl_salv_selections.
-    DATA lp_filelength       TYPE i ##NEEDED.
     DATA lp_localfile        TYPE string.
     DATA lp_filename         TYPE string.
 *   Selected rows
+    DATA lr_selections       TYPE REF TO cl_salv_selections.
     DATA lt_rows             TYPE salv_t_row.
     DATA ls_cell             TYPE salv_s_cell.
-    DATA lp_path             TYPE string.
-    DATA lp_fullpath         TYPE string.
-    DATA lp_desktop          TYPE string.
-    DATA lp_timestamp        TYPE tzntstmps.
-
 *   Which popup are we displaying? Conflicts or Table keys?
     FIELD-SYMBOLS <lf_ref_table> TYPE REF TO cl_salv_table.
     IF rf_conflicts IS BOUND.
@@ -936,87 +939,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           ENDIF.
           rf_ztct->display_excel( rf_ztct->main_list ).
         WHEN '&SAVE'.
-*         Build header
-          rf_ztct->main_to_tab_delimited( EXPORTING im_main_list     = rf_ztct->main_list
-                                          IMPORTING ex_tab_delimited = rf_ztct->tab_delimited ).
-*         Finding desktop
-          cl_gui_frontend_services=>get_desktop_directory(
-             CHANGING   desktop_directory = lp_desktop
-             EXCEPTIONS
-               cntl_error                 = 1
-               error_no_gui               = 2
-               not_supported_by_gui       = 3
-               OTHERS                     = 4 ).
-          IF sy-subrc <> 0.
-            MESSAGE e001(00) WITH 'Desktop not found'(008) ##MG_MISSING.
-          ENDIF.
-
-          CONVERT DATE sy-datum TIME sy-uzeit
-            INTO TIME STAMP lp_timestamp TIME ZONE sy-zonlo.
-          DATA(lp_default_filename) = |{ lp_timestamp }|.
-          CONCATENATE 'ZTCT-' lp_default_filename INTO lp_default_filename.
-
-          DATA(lp_title) = |{ 'Save Transportlist'(009) }|.
-          cl_gui_frontend_services=>file_save_dialog(
-            EXPORTING
-              window_title         = lp_title
-              default_extension    = 'TXT'
-              default_file_name    = lp_default_filename
-              initial_directory    = lp_desktop
-            CHANGING
-              filename             = lp_filename
-              path                 = lp_path
-              fullpath             = lp_fullpath
-            EXCEPTIONS
-              cntl_error           = 1
-              error_no_gui         = 2
-              not_supported_by_gui = 3
-              OTHERS               = 4 ).
-          IF sy-subrc <> 0.
-            MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-                       WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-          ENDIF.
-
-*         Display save dialog window
-          cl_gui_frontend_services=>gui_download(
-            EXPORTING
-              filename                = lp_fullpath
-              filetype                = 'ASC'
-            IMPORTING
-              filelength              = lp_filelength
-            CHANGING
-              data_tab                = rf_ztct->tab_delimited
-            EXCEPTIONS
-              file_write_error        = 1
-              no_batch                = 2
-              gui_refuse_filetransfer = 3
-              invalid_type            = 4
-              no_authority            = 5
-              unknown_error           = 6
-              header_not_allowed      = 7
-              separator_not_allowed   = 8
-              filesize_not_allowed    = 9
-              header_too_long         = 10
-              dp_error_create         = 11
-              dp_error_send           = 12
-              dp_error_write          = 13
-              unknown_dp_error        = 14
-              access_denied           = 15
-              dp_out_of_memory        = 16
-              disk_full               = 17
-              dp_timeout              = 18
-              file_not_found          = 19
-              dataprovider_exception  = 20
-              control_flush_error     = 21
-              not_supported_by_gui    = 22
-              error_no_gui            = 23
-              OTHERS                  = 24 ).
-          CASE sy-subrc.
-            WHEN 0.
-            WHEN OTHERS.
-              MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-                         WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-          ENDCASE.
+          rf_ztct->ofc_save( ).
         WHEN '&NCONF'.
           rf_ztct->ofc_nconf( EXPORTING im_selections = lr_selections
                               CHANGING  ch_cell       = ls_cell ).
@@ -1361,269 +1284,20 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     If a newer version/request is found in prd, then add a warning and
 *     continue with the next.
       IF lt_newer_transports[] IS NOT INITIAL.
-        FREE lt_e07t.
-        SELECT * FROM e07t INTO TABLE @lt_e07t
-                   FOR ALL ENTRIES IN @lt_newer_transports
-                                WHERE trkorr = @lt_newer_transports-trkorr
-                                      ORDER BY PRIMARY KEY. "#EC CI_SUBRC
-        LOOP AT lt_newer_transports INTO ls_newer_line.
-*         Get transport description:
-          READ TABLE lt_e07t INTO ls_e07t
-                         WITH KEY trkorr = ls_newer_line-trkorr.
-          IF sy-subrc = 0.
-            ls_newer_line-tr_descr = ls_e07t-as4text.
-          ENDIF.
-*         Check if it has been transported to the target system:
-          FREE lt_stms_wbo_requests.
-          CLEAR lt_stms_wbo_requests.
-          READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
-               WITH TABLE KEY request          = ls_newer_line-trkorr
-                              target_system    = lp_target.
-          IF sy-subrc = 0.
-            lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
-          ELSE.
-            CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
-              EXPORTING
-                iv_request                 = ls_newer_line-trkorr
-                iv_target_system           = lp_target
-                iv_header_only             = 'X'
-                iv_monitor                 = ' '
-              IMPORTING
-                et_request_infos           = lt_stms_wbo_requests
-              EXCEPTIONS
-                read_config_failed         = 1
-                table_of_requests_is_empty = 2
-                system_not_available       = 3
-                OTHERS                     = 4.
-            IF sy-subrc <> 0.
-              MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-                      WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-            ELSE.
-              tms_mgr_buffer_line-request       = ls_newer_line-trkorr.
-              tms_mgr_buffer_line-target_system = lp_target.
-              tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
-              INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
-            ENDIF.
-          ENDIF.
-          READ TABLE lt_stms_wbo_requests INDEX 1
-                     INTO ls_stms_wbo_requests.
-          IF sy-subrc = 0 AND ls_stms_wbo_requests-e070 IS NOT INITIAL.
-*           Only display the warning if the preceding transport is not
-*           one of the selected transports (and in an earlier
-*           position)
-            check_if_same_object( EXPORTING im_line        = ls_main
-                                            im_newer_older = ls_newer_line
-                                  IMPORTING ex_tabkey      = tp_tabkey
-                                            ex_return      = lp_return ).
-            CHECK lp_return = abap_true.
-*           Fill conflict list
-            conflict_line = CORRESPONDING #( ls_newer_line ).
-            conflict_line-warning_lvl  = co_error.
-            conflict_line-warning_rank = co_error_rank.
-            conflict_line-warning_txt  = lp_error_text.
-            conflict_line-objkey       = tp_tabkey.
-*           Get the last date the object was imported
-            get_import_datetime_qas( EXPORTING im_trkorr  = ls_newer_line-trkorr
-                                     IMPORTING ex_as4time = conflict_line-as4time
-                                               ex_as4date = conflict_line-as4date ).
-*           Check if the transport is in the list
-*           Display the warning if the preceding transport is not
-*           in the main list. If it is, then display the hint icon.
-            READ TABLE ch_main_list
-                  INTO ls_line_temp
-                  WITH KEY trkorr = ls_newer_line-trkorr
-                  TRANSPORTING prd.
-            IF sy-subrc = 0.
-              IF ls_line_temp-prd = co_scrap.
-*               This newer version is in the list and made visible:
-                conflict_line-warning_lvl = co_scrap.
-              ENDIF.
-            ELSE.
-              APPEND conflict_line TO conflicts.
-              CLEAR conflict_line.
-            ENDIF.
-          ELSE.
-            check_if_in_list( EXPORTING im_line  = ls_newer_line
-                                        im_tabix = lp_tabix
-                              IMPORTING ex_line  = line_found_in_list ).
-            IF line_found_in_list IS NOT INITIAL.
-*             Even if the transport is only in QAS and not in prd (so a
-*             newer transport exists, but will not be overwritten), we still
-*             want to let the user now about it. To prevent that a newer
-*             development exists and should go to production, but it might
-*             be forgotten if not selected....
-              ls_main-warning_lvl        = co_hint.
-              ls_newer_line-warning_lvl  = co_hint.
-              ls_main-warning_rank       = co_hint2_rank.
-              ls_newer_line-warning_rank = co_hint2_rank.
-              ls_main-warning_txt        = lp_hint2_text.
-              ls_newer_line-warning_txt  = lp_hint2_text.
-*             No need to check further. A newer transport was found but because
-*             that newer transport is in the list, we can stop checking for newer
-*             transports because that will be done for the transport that is in
-*             the list.
-              lp_exit = abap_true.
-            ELSE.
-*             The transport is not yet transported, but if it is found
-*             further down in the list, it is okay. Change the warning level
-*             from ERROR to INFO.
-              ls_main-warning_lvl        = co_info.
-              ls_newer_line-warning_lvl  = co_info.
-              ls_main-warning_rank       = co_info_rank.
-              ls_newer_line-warning_rank = co_info_rank.
-              ls_main-warning_txt        = lp_info_text.
-              ls_newer_line-warning_txt  = lp_info_text.
-            ENDIF.
-            conflict_line = CORRESPONDING #( ls_newer_line ).
-            APPEND conflict_line TO conflicts.
-            CLEAR conflict_line.
-            IF lp_exit = abap_true.
-              EXIT.
-            ENDIF.
-          ENDIF.
-        ENDLOOP.
+        check_newer_transports( EXPORTING im_newer_transports = lt_newer_transports
+                                          im_main_list        = ch_main_list
+                                CHANGING  ch_conflicts        = conflicts
+                                          ch_main             = ls_main ).
       ENDIF.
 *     Select all the transports that are older. These will be checked to
 *     see if they have been moved to prd. If the older version has been
 *     transported, it is okay.
 *     If not, then add a warning and continue with the next record.
       IF lt_older_transports[] IS NOT INITIAL.
-        FREE lt_e07t.
-        SELECT * FROM e07t INTO TABLE @lt_e07t
-                   FOR ALL ENTRIES IN @lt_older_transports
-                                WHERE trkorr = @lt_older_transports-trkorr
-                                      ORDER BY PRIMARY KEY. "#EC CI_SUBRC
-        LOOP AT lt_older_transports INTO ls_older_line.
-*         Get transport description:
-          READ TABLE lt_e07t INTO ls_e07t
-                         WITH KEY trkorr = ls_older_line-trkorr.
-          IF sy-subrc = 0.
-            ls_older_line-tr_descr = ls_e07t-as4text.
-          ENDIF.
-*         Check if it has been transported to QAS
-          FREE lt_stms_wbo_requests.
-          CLEAR lt_stms_wbo_requests.
-          READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
-                          WITH TABLE KEY request          = ls_older_line-trkorr
-                                         target_system    = lp_target.
-          IF sy-subrc = 0.
-            lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
-          ELSE.
-            CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
-              EXPORTING
-                iv_request                 = ls_older_line-trkorr
-                iv_target_system           = lp_target
-                iv_header_only             = 'X'
-                iv_monitor                 = ' '
-              IMPORTING
-                et_request_infos           = lt_stms_wbo_requests
-              EXCEPTIONS
-                read_config_failed         = 1
-                table_of_requests_is_empty = 2
-                system_not_available       = 3
-                OTHERS                     = 4.
-            IF sy-subrc <> 0.
-              MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-                      WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-            ELSE.
-              tms_mgr_buffer_line-request       = ls_older_line-trkorr.
-              tms_mgr_buffer_line-target_system = lp_target.
-              tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
-              INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
-            ENDIF.
-          ENDIF.
-*         Was an older transport found that has not yet gone to EEP?
-          READ TABLE lt_stms_wbo_requests INDEX 1
-                                          INTO ls_stms_wbo_requests.
-          IF sy-subrc = 0 AND ls_stms_wbo_requests-e070 IS INITIAL.
-            check_if_same_object( EXPORTING im_line        = ls_main
-                                            im_newer_older = ls_older_line
-                                  IMPORTING ex_tabkey      = tp_tabkey
-                                            ex_return      = lp_return ).
-*           Yes, same object!
-            IF lp_return = abap_true.
-              conflict_line = CORRESPONDING #( ls_older_line ).
-*             Get the last date the object was imported
-              get_import_datetime_qas( EXPORTING im_trkorr  = ls_older_line-trkorr
-                                       IMPORTING ex_as4time = conflict_line-as4time
-                                                 ex_as4date = conflict_line-as4date ).
-              conflict_line-warning_lvl  = co_warn.
-              conflict_line-warning_rank = co_warn_rank.
-              main_list_line-warning_txt = lp_warn_text.
-              conflict_line-objkey       = tp_tabkey.
-*             Check if the transport is in the list
-*             Display the warning if the preceding transport is not
-*             in the main list. If it is, then display the hint icon.
-              IF line_exists( ch_main_list[ trkorr = ls_older_line-trkorr ] ).
-*               There is a warning but the conflicting transport is
-*               ALSO in the list. Display the HINT Icon. The other
-*               transport will be checked too, sooner or later...
-                conflict_line-warning_lvl  = co_hint.
-                conflict_line-warning_rank = co_hint2_rank.
-                conflict_line-warning_txt  = lp_hint2_text.
-              ENDIF.
-*             Check if transport has been released.
-*             D - Modifiable
-*             L - Modifiable, protected
-*             A - Modifiable, protected
-*             O - Release started
-*             R - Released
-*             N - Released (with import protection for repaired objects)
-              FREE lt_stms_wbo_requests.
-              CLEAR lt_stms_wbo_requests.
-              READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
-                              WITH TABLE KEY request          = ls_older_line-trkorr
-                                             target_system    = dev_system.
-              IF sy-subrc = 0.
-                lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
-              ELSE.
-                CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
-                  EXPORTING
-                    iv_request                 = ls_older_line-trkorr
-                    iv_target_system           = dev_system
-                    iv_header_only             = 'X'
-                    iv_monitor                 = ' '
-                  IMPORTING
-                    et_request_infos           = lt_stms_wbo_requests
-                  EXCEPTIONS
-                    read_config_failed         = 1
-                    table_of_requests_is_empty = 2
-                    system_not_available       = 3
-                    OTHERS                     = 4.
-                IF sy-subrc <> 0.
-                  MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-                          WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-                ELSE.
-                  tms_mgr_buffer_line-request       = ls_older_line-trkorr.
-                  tms_mgr_buffer_line-target_system = lp_target.
-                  tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
-                  INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
-                ENDIF.
-              ENDIF.
-              READ TABLE lt_stms_wbo_requests INDEX 1
-                                              INTO ls_stms_wbo_requests.
-              IF sy-subrc = 0.
-                IF ls_stms_wbo_requests-e070-trstatus NA 'NR'.
-                  conflict_line-warning_lvl  = co_alert.
-                  conflict_line-warning_rank = co_alert1_rank.
-                  conflict_line-warning_txt  = lp_alert1_text.
-                ELSEIF ls_stms_wbo_requests-e070-trstatus = 'O'.
-                  conflict_line-warning_lvl  = co_alert.
-                  conflict_line-warning_rank = co_alert2_rank.
-                  conflict_line-warning_txt  = lp_alert2_text.
-                ENDIF.
-              ENDIF.
-              IF conflict_line IS NOT INITIAL.
-                APPEND conflict_line TO conflicts.
-                CLEAR conflict_line.
-              ENDIF.
-            ENDIF.
-          ELSE.
-*           When the first earlier transported version is found,
-*           the check must be ended.
-            EXIT.
-          ENDIF.
-        ENDLOOP.
+        check_older_transports( EXPORTING im_older_transports = lt_older_transports
+                                          im_main_list        = ch_main_list
+                                CHANGING  ch_conflicts        = conflicts
+                                          ch_main             = ls_main ).
       ENDIF.
 *     Determine highest warning level in conflict list
 *     Only when NOT building the conflict popup
@@ -1669,6 +1343,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     IF buffer_chk = abap_true AND building_conflict_popup = abap_false.
       LOOP AT ch_main_list ASSIGNING FIELD-SYMBOL(<lf_main_list>)
                            WHERE prd  <> co_okay
+                             AND prd  <> co_scrap
                              AND dev  <> co_error
                              AND flag = abap_true.
 *       Show the progress indicator
@@ -2632,13 +2307,13 @@ CLASS lcl_ztct IMPLEMENTATION.
                          WHERE flag = abap_true.
 *     Also flag all the objects already existing in the main table
 *     that are in the added list: They need to be checked again.
-      LOOP AT lt_main_list_copy[] INTO main_list_line
-                                 WHERE object     = main_list_line-object
-                                   AND obj_name   = main_list_line-obj_name
-                                   AND keyobject  = main_list_line-keyobject
-                                   AND keyobjname = main_list_line-keyobjname
-                                   AND tabkey     = main_list_line-tabkey
-                                   AND flag = abap_false.
+      LOOP AT lt_main_list_copy INTO main_list_line
+                               WHERE object     = main_list_line-object
+                                 AND obj_name   = main_list_line-obj_name
+                                 AND keyobject  = main_list_line-keyobject
+                                 AND keyobjname = main_list_line-keyobjname
+                                 AND tabkey     = main_list_line-tabkey
+                                 AND flag = abap_false.
         main_list_line-flag = abap_true.
         MODIFY lt_main_list_copy FROM main_list_line
                                  INDEX sy-tabix
@@ -3074,6 +2749,291 @@ CLASS lcl_ztct IMPLEMENTATION.
                        AND tabkey     = im_line-tabkey
                        AND prd        <> co_okay.
       EXIT.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD check_newer_transports.
+    DATA lt_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
+    DATA ls_stms_wbo_requests TYPE stms_wbo_request.
+    DATA lp_tabix             TYPE sytabix.
+    DATA lp_return            TYPE c.
+    DATA lp_exit              TYPE abap_bool.
+    DATA ls_main              TYPE ty_request_details.
+    DATA ls_line_temp         TYPE ty_request_details.
+    DATA ls_newer_line        TYPE ty_request_details.
+    DATA lp_target            TYPE tmssysnam.
+    DATA lt_e07t              TYPE e07t_t.
+    DATA ls_e07t              TYPE e07t.
+
+    FREE lt_e07t.
+    SELECT * FROM e07t INTO TABLE @lt_e07t
+               FOR ALL ENTRIES IN @im_newer_transports
+                            WHERE trkorr = @im_newer_transports-trkorr
+                                  ORDER BY PRIMARY KEY.   "#EC CI_SUBRC
+    LOOP AT im_newer_transports INTO ls_newer_line.
+*     Get transport description
+      READ TABLE lt_e07t INTO ls_e07t
+                     WITH KEY trkorr = ls_newer_line-trkorr.
+      IF sy-subrc = 0.
+        ls_newer_line-tr_descr = ls_e07t-as4text.
+      ENDIF.
+*     Check if it has been transported to the target system
+      FREE lt_stms_wbo_requests.
+      CLEAR lt_stms_wbo_requests.
+      READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
+           WITH TABLE KEY request          = ls_newer_line-trkorr
+                          target_system    = lp_target.
+      IF sy-subrc = 0.
+        lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
+      ELSE.
+        CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
+          EXPORTING
+            iv_request                 = ls_newer_line-trkorr
+            iv_target_system           = lp_target
+            iv_header_only             = 'X'
+            iv_monitor                 = ' '
+          IMPORTING
+            et_request_infos           = lt_stms_wbo_requests
+          EXCEPTIONS
+            read_config_failed         = 1
+            table_of_requests_is_empty = 2
+            system_not_available       = 3
+            OTHERS                     = 4.
+        IF sy-subrc <> 0.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                  WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ELSE.
+          tms_mgr_buffer_line-request       = ls_newer_line-trkorr.
+          tms_mgr_buffer_line-target_system = lp_target.
+          tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
+          INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
+        ENDIF.
+      ENDIF.
+      READ TABLE lt_stms_wbo_requests INDEX 1
+                 INTO ls_stms_wbo_requests.
+      IF sy-subrc = 0 AND ls_stms_wbo_requests-e070 IS NOT INITIAL.
+*       Only display the warning if the preceding transport is not
+*       one of the selected transports (and in an earlier
+*       position)
+        check_if_same_object( EXPORTING im_line        = ch_main
+                                        im_newer_older = ls_newer_line
+                              IMPORTING ex_tabkey      = tp_tabkey
+                                        ex_return      = lp_return ).
+        CHECK lp_return = abap_true.
+*       Fill conflict list
+        conflict_line = CORRESPONDING #( ls_newer_line ).
+        conflict_line-warning_lvl  = co_error.
+        conflict_line-warning_rank = co_error_rank.
+        conflict_line-warning_txt  = lp_error_text.
+        conflict_line-objkey       = tp_tabkey.
+*       Get the last date the object was imported
+        get_import_datetime_qas( EXPORTING im_trkorr  = ls_newer_line-trkorr
+                                 IMPORTING ex_as4time = conflict_line-as4time
+                                           ex_as4date = conflict_line-as4date ).
+*       Check if the transport is in the list
+*       Display the warning if the preceding transport is not
+*       in the main list. If it is, then display the hint icon.
+        READ TABLE im_main_list
+              INTO ls_line_temp
+              WITH KEY trkorr = ls_newer_line-trkorr
+              TRANSPORTING prd.
+        IF sy-subrc = 0.
+          IF ls_line_temp-prd = co_scrap.
+*           This newer version is in the list and made visible
+            conflict_line-warning_lvl  = co_hint.
+            conflict_line-warning_rank = co_hint2_rank.
+            conflict_line-warning_txt  = lp_hint2_text.
+          ENDIF.
+        ENDIF.
+        APPEND conflict_line TO conflicts.
+        CLEAR conflict_line.
+      ELSE.
+        check_if_in_list( EXPORTING im_line  = ls_newer_line
+                                    im_tabix = lp_tabix
+                          IMPORTING ex_line  = line_found_in_list ).
+        IF line_found_in_list IS NOT INITIAL.
+*         Even if the transport is only in QAS and not in prd (so a
+*         newer transport exists, but will not be overwritten), we still
+*         want to let the user now about it. To prevent that a newer
+*         development exists and should go to production, but it might
+*         be forgotten if not selected...
+          ch_main-warning_lvl        = co_hint.
+          ls_newer_line-warning_lvl  = co_hint.
+          ch_main-warning_rank       = co_hint2_rank.
+          ls_newer_line-warning_rank = co_hint2_rank.
+          ch_main-warning_txt        = lp_hint2_text.
+          ls_newer_line-warning_txt  = lp_hint2_text.
+*         No need to check further. A newer transport was found but because
+*         that newer transport is in the list, we can stop checking for newer
+*         transports because that will be done for the transport that is in
+*         the list.
+          lp_exit = abap_true.
+        ELSE.
+*         The transport is not yet transported, but if it is found
+*         further down in the list, it is okay. Change the warning level
+*         from ERROR to INFO.
+          ch_main-warning_lvl        = co_info.
+          ls_newer_line-warning_lvl  = co_info.
+          ch_main-warning_rank       = co_info_rank.
+          ls_newer_line-warning_rank = co_info_rank.
+          ch_main-warning_txt        = lp_info_text.
+          ls_newer_line-warning_txt  = lp_info_text.
+        ENDIF.
+        conflict_line = CORRESPONDING #( ls_newer_line ).
+        APPEND conflict_line TO conflicts.
+        CLEAR conflict_line.
+        IF lp_exit = abap_true.
+          EXIT.
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD check_older_transports.
+    DATA lt_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
+    DATA ls_stms_wbo_requests TYPE stms_wbo_request.
+    DATA lp_return            TYPE c.
+    DATA lt_older_transports  TYPE ty_request_details_tt.
+    DATA ls_older_line        TYPE ty_request_details.
+    DATA lp_target            TYPE tmssysnam.
+    DATA lt_e07t              TYPE e07t_t.
+    DATA ls_e07t              TYPE e07t.
+
+    FREE lt_e07t.
+    SELECT * FROM e07t INTO TABLE @lt_e07t
+               FOR ALL ENTRIES IN @lt_older_transports
+                            WHERE trkorr = @lt_older_transports-trkorr
+                                  ORDER BY PRIMARY KEY.   "#EC CI_SUBRC
+    LOOP AT lt_older_transports INTO ls_older_line.
+*     Get transport description
+      READ TABLE lt_e07t INTO ls_e07t
+                     WITH KEY trkorr = ls_older_line-trkorr.
+      IF sy-subrc = 0.
+        ls_older_line-tr_descr = ls_e07t-as4text.
+      ENDIF.
+*     Check if it has been transported to QAS
+      FREE lt_stms_wbo_requests.
+      CLEAR lt_stms_wbo_requests.
+      READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
+                      WITH TABLE KEY request          = ls_older_line-trkorr
+                                     target_system    = lp_target.
+      IF sy-subrc = 0.
+        lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
+      ELSE.
+        CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
+          EXPORTING
+            iv_request                 = ls_older_line-trkorr
+            iv_target_system           = lp_target
+            iv_header_only             = 'X'
+            iv_monitor                 = ' '
+          IMPORTING
+            et_request_infos           = lt_stms_wbo_requests
+          EXCEPTIONS
+            read_config_failed         = 1
+            table_of_requests_is_empty = 2
+            system_not_available       = 3
+            OTHERS                     = 4.
+        IF sy-subrc <> 0.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                  WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ELSE.
+          tms_mgr_buffer_line-request       = ls_older_line-trkorr.
+          tms_mgr_buffer_line-target_system = lp_target.
+          tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
+          INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
+        ENDIF.
+      ENDIF.
+*     Was an older transport found that has not yet gone to EEP?
+      READ TABLE lt_stms_wbo_requests INDEX 1
+                                      INTO ls_stms_wbo_requests.
+      IF sy-subrc = 0 AND ls_stms_wbo_requests-e070 IS INITIAL.
+        check_if_same_object( EXPORTING im_line        = ch_main
+                                        im_newer_older = ls_older_line
+                              IMPORTING ex_tabkey      = tp_tabkey
+                                        ex_return      = lp_return ).
+*       Yes, same object!
+        IF lp_return = abap_true.
+          conflict_line = CORRESPONDING #( ls_older_line ).
+*         Get the last date the object was imported
+          get_import_datetime_qas( EXPORTING im_trkorr  = ls_older_line-trkorr
+                                   IMPORTING ex_as4time = conflict_line-as4time
+                                             ex_as4date = conflict_line-as4date ).
+          conflict_line-warning_lvl  = co_warn.
+          conflict_line-warning_rank = co_warn_rank.
+          main_list_line-warning_txt = lp_warn_text.
+          conflict_line-objkey       = tp_tabkey.
+*         Check if the transport is in the list
+*         Display the warning if the preceding transport is not
+*         in the main list. If it is, then display the hint icon.
+          IF line_exists( im_main_list[ trkorr = ls_older_line-trkorr ] ).
+*           There is a warning but the conflicting transport is
+*           ALSO in the list. Display the HINT Icon. The other
+*           transport will be checked too, sooner or later...
+            conflict_line-warning_lvl  = co_hint.
+            conflict_line-warning_rank = co_hint2_rank.
+            conflict_line-warning_txt  = lp_hint2_text.
+          ENDIF.
+*         Check if transport has been released.
+*         D - Modifiable
+*         L - Modifiable, protected
+*         A - Modifiable, protected
+*         O - Release started
+*         R - Released
+*         N - Released (with import protection for repaired objects)
+          FREE lt_stms_wbo_requests.
+          CLEAR lt_stms_wbo_requests.
+          READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
+                          WITH TABLE KEY request          = ls_older_line-trkorr
+                                         target_system    = dev_system.
+          IF sy-subrc = 0.
+            lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
+          ELSE.
+            CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
+              EXPORTING
+                iv_request                 = ls_older_line-trkorr
+                iv_target_system           = dev_system
+                iv_header_only             = 'X'
+                iv_monitor                 = ' '
+              IMPORTING
+                et_request_infos           = lt_stms_wbo_requests
+              EXCEPTIONS
+                read_config_failed         = 1
+                table_of_requests_is_empty = 2
+                system_not_available       = 3
+                OTHERS                     = 4.
+            IF sy-subrc <> 0.
+              MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                      WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+            ELSE.
+              tms_mgr_buffer_line-request       = ls_older_line-trkorr.
+              tms_mgr_buffer_line-target_system = lp_target.
+              tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
+              INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
+            ENDIF.
+          ENDIF.
+          READ TABLE lt_stms_wbo_requests INDEX 1
+                                          INTO ls_stms_wbo_requests.
+          IF sy-subrc = 0.
+            IF ls_stms_wbo_requests-e070-trstatus NA 'NR'.
+              conflict_line-warning_lvl  = co_alert.
+              conflict_line-warning_rank = co_alert1_rank.
+              conflict_line-warning_txt  = lp_alert1_text.
+            ELSEIF ls_stms_wbo_requests-e070-trstatus = 'O'.
+              conflict_line-warning_lvl  = co_alert.
+              conflict_line-warning_rank = co_alert2_rank.
+              conflict_line-warning_txt  = lp_alert2_text.
+            ENDIF.
+          ENDIF.
+          IF conflict_line IS NOT INITIAL.
+            APPEND conflict_line TO conflicts.
+            CLEAR conflict_line.
+          ENDIF.
+        ENDIF.
+      ELSE.
+*       When the first earlier transported version is found,
+*       the check must be ended.
+        EXIT.
+      ENDIF.
     ENDLOOP.
   ENDMETHOD.
 
@@ -4656,7 +4616,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                    ORDER BY PRIMARY KEY.
     IF sy-subrc = 0 AND lt_tadir IS NOT INITIAL.
 *     DD01L (Domains)
-      SELECT domname
+      SELECT domname AS ddic_object
              APPENDING TABLE @ddic_objects
              FROM dd01l FOR ALL ENTRIES IN @lt_tadir
             WHERE domname = @lt_tadir-obj_name(30).       "#EC CI_SUBRC
@@ -4735,6 +4695,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_systems           TYPE ctslg_system.
     DATA lp_scope             TYPE seu_obj ##NEEDED.
     DATA lp_answer            TYPE char1 ##NEEDED.
+    DATA ls_ddic_object       TYPE string.
     DATA lp_index             TYPE syindex.
     DATA lp_counter           TYPE i.
     DATA lp_total             TYPE sytabix.
@@ -4748,7 +4709,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lt_where_used_sub    TYPE sci_findlst.
 
     FREE ddic_e071.
-
 * Get all object types
 * Select values for pgmid/object/text from database--------------------
 * Get all object types that have been transported before
@@ -4767,7 +4727,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 * for the object types found
     CLEAR lp_counter.
     lp_total = lines( ddic_objects ).
-    LOOP AT ddic_objects INTO DATA(ls_ddic_object).
+    LOOP AT ddic_objects INTO ls_ddic_object.
       lp_counter = lp_counter + 1.
       lp_obj_name = ls_ddic_object.
       progress_indicator( im_counter = lp_counter
@@ -5146,11 +5106,11 @@ CLASS lcl_ztct IMPLEMENTATION.
     IF ls_fields-value IS INITIAL.
       RETURN.
     ENDIF.
-*         Is it already in the list?
+*   Is it already in the list?
     IF line_exists( rf_ztct->main_list[ trkorr = ls_fields-value(20) ] ).
       RETURN.
     ENDIF.
-*         Add transport number to the internal table to add:
+*   Add transport number to the internal table to add:
     ls_range_transports_to_add-low = ls_fields-value.
     APPEND ls_range_transports_to_add TO lt_range_transports_to_add.
     rf_ztct->get_added_objects( EXPORTING im_to_add = lt_range_transports_to_add
@@ -5158,19 +5118,112 @@ CLASS lcl_ztct IMPLEMENTATION.
     rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
     rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
                           IMPORTING ex_main   = rf_ztct->main_list ).
-*         After the transports have been added, check if there are added
-*         transports that are already in prd. If so, make them visible by
-*         changing the prd icon to co_scrap.
+*   After the transports have been added, check if there are added
+*   transports that are already in prd. If so, make them visible by
+*   changing the prd icon to co_scrap.
     LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
                               WHERE prd    = rf_ztct->co_okay
                                 AND trkorr IN lt_range_transports_to_add.
       rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
       MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
     ENDLOOP.
-*         After the transports have been added, we need to check again
+*   After the transports have been added, we need to check again
     rf_ztct->flag_same_objects( CHANGING ch_main_list = rf_ztct->main_list ).
     rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
     rf_ztct->refresh_alv( ).
+  ENDMETHOD.
+
+  METHOD ofc_save.
+*   Data declarations
+    DATA lp_filelength       TYPE i ##NEEDED.
+    DATA lp_filename         TYPE string.
+    DATA lp_default_filename TYPE string.
+*   Selected rows
+    DATA lp_path             TYPE string.
+    DATA lp_fullpath         TYPE string.
+    DATA lp_desktop          TYPE string.
+    DATA lp_timestamp        TYPE tzntstmps.
+*   Build header
+    rf_ztct->main_to_tab_delimited( EXPORTING im_main_list     = rf_ztct->main_list
+                                    IMPORTING ex_tab_delimited = rf_ztct->tab_delimited ).
+*   Finding desktop
+    cl_gui_frontend_services=>get_desktop_directory(
+       CHANGING   desktop_directory = lp_desktop
+       EXCEPTIONS
+         cntl_error                 = 1
+         error_no_gui               = 2
+         not_supported_by_gui       = 3
+         OTHERS                     = 4 ).
+    IF sy-subrc <> 0.
+      MESSAGE e001(00) WITH 'Desktop not found'(008) ##MG_MISSING.
+    ENDIF.
+
+    CONVERT DATE sy-datum TIME sy-uzeit
+      INTO TIME STAMP lp_timestamp TIME ZONE sy-zonlo.
+    lp_default_filename = |{ lp_timestamp }|.
+    CONCATENATE 'ZTCT-' lp_default_filename INTO lp_default_filename.
+
+    DATA(lp_title) = |{ 'Save Transportlist'(009) }|.
+    cl_gui_frontend_services=>file_save_dialog(
+      EXPORTING
+        window_title         = lp_title
+        default_extension    = 'TXT'
+        default_file_name    = lp_default_filename
+        initial_directory    = lp_desktop
+      CHANGING
+        filename             = lp_filename
+        path                 = lp_path
+        fullpath             = lp_fullpath
+      EXCEPTIONS
+        cntl_error           = 1
+        error_no_gui         = 2
+        not_supported_by_gui = 3
+        OTHERS               = 4 ).
+    IF sy-subrc <> 0.
+      MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                 WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+    ENDIF.
+
+*   Display save dialog window
+    cl_gui_frontend_services=>gui_download(
+      EXPORTING
+        filename                = lp_fullpath
+        filetype                = 'ASC'
+      IMPORTING
+        filelength              = lp_filelength
+      CHANGING
+        data_tab                = rf_ztct->tab_delimited
+      EXCEPTIONS
+        file_write_error        = 1
+        no_batch                = 2
+        gui_refuse_filetransfer = 3
+        invalid_type            = 4
+        no_authority            = 5
+        unknown_error           = 6
+        header_not_allowed      = 7
+        separator_not_allowed   = 8
+        filesize_not_allowed    = 9
+        header_too_long         = 10
+        dp_error_create         = 11
+        dp_error_send           = 12
+        dp_error_write          = 13
+        unknown_dp_error        = 14
+        access_denied           = 15
+        dp_out_of_memory        = 16
+        disk_full               = 17
+        dp_timeout              = 18
+        file_not_found          = 19
+        dataprovider_exception  = 20
+        control_flush_error     = 21
+        not_supported_by_gui    = 22
+        error_no_gui            = 23
+        OTHERS                  = 24 ).
+    CASE sy-subrc.
+      WHEN 0.
+      WHEN OTHERS.
+        MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                   WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+    ENDCASE.
   ENDMETHOD.
 
   METHOD ofc_nconf.
@@ -5302,7 +5355,7 @@ START-OF-SELECTION.
                 pgmid    = 'R3TR' ).
 
 *   Read transport description:
-    IF ta_trkorr_range[] IS NOT INITIAL.
+    IF sy-subrc = 0 AND ta_trkorr_range[] IS NOT INITIAL.
       LOOP AT ta_trkorr_range INTO st_trkorr_range.
         tp_tabix = sy-tabix.
 *       Check if the description contains the search string
