@@ -188,7 +188,6 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS set_trkorr_range            IMPORTING im_trkorr_range TYPE ty_range_trkorr OPTIONAL.
     METHODS set_project_range           IMPORTING im_project_range TYPE ty_range_trkorr OPTIONAL.
     METHODS set_excluded_objects        IMPORTING im_excluded_objects TYPE ty_range_excluded_objects OPTIONAL.
-    METHODS set_search_string           IMPORTING im_search_string TYPE as4text OPTIONAL.
     METHODS set_user_layout             IMPORTING im_user_layout TYPE abap_bool OPTIONAL.
     METHODS set_process_type            IMPORTING im_process_type TYPE i.
     METHODS set_skiplive                IMPORTING im_skiplive TYPE abap_bool OPTIONAL.
@@ -326,7 +325,6 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     DATA trkorr_range                TYPE ty_range_trkorr.
     DATA project_range               TYPE ty_range_trkorr.
     DATA excluded_objects            TYPE ty_range_excluded_objects.
-    DATA search_string               TYPE as4text.
     DATA user_layout                 TYPE abap_bool.
     DATA process_type                TYPE i.
     DATA skiplive                    TYPE abap_bool.
@@ -3242,10 +3240,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     excluded_objects = im_excluded_objects.
   ENDMETHOD.
 
-  METHOD set_search_string.
-    search_string = im_search_string.
-  ENDMETHOD.
-
   METHOD set_user_layout.
     user_layout = im_user_layout.
   ENDMETHOD.
@@ -5430,7 +5424,6 @@ FORM init_ztct.
   rf_ztct->set_trkorr_range( ta_trkorr_range ).
   rf_ztct->set_project_range( ta_project_range ).
   rf_ztct->set_excluded_objects( lt_excluded_objects ).
-  rf_ztct->set_search_string( p_str ).
   rf_ztct->set_process_type( tp_process_type ).
   rf_ztct->set_filename( p_file ).
   rf_ztct->set_systems( im_dev_system = p_dev
