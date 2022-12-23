@@ -3090,7 +3090,7 @@ CLASS lcl_ztct IMPLEMENTATION.
               AND object    = @tp_dokl_object
               AND typ       = 'T'
               AND dokformat <> 'L'
-              AND doktext   <> ''.
+              AND doktext   <> ''.                        "#EC CI_SUBRC
     IF sy-subrc = 0.
 *     There is documentation: Display Doc Icon
       main_list_line-info = co_docu.
