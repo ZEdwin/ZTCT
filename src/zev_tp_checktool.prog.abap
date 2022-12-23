@@ -1200,26 +1200,17 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD check_for_conflicts.
-    DATA lt_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
-    DATA ls_stms_wbo_requests TYPE stms_wbo_request.
     DATA lp_counter           TYPE i.
     DATA lp_tabix             TYPE sytabix.
-    DATA lp_return            TYPE c.
-    DATA lp_exit              TYPE abap_bool.
     DATA ls_main              TYPE ty_request_details.
-    DATA ls_line_temp         TYPE ty_request_details.
     DATA lt_newer_transports  TYPE ty_request_details_tt.
     DATA lt_older_transports  TYPE ty_request_details_tt.
-    DATA ls_newer_line        TYPE ty_request_details.
-    DATA ls_older_line        TYPE ty_request_details.
     DATA lp_domnam            TYPE char10.
     DATA lp_highest_lvl       TYPE icon_d.
     DATA lp_highest_rank      TYPE numc4.
     DATA lp_highest_text      TYPE text74.
     DATA lp_highest_col       TYPE lvc_t_scol.
     DATA lp_target            TYPE tmssysnam.
-    DATA lt_e07t              TYPE e07t_t.
-    DATA ls_e07t              TYPE e07t.
 
     FREE conflicts.
     CLEAR conflict_line.
@@ -1700,39 +1691,40 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Only continue if there are transports left to check
     IF main_list IS INITIAL.
       RETURN.
-    ENDIF.
+    ELSE.
 *   Also read from the version table VRSD. This table contains all
 *   dependent objects. For example: If from E071 a function group
 *   is retrieved, VRSD will contain all functions too.
-    SELECT korrnum, objtype, objname,
-           author, datum, zeit
-           FROM vrsd
-           INTO (@ls_main_list_vrsd-trkorr,
-                 @ls_main_list_vrsd-object,
-                 @ls_main_list_vrsd-obj_name,
-                 @ls_main_list_vrsd-as4user,
-                 @ls_main_list_vrsd-as4date,
-                 @ls_main_list_vrsd-as4time)
-           FOR ALL ENTRIES IN @main_list
-           WHERE korrnum = @main_list-trkorr.
-      READ TABLE main_list INTO main_list_line
-                           WITH KEY trkorr = ls_main_list_vrsd-trkorr.
-      IF sy-subrc = 0.
-        main_list_line-object   = ls_main_list_vrsd-object.
-        main_list_line-obj_name = ls_main_list_vrsd-obj_name.
-        main_list_line-as4user  = ls_main_list_vrsd-as4user.
-        main_list_line-as4date  = ls_main_list_vrsd-as4date.
-        main_list_line-as4time  = ls_main_list_vrsd-as4time.
+      SELECT korrnum, objtype, objname,
+             author, datum, zeit
+             FROM vrsd
+             INTO (@ls_main_list_vrsd-trkorr,
+                   @ls_main_list_vrsd-object,
+                   @ls_main_list_vrsd-obj_name,
+                   @ls_main_list_vrsd-as4user,
+                   @ls_main_list_vrsd-as4date,
+                   @ls_main_list_vrsd-as4time)
+             FOR ALL ENTRIES IN @main_list
+             WHERE korrnum = @main_list-trkorr.
+        READ TABLE main_list INTO main_list_line
+                             WITH KEY trkorr = ls_main_list_vrsd-trkorr.
+        IF sy-subrc = 0.
+          main_list_line-object   = ls_main_list_vrsd-object.
+          main_list_line-obj_name = ls_main_list_vrsd-obj_name.
+          main_list_line-as4user  = ls_main_list_vrsd-as4user.
+          main_list_line-as4date  = ls_main_list_vrsd-as4date.
+          main_list_line-as4time  = ls_main_list_vrsd-as4time.
 *       Only append if the object from VRSD does not already exist in the
 *       main list:
-        IF NOT line_exists( main_list[ trkorr   = main_list_line-trkorr
-                                       object   = main_list_line-object
-                                       obj_name = main_list_line-obj_name ] ).
-          main_list_line-flag = abap_true.
-          APPEND main_list_line TO lt_main_list_vrsd.
+          IF NOT line_exists( main_list[ trkorr   = main_list_line-trkorr
+                                         object   = main_list_line-object
+                                         obj_name = main_list_line-obj_name ] ).
+            main_list_line-flag = abap_true.
+            APPEND main_list_line TO lt_main_list_vrsd.
+          ENDIF.
         ENDIF.
-      ENDIF.
-    ENDSELECT.
+      ENDSELECT.
+    ENDIF.
 *   Duplicates may exist if the same object exists in different tasks
 *   belonging to the same request:
     SORT lt_main_list_vrsd DESCENDING.
@@ -1935,6 +1927,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_indexinc          TYPE sytabix.
     DATA lp_trkorr            TYPE trkorr.
     DATA ls_main_backup       TYPE ty_request_details.
+    DATA lv_prd_backup        TYPE icon_l4.
     CLEAR: lp_counter,
            total.
 *   The CHECKED_BY field is always going to be filled. If it is empty,
@@ -2104,10 +2097,12 @@ CLASS lcl_ztct IMPLEMENTATION.
             ENDIF.
           ELSE.
 *           Initialize environment fields. The environments will be
-*           checked
-*           and updated with the correct environment later
+*           checked and updated with the correct environment later
             main_list_line-dev = co_inact.
             main_list_line-qas = co_inact.
+* If a transport is in production and marked for re-import, do not
+* change the SCRAP icon to the OKAY icon
+            lv_prd_backup = main_list_line-prd.
             main_list_line-prd = co_inact.
 *           Now check in which environments the transport can be found
             LOOP AT st_request-cofile-systems INTO ls_systems.
@@ -2137,7 +2132,11 @@ CLASS lcl_ztct IMPLEMENTATION.
                   IF sy-subrc = 0.
                     CHECK st_steps-stepid <> '<'.
 *                   Green - Exists
-                    main_list_line-prd = co_okay.
+                    IF lv_prd_backup IS NOT INITIAL.
+                      main_list_line-prd = lv_prd_backup.
+                    ELSE.
+                      main_list_line-prd = co_okay.
+                    ENDIF.
                   ENDIF.
               ENDCASE.
             ENDLOOP.
@@ -2758,7 +2757,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_tabix             TYPE sytabix.
     DATA lp_return            TYPE c.
     DATA lp_exit              TYPE abap_bool.
-    DATA ls_main              TYPE ty_request_details.
     DATA ls_line_temp         TYPE ty_request_details.
     DATA ls_newer_line        TYPE ty_request_details.
     DATA lp_target            TYPE tmssysnam.
@@ -2766,10 +2764,12 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_e07t              TYPE e07t.
 
     FREE lt_e07t.
-    SELECT * FROM e07t INTO TABLE @lt_e07t
-               FOR ALL ENTRIES IN @im_newer_transports
-                            WHERE trkorr = @im_newer_transports-trkorr
-                                  ORDER BY PRIMARY KEY.   "#EC CI_SUBRC
+    IF im_newer_transports[] IS NOT INITIAL.
+      SELECT * FROM e07t INTO TABLE @lt_e07t
+                 FOR ALL ENTRIES IN @im_newer_transports
+                              WHERE trkorr = @im_newer_transports-trkorr
+                                    ORDER BY PRIMARY KEY. "#EC CI_SUBRC
+    ENDIF.
     LOOP AT im_newer_transports INTO ls_newer_line.
 *     Get transport description
       READ TABLE lt_e07t INTO ls_e07t
@@ -2887,24 +2887,26 @@ CLASS lcl_ztct IMPLEMENTATION.
         ENDIF.
       ENDIF.
     ENDLOOP.
+    ch_conflicts = conflicts.
   ENDMETHOD.
 
   METHOD check_older_transports.
     DATA lt_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
     DATA ls_stms_wbo_requests TYPE stms_wbo_request.
     DATA lp_return            TYPE c.
-    DATA lt_older_transports  TYPE ty_request_details_tt.
     DATA ls_older_line        TYPE ty_request_details.
     DATA lp_target            TYPE tmssysnam.
     DATA lt_e07t              TYPE e07t_t.
     DATA ls_e07t              TYPE e07t.
 
     FREE lt_e07t.
-    SELECT * FROM e07t INTO TABLE @lt_e07t
-               FOR ALL ENTRIES IN @lt_older_transports
-                            WHERE trkorr = @lt_older_transports-trkorr
-                                  ORDER BY PRIMARY KEY.   "#EC CI_SUBRC
-    LOOP AT lt_older_transports INTO ls_older_line.
+    IF im_older_transports[] IS NOT INITIAL.
+      SELECT * FROM e07t INTO TABLE @lt_e07t
+                 FOR ALL ENTRIES IN @im_older_transports
+                              WHERE trkorr = @im_older_transports-trkorr
+                                    ORDER BY PRIMARY KEY. "#EC CI_SUBRC
+    ENDIF.
+    LOOP AT im_older_transports INTO ls_older_line.
 *     Get transport description
       READ TABLE lt_e07t INTO ls_e07t
                      WITH KEY trkorr = ls_older_line-trkorr.
@@ -3035,6 +3037,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         EXIT.
       ENDIF.
     ENDLOOP.
+    ch_conflicts = conflicts.
   ENDMETHOD.
 
   METHOD check_if_same_object.
@@ -4616,20 +4619,26 @@ CLASS lcl_ztct IMPLEMENTATION.
                                    ORDER BY PRIMARY KEY.
     IF sy-subrc = 0 AND lt_tadir IS NOT INITIAL.
 *     DD01L (Domains)
-      SELECT domname AS ddic_object
-             APPENDING TABLE @ddic_objects
-             FROM dd01l FOR ALL ENTRIES IN @lt_tadir
-            WHERE domname = @lt_tadir-obj_name(30).       "#EC CI_SUBRC
+      IF lt_tadir[] IS NOT INITIAL.
+        SELECT domname AS ddic_object
+               APPENDING TABLE @ddic_objects
+               FROM dd01l FOR ALL ENTRIES IN @lt_tadir
+              WHERE domname = @lt_tadir-obj_name(30).     "#EC CI_SUBRC
+      ENDIF.
 *     DD02L (SAP-tables)
-      SELECT tabname
-             APPENDING TABLE @ddic_objects
-             FROM dd02l FOR ALL ENTRIES IN @lt_tadir
-            WHERE tabname = @lt_tadir-obj_name(30).       "#EC CI_SUBRC
+      IF lt_tadir[] IS NOT INITIAL.
+        SELECT tabname
+               APPENDING TABLE @ddic_objects
+               FROM dd02l FOR ALL ENTRIES IN @lt_tadir
+              WHERE tabname = @lt_tadir-obj_name(30).     "#EC CI_SUBRC
+      ENDIF.
 *     DD04L (Data elements)
-      SELECT rollname
-             APPENDING TABLE @ddic_objects
-             FROM dd04l FOR ALL ENTRIES IN @lt_tadir
-            WHERE rollname = @lt_tadir-obj_name(30).      "#EC CI_SUBRC
+      IF lt_tadir[] IS NOT INITIAL.
+        SELECT rollname
+               APPENDING TABLE @ddic_objects
+               FROM dd04l FOR ALL ENTRIES IN @lt_tadir
+              WHERE rollname = @lt_tadir-obj_name(30).    "#EC CI_SUBRC
+      ENDIF.
       SORT ddic_objects.
       DELETE ADJACENT DUPLICATES FROM ddic_objects.
     ENDIF.
@@ -5218,12 +5227,10 @@ CLASS lcl_ztct IMPLEMENTATION.
         not_supported_by_gui    = 22
         error_no_gui            = 23
         OTHERS                  = 24 ).
-    CASE sy-subrc.
-      WHEN 0.
-      WHEN OTHERS.
-        MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-                   WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-    ENDCASE.
+    IF sy-subrc <> 0.
+      MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                 WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+    ENDIF.
   ENDMETHOD.
 
   METHOD ofc_nconf.
