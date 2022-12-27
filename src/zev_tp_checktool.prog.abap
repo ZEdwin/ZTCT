@@ -1086,6 +1086,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD execute.
     DATA lp_cancelled TYPE abap_bool.
+
     IF process_type = 1.
       get_data( trkorr_range ).
       get_additional_tp_info( CHANGING ch_table = main_list ).
@@ -1126,6 +1127,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         RETURN.
       ENDIF.
     ENDIF.
+
     set_color( ).
     alv_init( ).
     alv_set_properties( rf_table ).
@@ -4127,9 +4129,15 @@ CLASS lcl_ztct IMPLEMENTATION.
       lr_row->create_text( text = lp_file_out(50) ).
     ENDIF.
     lr_row = lr_rows->add_row( ).
-    lr_row->create_text( text = text-h01 ).
+    CONCATENATE 'If there is a warning icon in column `Warning`, double-clicking on the'(h01)
+                'icon will display a list of objects that should be checked.'(h02)
+                 INTO DATA(lp_string) SEPARATED BY space.
+    lr_row->create_text( text = lp_string ).
     lr_row = lr_rows->add_row( ).
-    lr_row->create_text( text = text-h02 ).
+    CONCATENATE 'You can add these conflicts by means of the button ‘Add Conflicts’ in'(h03)
+                'the application toolbar or doubleclicking the warning.'(h04)
+                 INTO lp_string SEPARATED BY space.
+    lr_row->create_text( text = lp_string ).
     lr_row = lr_rows->add_row( ).
     lr_row = lr_rows->add_row( ).
     lr_row->create_label( text = 'No of Records found:'(t04) ).
@@ -4710,6 +4718,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_chars             TYPE string VALUE '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
     DATA ls_objects           TYPE string.
     DATA lt_where_used_sub    TYPE sci_findlst.
+    DATA lp_string            TYPE string.
 
     FREE ddic_e071.
 * Get all object types
@@ -4886,7 +4895,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDLOOP.
 * Remove all entries from the where used list that are not existing
 * in tables DD01L, DD02L or DD04L
-    DATA lp_string TYPE string.
     LOOP AT where_used INTO where_used_line.
 * DD01L (Domains)
       SELECT SINGLE domname

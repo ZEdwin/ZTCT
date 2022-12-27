@@ -2418,13 +2418,25 @@
     <item>
      <ID>I</ID>
      <KEY>H01</KEY>
-     <ENTRY>If there is a warning icon in column `Warning`, double-clicking on the icon will display a list of objects that should be checked.</ENTRY>
+     <ENTRY>If there is a warning icon in column `Warning`, double-clicking on the</ENTRY>
      <LENGTH>132</LENGTH>
     </item>
     <item>
      <ID>I</ID>
      <KEY>H02</KEY>
-     <ENTRY>You can add these conflicts by means of the button &apos;Add Conflicts&apos; in the application toolbar or doubleclicking the warning.</ENTRY>
+     <ENTRY>icon will display a list of objects that should be checked.</ENTRY>
+     <LENGTH>132</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>H03</KEY>
+     <ENTRY>You can add these conflicts by means of the button ‘Add Conflicts’ in</ENTRY>
+     <LENGTH>132</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>H04</KEY>
+     <ENTRY>the application toolbar or doubleclicking the warning.</ENTRY>
      <LENGTH>132</LENGTH>
     </item>
     <item>
