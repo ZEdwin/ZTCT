@@ -161,7 +161,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     TYPES:   t_color TYPE lvc_t_scol,
              END OF ty_request_details.
 
-    TYPES ty_request_details_tt TYPE STANDARD TABLE OF ty_request_details.
+    TYPES ty_request_details_tt TYPE STANDARD TABLE OF ty_request_details WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_tables_with_keys,
              tabname TYPE trobj_name,
@@ -343,25 +343,25 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS get_tp_info              IMPORTING im_trkorr      TYPE trkorr
                                                im_obj_name    TYPE trobj_name
                                      RETURNING VALUE(re_line) TYPE ty_request_details.
-    METHODS get_added_objects        IMPORTING im_to_add TYPE ty_range_trkorr
-                                     EXPORTING ex_to_add TYPE ty_request_details_tt.
-    METHODS add_to_list              IMPORTING im_to_add TYPE ty_request_details_tt
-                                     EXPORTING ex_main   TYPE ty_request_details_tt.
+    METHODS get_added_objects        IMPORTING im_to_add        TYPE ty_range_trkorr
+                                     RETURNING VALUE(ex_to_add) TYPE ty_request_details_tt.
+    METHODS add_to_list              IMPORTING im_to_add      TYPE ty_request_details_tt
+                                     RETURNING VALUE(ex_main) TYPE ty_request_details_tt.
     METHODS build_conflict_popup     IMPORTING im_rows TYPE salv_t_row
                                                im_cell TYPE salv_s_cell.
     METHODS delete_tp_from_list      IMPORTING im_rows TYPE salv_t_row.
     METHODS flag_same_objects        CHANGING  ch_main_list TYPE ty_request_details_tt.
     METHODS mark_all_tp_records      IMPORTING im_cell TYPE salv_s_cell
                                      CHANGING  ch_rows TYPE salv_t_row.
-    METHODS main_to_tab_delimited    IMPORTING im_main_list     TYPE ty_request_details_tt
-                                     EXPORTING ex_tab_delimited TYPE table_of_strings.
+    METHODS main_to_tab_delimited    IMPORTING im_main_list            TYPE ty_request_details_tt
+                                     RETURNING VALUE(ex_tab_delimited) TYPE table_of_strings.
     METHODS tab_delimited_to_main    IMPORTING im_tab_delimited TYPE table_of_strings.
     METHODS display_transport        IMPORTING im_trkorr TYPE trkorr.
     METHODS display_user             IMPORTING im_user TYPE syuname.
     METHODS display_docu             IMPORTING im_trkorr TYPE trkorr.
-    METHODS check_if_in_list         IMPORTING im_line  TYPE ty_request_details
-                                               im_tabix TYPE sytabix
-                                     EXPORTING ex_line  TYPE ty_request_details.
+    METHODS check_if_in_list         IMPORTING im_line        TYPE ty_request_details
+                                               im_tabix       TYPE sytabix
+                                     RETURNING VALUE(ex_line) TYPE ty_request_details.
     METHODS check_documentation      IMPORTING im_trkorr TYPE trkorr
                                      CHANGING  ch_table  TYPE ty_request_details_tt.
     METHODS clear_flags.
@@ -387,8 +387,8 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
                                      EXPORTING ex_tabkey      TYPE trobj_name
                                                ex_return      TYPE c.
     METHODS sort_main_list.
-    METHODS determine_warning_text   IMPORTING im_highest_rank TYPE numc4
-                                     EXPORTING ex_highest_text TYPE text74.
+    METHODS determine_warning_text   IMPORTING im_highest_rank        TYPE numc4
+                                     RETURNING VALUE(ex_highest_text) TYPE text74.
     METHODS get_tps_for_same_object  IMPORTING im_line  TYPE ty_request_details
                                      EXPORTING ex_newer TYPE ty_request_details_tt
                                                ex_older TYPE ty_request_details_tt.
@@ -403,15 +403,15 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS prepare_ddic_check.
     METHODS set_ddic_objects.
     METHODS do_ddic_check            CHANGING  ch_main_list TYPE ty_request_details_tt.
-    METHODS set_properties_conflicts IMPORTING im_table TYPE ty_request_details_tt
-                                     EXPORTING ex_xend  TYPE i.
+    METHODS set_properties_conflicts IMPORTING im_table       TYPE ty_request_details_tt
+                                     RETURNING VALUE(ex_xend) TYPE i.
     METHODS get_data                 IMPORTING im_trkorr_range TYPE gtabkey_trkorrt.
     METHODS check_for_conflicts      CHANGING  ch_main_list TYPE ty_request_details_tt.
     METHODS build_table_keys_popup.
     METHODS add_table_keys_to_list   CHANGING  ch_table TYPE ty_request_details_tt.
     METHODS get_additional_tp_info   CHANGING  ch_table TYPE ty_request_details_tt.
-    METHODS gui_upload               IMPORTING im_filename  TYPE string
-                                     EXPORTING ex_cancelled TYPE abap_bool.
+    METHODS gui_upload               IMPORTING im_filename         TYPE string
+                                     RETURNING VALUE(ex_cancelled) TYPE abap_bool.
     METHODS determine_col_width      IMPORTING im_field    TYPE any
                                      CHANGING  ch_colwidth TYPE lvc_outlen.
     METHODS check_colwidth           IMPORTING im_name            TYPE abap_compname
@@ -1085,8 +1085,6 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD execute.
-    DATA lp_cancelled TYPE abap_bool.
-
     IF process_type = 1.
       get_data( trkorr_range ).
       get_additional_tp_info( CHANGING ch_table = main_list ).
@@ -1120,12 +1118,8 @@ CLASS lcl_ztct IMPLEMENTATION.
         prepare_ddic_check( ).
       ENDIF.
       check_for_conflicts( CHANGING ch_main_list = main_list ).
-    ELSE.
-      gui_upload( EXPORTING im_filename  = filename
-                  IMPORTING ex_cancelled = lp_cancelled ).
-      IF lp_cancelled = abap_true.
-        RETURN.
-      ENDIF.
+    ELSEIF gui_upload( filename ) = abap_true.
+      RETURN.
     ENDIF.
 
     set_color( ).
@@ -1302,8 +1296,7 @@ CLASS lcl_ztct IMPLEMENTATION.
             lp_highest_lvl  = conflict_line-warning_lvl.
             lp_highest_rank = conflict_line-warning_rank.
             lp_highest_col  = conflict_line-t_color.
-            determine_warning_text( EXPORTING im_highest_rank = lp_highest_rank
-                                    IMPORTING ex_highest_text = lp_highest_text ).
+            lp_highest_text = determine_warning_text( lp_highest_rank ).
           ENDIF.
         ENDLOOP.
         ls_main-warning_lvl  = lp_highest_lvl.
@@ -2240,8 +2233,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           CHANGING
             t_table      = conflicts ).
 *       Set ALV properties
-        set_properties_conflicts( EXPORTING im_table = conflicts
-                                  IMPORTING ex_xend  = lp_xend ).
+        lp_xend = set_properties_conflicts( conflicts ).
 *       Set lr_tooltips
         alv_set_lr_tooltips( rf_conflicts ).
 *       Register handler for actions
@@ -2690,10 +2682,10 @@ CLASS lcl_ztct IMPLEMENTATION.
           IF im_filename IS INITIAL.
             MESSAGE i000(db) WITH 'Cancelled by user'(031).
           ELSE.
-            MESSAGE e000(db) WITH 'Error occurred'(029).
+            MESSAGE i000(db) DISPLAY LIKE 'E' WITH 'Error occurred'(029).
           ENDIF.
         WHEN OTHERS.
-          MESSAGE e000(db) WITH 'Error occurred'(029).
+          MESSAGE i000(db) DISPLAY LIKE 'E' WITH 'Error occurred'(029).
       ENDCASE.
     ELSE.
       lt_tab_delimited[] = lt_temp_table[].
@@ -2848,9 +2840,8 @@ CLASS lcl_ztct IMPLEMENTATION.
         APPEND conflict_line TO conflicts.
         CLEAR conflict_line.
       ELSE.
-        check_if_in_list( EXPORTING im_line  = ls_newer_line
-                                    im_tabix = lp_tabix
-                          IMPORTING ex_line  = line_found_in_list ).
+        line_found_in_list = check_if_in_list( EXPORTING im_line  = ls_newer_line
+                                                         im_tabix = lp_tabix ).
         IF line_found_in_list IS NOT INITIAL.
 *         Even if the transport is only in QAS and not in prd (so a
 *         newer transport exists, but will not be overwritten), we still
@@ -3492,6 +3483,10 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD alv_output.
+*   Declaration for Top of List settings
+    DATA lr_form_element TYPE REF TO cl_salv_form_element.
+    lr_form_element = top_of_page( ).
+    rf_table->set_top_of_list( lr_form_element ).
 *   Display the ALV output
     rf_table->display( ).
   ENDMETHOD.
@@ -4129,7 +4124,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       lr_row->create_text( text = lp_file_out(50) ).
     ENDIF.
     lr_row = lr_rows->add_row( ).
-    CONCATENATE 'If there is a warning icon in column `Warning`, double-clicking on the'(h01)
+    CONCATENATE 'If there is a warning icon in column ‘Warning’, double-clicking on the'(h01)
                 'icon will display a list of objects that should be checked.'(h02)
                  INTO DATA(lp_string) SEPARATED BY space.
     lr_row->create_text( text = lp_string ).
@@ -4981,11 +4976,9 @@ CLASS lcl_ztct IMPLEMENTATION.
         MESSAGE i000(db) WITH 'No rows selected: No transports will be added'(m06).
       ENDIF.
       IF lt_range_transports_to_add[] IS NOT INITIAL.
-        rf_ztct->get_added_objects( EXPORTING im_to_add = lt_range_transports_to_add
-                                    IMPORTING ex_to_add = rf_ztct->add_to_main ).
+        rf_ztct->add_to_main = rf_ztct->get_added_objects( lt_range_transports_to_add ).
         rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
-        rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
-                              IMPORTING ex_main   = rf_ztct->main_list ).
+        rf_ztct->main_list = rf_ztct->add_to_list( rf_ztct->add_to_main ).
 *       After the transports have been added, check if there are added
 *       transports that are already in prd. If so, make them visible by
 *       changing the prd icon to co_scrap.
@@ -5124,11 +5117,9 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Add transport number to the internal table to add:
     ls_range_transports_to_add-low = ls_fields-value.
     APPEND ls_range_transports_to_add TO lt_range_transports_to_add.
-    rf_ztct->get_added_objects( EXPORTING im_to_add = lt_range_transports_to_add
-                                IMPORTING ex_to_add = rf_ztct->add_to_main ).
+    rf_ztct->add_to_main = rf_ztct->get_added_objects( lt_range_transports_to_add ).
     rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
-    rf_ztct->add_to_list( EXPORTING im_to_add = rf_ztct->add_to_main
-                          IMPORTING ex_main   = rf_ztct->main_list ).
+    rf_ztct->main_list = rf_ztct->add_to_list( rf_ztct->add_to_main ).
 *   After the transports have been added, check if there are added
 *   transports that are already in prd. If so, make them visible by
 *   changing the prd icon to co_scrap.
@@ -5155,8 +5146,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_desktop          TYPE string.
     DATA lp_timestamp        TYPE tzntstmps.
 *   Build header
-    rf_ztct->main_to_tab_delimited( EXPORTING im_main_list     = rf_ztct->main_list
-                                    IMPORTING ex_tab_delimited = rf_ztct->tab_delimited ).
+    rf_ztct->tab_delimited = rf_ztct->main_to_tab_delimited( rf_ztct->main_list ).
 *   Finding desktop
     cl_gui_frontend_services=>get_desktop_directory(
        CHANGING   desktop_directory = lp_desktop
