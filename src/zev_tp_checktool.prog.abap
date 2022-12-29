@@ -161,7 +161,8 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     TYPES:   t_color TYPE lvc_t_scol,
              END OF ty_request_details.
 
-    TYPES ty_request_details_tt TYPE STANDARD TABLE OF ty_request_details WITH DEFAULT KEY.
+    TYPES ty_request_details_tt TYPE STANDARD TABLE OF ty_request_details
+                                WITH KEY trkorr obj_name.
 
     TYPES: BEGIN OF ty_tables_with_keys,
              tabname TYPE trobj_name,
@@ -344,9 +345,9 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
                                                im_obj_name    TYPE trobj_name
                                      RETURNING VALUE(re_line) TYPE ty_request_details.
     METHODS get_added_objects        IMPORTING im_to_add        TYPE ty_range_trkorr
-                                     RETURNING VALUE(ex_to_add) TYPE ty_request_details_tt.
+                                     RETURNING VALUE(re_to_add) TYPE ty_request_details_tt.
     METHODS add_to_list              IMPORTING im_to_add      TYPE ty_request_details_tt
-                                     RETURNING VALUE(ex_main) TYPE ty_request_details_tt.
+                                     RETURNING VALUE(re_main) TYPE ty_request_details_tt.
     METHODS build_conflict_popup     IMPORTING im_rows TYPE salv_t_row
                                                im_cell TYPE salv_s_cell.
     METHODS delete_tp_from_list      IMPORTING im_rows TYPE salv_t_row.
@@ -354,14 +355,14 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS mark_all_tp_records      IMPORTING im_cell TYPE salv_s_cell
                                      CHANGING  ch_rows TYPE salv_t_row.
     METHODS main_to_tab_delimited    IMPORTING im_main_list            TYPE ty_request_details_tt
-                                     RETURNING VALUE(ex_tab_delimited) TYPE table_of_strings.
+                                     RETURNING VALUE(re_tab_delimited) TYPE table_of_strings.
     METHODS tab_delimited_to_main    IMPORTING im_tab_delimited TYPE table_of_strings.
     METHODS display_transport        IMPORTING im_trkorr TYPE trkorr.
     METHODS display_user             IMPORTING im_user TYPE syuname.
     METHODS display_docu             IMPORTING im_trkorr TYPE trkorr.
     METHODS check_if_in_list         IMPORTING im_line        TYPE ty_request_details
                                                im_tabix       TYPE sytabix
-                                     RETURNING VALUE(ex_line) TYPE ty_request_details.
+                                     RETURNING VALUE(re_line) TYPE ty_request_details.
     METHODS check_documentation      IMPORTING im_trkorr TYPE trkorr
                                      CHANGING  ch_table  TYPE ty_request_details_tt.
     METHODS clear_flags.
@@ -388,7 +389,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
                                                ex_return      TYPE c.
     METHODS sort_main_list.
     METHODS determine_warning_text   IMPORTING im_highest_rank        TYPE numc4
-                                     RETURNING VALUE(ex_highest_text) TYPE text74.
+                                     RETURNING VALUE(re_highest_text) TYPE text74.
     METHODS get_tps_for_same_object  IMPORTING im_line  TYPE ty_request_details
                                      EXPORTING ex_newer TYPE ty_request_details_tt
                                                ex_older TYPE ty_request_details_tt.
@@ -404,7 +405,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS set_ddic_objects.
     METHODS do_ddic_check            CHANGING  ch_main_list TYPE ty_request_details_tt.
     METHODS set_properties_conflicts IMPORTING im_table       TYPE ty_request_details_tt
-                                     RETURNING VALUE(ex_xend) TYPE i.
+                                     RETURNING VALUE(re_xend) TYPE i.
     METHODS get_data                 IMPORTING im_trkorr_range TYPE gtabkey_trkorrt.
     METHODS check_for_conflicts      CHANGING  ch_main_list TYPE ty_request_details_tt.
     METHODS build_table_keys_popup.
@@ -816,15 +817,18 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file.
 CLASS lcl_eventhandler_ztct IMPLEMENTATION.
 
   METHOD on_function_click.
+    TYPES ty_string TYPE string.
     DATA lt_range_transports_to_add TYPE RANGE OF e070-trkorr.
     DATA ls_range_transports_to_add LIKE LINE OF lt_range_transports_to_add.
-*   Data declarations
-    DATA lp_localfile        TYPE string.
-    DATA lp_filename         TYPE string.
 *   Selected rows
     DATA lr_selections       TYPE REF TO cl_salv_selections.
     DATA lt_rows             TYPE salv_t_row.
     DATA ls_cell             TYPE salv_s_cell.
+
+* Inline data declarations. Preferred by AbapLint, but should not be
+* declared within conditional blocks (IF, ELSE, CASE).
+    DATA(lp_filename)  = VALUE ty_string( ).
+
 *   Which popup are we displaying? Conflicts or Table keys?
     FIELD-SYMBOLS <lf_ref_table> TYPE REF TO cl_salv_table.
     IF rf_conflicts IS BOUND.
@@ -876,8 +880,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           rf_ztct->ofc_add_tp( ).
         WHEN '&ADD_FILE'.
           rf_ztct->clear_flags( ).
-          lp_localfile = rf_ztct->get_filename( ).
-          lp_filename  = lp_localfile.
+          lp_filename = rf_ztct->get_filename( ).
           rf_ztct->gui_upload( lp_filename ).
           tp_dokl_object = 'ZEV_TP_CHECKTOOL_ADD_FILE'.
           rf_ztct->docu_call( im_object     = tp_dokl_object
@@ -1379,7 +1382,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_title               TYPE lvc_title.
     DATA lp_tp_prefix           TYPE char5.
     DATA lp_xstart              TYPE i VALUE 26.
-    DATA lp_xend                TYPE i.
     DATA lp_ystart              TYPE i VALUE 7.
     DATA lp_cw_tabname          TYPE lvc_outlen.
     DATA lp_cw_counter          TYPE lvc_outlen.
@@ -1388,6 +1390,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_short_text       TYPE char10.
     DATA lp_medium_text      TYPE char20.
     DATA lp_long_text        TYPE char40.
+
+    DATA(lp_xend) = 0.
 
 *   Only if the option to check for table keys is switched ON and
 *   checking is active
@@ -1566,14 +1570,14 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD progress_indicator.
     DATA lp_gprogtext         TYPE char1024.
-    DATA lp_step              TYPE i VALUE 1.
     DATA lp_string            TYPE string.
     DATA lp_total             TYPE numc10.
-    DATA lp_counter_reset     TYPE i.
 *   IM_TOTAL cannot be changed, and we need to remove the leading
-*   zero's. That is why intermediate parameter lp_TOTAL was added
+*   zero's. That is why intermediate parameter lp_total was added
     lp_total = im_total.
     DATA(lp_difference) = lp_total - im_counter.
+    DATA(lp_step) = 1.
+    DATA(lp_counter_reset) = 0.
 *   Determine step size
     IF im_flag = abap_true.
       IF lp_difference < 100.
@@ -1805,7 +1809,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lt_main_list_vrsd TYPE ty_request_details_tt.
     DATA ls_added          TYPE ty_request_details.
     FIELD-SYMBOLS <lf_main_list> TYPE ty_request_details.
-    FREE ex_to_add.
+    FREE re_to_add.
     FREE lt_main_list_vrsd.
     CLEAR ls_main.
 *   Select all requests (not tasks) in the range. Objects belonging to
@@ -1814,7 +1818,7 @@ CLASS lcl_ztct IMPLEMENTATION.
            a~as4user, a~as4date,    a~as4time,
            b~pgmid,   b~object,     b~obj_name,
            b~objfunc
-           INTO CORRESPONDING FIELDS OF TABLE @ex_to_add
+           INTO CORRESPONDING FIELDS OF TABLE @re_to_add
            FROM  e070 AS a JOIN e071 AS b
              ON  a~trkorr = b~trkorr
            WHERE a~trkorr IN @im_to_add
@@ -1828,8 +1832,8 @@ CLASS lcl_ztct IMPLEMENTATION.
       RETURN.
     ENDIF.
 *   Read transport description:
-    IF ex_to_add[] IS NOT INITIAL.
-      LOOP AT ex_to_add ASSIGNING <lf_main_list>.
+    IF re_to_add[] IS NOT INITIAL.
+      LOOP AT re_to_add ASSIGNING <lf_main_list>.
         <lf_main_list>-flag = abap_true.
         SELECT SINGLE as4text
                  FROM e07t
@@ -1840,7 +1844,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Also read from the version table VRSD. This table contains all
 *   dependent objects. For example: If from E071 a function group
 *   is retrieved, VRSD will contain all functions too.
-    IF ex_to_add[] IS NOT INITIAL.
+    IF re_to_add[] IS NOT INITIAL.
       SELECT korrnum, objtype, objname,
              author, datum, zeit
              FROM vrsd
@@ -1850,9 +1854,9 @@ CLASS lcl_ztct IMPLEMENTATION.
                    @ls_main_list_vrsd-as4user,
                    @ls_main_list_vrsd-as4date,
                    @ls_main_list_vrsd-as4time)
-             FOR ALL ENTRIES IN @ex_to_add
-             WHERE korrnum = @ex_to_add-trkorr.
-        READ TABLE ex_to_add
+             FOR ALL ENTRIES IN @re_to_add
+             WHERE korrnum = @re_to_add-trkorr.
+        READ TABLE re_to_add
                    INTO ls_main
                    WITH KEY trkorr = ls_main_list_vrsd-trkorr.
         IF sy-subrc = 0.
@@ -1863,7 +1867,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           ls_main-as4time  = ls_main_list_vrsd-as4time.
 *       Only append if the object from VRSD does not already exist
 *       in the main list:
-          IF NOT line_exists( ex_to_add[ trkorr   = ls_main-trkorr
+          IF NOT line_exists( re_to_add[ trkorr   = ls_main-trkorr
                                          object   = ls_main-object
                                          obj_name = ls_main-obj_name ] ).
             ls_main-flag = abap_true.
@@ -1872,12 +1876,12 @@ CLASS lcl_ztct IMPLEMENTATION.
         ENDIF.
       ENDSELECT.
 *     Now add all VRSD entries to the main list
-      APPEND LINES OF lt_main_list_vrsd TO ex_to_add.
+      APPEND LINES OF lt_main_list_vrsd TO re_to_add.
     ENDIF.
-    add_table_keys_to_list( CHANGING ch_table = ex_to_add ).
+    add_table_keys_to_list( CHANGING ch_table = re_to_add ).
 *   Only add the records that are not yet existing in the main list.
 *   Do not add the records that already exist in the main list.
-    LOOP AT ex_to_add INTO ls_added.
+    LOOP AT re_to_add INTO ls_added.
       lp_tabix = sy-tabix.
       IF line_exists( main_list[ trkorr     = ls_added-trkorr
                                  object     = ls_added-object
@@ -1902,11 +1906,11 @@ CLASS lcl_ztct IMPLEMENTATION.
           MODIFY main_list FROM main_list_line INDEX sy-tabix.
         ENDLOOP.
 *       No need to add this transport again:
-        DELETE ex_to_add INDEX lp_tabix.
+        DELETE re_to_add INDEX lp_tabix.
       ENDIF.
     ENDLOOP.
-    SORT ex_to_add.
-    DELETE ADJACENT DUPLICATES FROM ex_to_add.
+    SORT re_to_add.
+    DELETE ADJACENT DUPLICATES FROM re_to_add.
   ENDMETHOD.
 
   METHOD get_additional_tp_info.
@@ -2187,7 +2191,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD add_to_list.
 *   Add the records:
-    APPEND LINES OF im_to_add TO ex_main.
+    APPEND LINES OF im_to_add TO re_main.
 *   Re-sort the list:
     sort_main_list( ).
   ENDMETHOD.
@@ -2195,7 +2199,6 @@ CLASS lcl_ztct IMPLEMENTATION.
   METHOD build_conflict_popup.
     DATA lr_events          TYPE REF TO cl_salv_events_table.
     DATA ls_conflict        TYPE ty_request_details ##NEEDED.
-    DATA lp_xend            TYPE i.
     DATA lp_xstart          TYPE i VALUE 50.
     DATA lp_ystart          TYPE i VALUE 7.
 *   Prevent the conflicts popup to be build multiple times
@@ -2233,7 +2236,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           CHANGING
             t_table      = conflicts ).
 *       Set ALV properties
-        lp_xend = set_properties_conflicts( conflicts ).
+        DATA(lp_xend) = set_properties_conflicts( conflicts ).
 *       Set lr_tooltips
         alv_set_lr_tooltips( rf_conflicts ).
 *       Register handler for actions
@@ -2438,13 +2441,13 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDTRY.
 
 * Build header line
-    FREE ex_tab_delimited.
+    FREE re_tab_delimited.
     lt_abap_component_tab = lr_structdescr->get_components( ).
     LOOP AT lt_abap_component_tab INTO ls_abap_component.
       CONCATENATE lp_string tp_tab ls_abap_component-name INTO lp_string.
     ENDLOOP.
     SHIFT lp_string LEFT DELETING LEADING tp_tab.
-    APPEND lp_string TO ex_tab_delimited.
+    APPEND lp_string TO re_tab_delimited.
 *   Now modify the lines of the main list to a tab delimited list
     LOOP AT im_main_list INTO main_list_line.
       CLEAR lp_string.
@@ -2461,7 +2464,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           ENDIF.
         ENDIF.
       ENDDO.
-      APPEND lp_string TO ex_tab_delimited.
+      APPEND lp_string TO re_tab_delimited.
     ENDLOOP.
   ENDMETHOD.
 
@@ -2727,11 +2730,11 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD check_if_in_list.
-    CLEAR ex_line.
+    CLEAR re_line.
 * This subroutine checks if the conflicting transport/object is found
 * further down in the list (in a later transport):
     DATA(lp_tabix) = im_tabix + 1.
-    LOOP AT main_list INTO ex_line FROM lp_tabix
+    LOOP AT main_list INTO re_line FROM lp_tabix
                      WHERE trkorr     = im_line-trkorr
                        AND object     = im_line-object
                        AND obj_name   = im_line-obj_name
@@ -2748,12 +2751,13 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_stms_wbo_requests TYPE stms_wbo_request.
     DATA lp_tabix             TYPE sytabix.
     DATA lp_return            TYPE c.
-    DATA lp_exit              TYPE abap_bool.
     DATA ls_line_temp         TYPE ty_request_details.
     DATA ls_newer_line        TYPE ty_request_details.
     DATA lp_target            TYPE tmssysnam.
     DATA lt_e07t              TYPE e07t_t.
     DATA ls_e07t              TYPE e07t.
+
+    DATA(lp_exit) = abap_false.
 
     FREE lt_e07t.
     IF im_newer_transports[] IS NOT INITIAL.
@@ -3513,7 +3517,6 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Remove some columns for the XLS output
     DATA lt_range_fieldname  TYPE RANGE OF ty_field_ran.
     DATA ls_fieldname        TYPE ty_field_ran.
-    DATA lp_return           TYPE abap_bool.
 *   Hide columns when empty
     DATA lt_range_hide_when_empty TYPE RANGE OF ty_field_ran.
     DATA ls_hide_when_empty  TYPE ty_field_ran.
@@ -3525,6 +3528,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_sys_s TYPE REF TO data.
     DATA lp_sys_m TYPE REF TO data.
     DATA lp_sys_l TYPE REF TO data.
+
+    DATA(lp_return) = abap_false.
 
 * Instantiate data references for column headers
     CREATE DATA lp_sys_s TYPE scrtext_s.
@@ -3842,7 +3847,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 * largest value is used as column width. This column width is then used
 * in the fielddif table for function "STC1_POPUP_WITH_TABLE_CONTROL".
 * This is done to downsize the width of the column as much as possible.
-    DATA lp_value TYPE i.
+    DATA(lp_value) = 0.
     IF im_field IS NOT INITIAL.
       lp_value = strlen( im_field ).
       IF lp_value > ch_colwidth.
@@ -3855,45 +3860,45 @@ CLASS lcl_ztct IMPLEMENTATION.
     CASE im_highest_rank.
       WHEN 0.
 *       ICON_LED_GREEN
-        CLEAR ex_highest_text.
+        CLEAR re_highest_text.
       WHEN 5.
 *       ICON_FAILURE
-        ex_highest_text = lp_alert0_text.
+        re_highest_text = lp_alert0_text.
       WHEN 6.
 *       ICON_FAILURE
-        ex_highest_text = lp_alert1_text.
+        re_highest_text = lp_alert1_text.
       WHEN 7.
 *       ICON_FAILURE
-        ex_highest_text = lp_alert2_text.
+        re_highest_text = lp_alert2_text.
       WHEN 8.
 *       ICON_FAILURE
-        ex_highest_text  = lp_alert3_text.
+        re_highest_text  = lp_alert3_text.
       WHEN 10.
 *       ICON_HINT
-        ex_highest_text = lp_hint1_text.
+        re_highest_text = lp_hint1_text.
       WHEN 12.
 *       ICON_HINT
-        ex_highest_text = lp_hint2_text.
+        re_highest_text = lp_hint2_text.
       WHEN 14.
 *       ICON_HINT
-        ex_highest_text = lp_hint3_text.
+        re_highest_text = lp_hint3_text.
       WHEN 16.
 *       ICON_HINT
-        ex_highest_text = lp_hint4_text.
+        re_highest_text = lp_hint4_text.
       WHEN 20.
 *       ICON_INFORMATION
-        ex_highest_text = lp_info_text.
+        re_highest_text = lp_info_text.
       WHEN 50.
 *       ICON_LED_YELLOW
-        ex_highest_text = lp_warn_text.
+        re_highest_text = lp_warn_text.
       WHEN 98.
 *       ICON_INCOMPLETE
-        ex_highest_text = lp_ddic_text.
+        re_highest_text = lp_ddic_text.
       WHEN 99.
 *       ICON_LED_RED
-        ex_highest_text = lp_error_text.
+        re_highest_text = lp_error_text.
       WHEN OTHERS.
-        CLEAR ex_highest_text.
+        CLEAR re_highest_text.
     ENDCASE.
   ENDMETHOD.
 
@@ -4092,11 +4097,13 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_head             TYPE char50.
     DATA lp_file_in          TYPE localfile.                "#EC NEEDED
     DATA lp_file_out         TYPE localfile.
-    DATA lp_records_found(5) TYPE n.
     DATA lp_picture          TYPE bds_typeid VALUE 'LOGO_MEDIQ_ALV_129X45'.
     DATA lr_rows             TYPE REF TO cl_salv_form_layout_grid.
     DATA lr_rows_flow        TYPE REF TO cl_salv_form_layout_flow.
     DATA lr_row              TYPE REF TO cl_salv_form_layout_flow.
+
+    DATA(lp_records_found) = VALUE numc5( ).
+
     lr_rows_flow = NEW #( ).
     lr_rows = lr_rows_flow->create_grid( ).
     lr_rows->create_grid( row     = 4
@@ -4124,12 +4131,12 @@ CLASS lcl_ztct IMPLEMENTATION.
       lr_row->create_text( text = lp_file_out(50) ).
     ENDIF.
     lr_row = lr_rows->add_row( ).
-    CONCATENATE 'If there is a warning icon in column ‘Warning’, double-clicking on the'(h01)
+    CONCATENATE 'If there is a warning icon in column ''Warning'', double-clicking on the'(h01)
                 'icon will display a list of objects that should be checked.'(h02)
                  INTO DATA(lp_string) SEPARATED BY space.
     lr_row->create_text( text = lp_string ).
     lr_row = lr_rows->add_row( ).
-    CONCATENATE 'You can add these conflicts by means of the button ‘Add Conflicts’ in'(h03)
+    CONCATENATE 'You can add these conflicts by means of the button ''Add Conflicts'' in'(h03)
                 'the application toolbar or doubleclicking the warning.'(h04)
                  INTO lp_string SEPARATED BY space.
     lr_row->create_text( text = lp_string ).
@@ -4285,7 +4292,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lt_details             TYPE abap_compdescr_tab.
     DATA ls_details             TYPE abap_compdescr.
     DATA lp_field               TYPE string.
-    DATA lp_bool                TYPE abap_bool.
 *   Declaration for ALV Columns
     DATA lr_columns_table       TYPE REF TO cl_salv_columns_table.
     DATA lt_t_column_ref        TYPE salv_t_column_ref.
@@ -4299,6 +4305,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_short_text          TYPE char10.
     DATA lp_medium_text         TYPE char20.
     DATA lp_long_text           TYPE char40.
+
+    DATA(lp_bool) = abap_false.
 
     FIELD-SYMBOLS <lf_type>    TYPE any.
 *   To remove some columns from the output
@@ -4587,7 +4595,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    ex_xend = lp_cw_korrnum     + lp_cw_tr_descr   +
+    re_xend = lp_cw_korrnum     + lp_cw_tr_descr   +
               lp_cw_warning_lvl + lp_cw_object     +
               lp_cw_obj_name    + lp_cw_tabkey     +
               lp_cw_keyobject   + lp_cw_keyobjname +
@@ -4701,19 +4709,20 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_systems           TYPE ctslg_system.
     DATA lp_scope             TYPE seu_obj ##NEEDED.
     DATA lp_answer            TYPE char1 ##NEEDED.
-    DATA ls_ddic_object       TYPE string.
     DATA lp_index             TYPE syindex.
     DATA lp_counter           TYPE i.
     DATA lp_total             TYPE sytabix.
-    DATA lp_deleted           TYPE abap_bool.
     DATA lp_obj_name          TYPE trobj_name.
     DATA lt_objrangtab        TYPE objrangtab.
     DATA ls_objtyprang        TYPE objtyprang.
     DATA lt_objtype           TYPE TABLE OF versobjtyp.
     DATA lp_chars             TYPE string VALUE '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
-    DATA ls_objects           TYPE string.
     DATA lt_where_used_sub    TYPE sci_findlst.
     DATA lp_string            TYPE string.
+
+    DATA(ls_ddic_object) = VALUE string( ).
+    DATA(ls_objects)     = VALUE string( ).
+    DATA(lp_deleted)     = VALUE abap_bool( ).
 
     FREE ddic_e071.
 * Get all object types
@@ -5035,8 +5044,8 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD ofc_ddic.
-    DATA lp_question         TYPE string.
     DATA lp_answer           TYPE char01.
+    DATA(lp_question) = VALUE string( ).
     IF rf_ztct->where_used[] IS INITIAL.
       lp_question = 'This will take approx. 5-15 minutes... Continue?'(041).
     ELSE.
@@ -5139,7 +5148,6 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Data declarations
     DATA lp_filelength       TYPE i ##NEEDED.
     DATA lp_filename         TYPE string.
-    DATA lp_default_filename TYPE string.
 *   Selected rows
     DATA lp_path             TYPE string.
     DATA lp_fullpath         TYPE string.
@@ -5161,7 +5169,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 
     CONVERT DATE sy-datum TIME sy-uzeit
       INTO TIME STAMP lp_timestamp TIME ZONE sy-zonlo.
-    lp_default_filename = |{ lp_timestamp }|.
+    DATA(lp_default_filename) = |{ lp_timestamp }|.
     CONCATENATE 'ZTCT-' lp_default_filename INTO lp_default_filename.
 
     DATA(lp_title) = |{ 'Save Transportlist'(009) }|.
