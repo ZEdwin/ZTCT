@@ -432,7 +432,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS exclude_all_tables.
     METHODS ofc_goon                 IMPORTING im_rows  TYPE salv_t_row
                                      CHANGING  ch_table TYPE REF TO cl_salv_table.
-    METHODS ofc_abr.
+    METHODS ofc_abr                  CHANGING  ch_conflicts TYPE REF TO cl_salv_table.
     METHODS ofc_ddic.
     METHODS ofc_add_tp.
     METHODS ofc_save.
@@ -852,7 +852,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           rf_ztct->ofc_goon( EXPORTING im_rows  = lt_rows
                               CHANGING ch_table = <lf_ref_table> ).
         WHEN 'ABR'.
-          rf_ztct->ofc_abr( ).
+          rf_ztct->ofc_abr( CHANGING ch_conflicts = rf_conflicts ).
         WHEN 'RECHECK'.
           rf_ztct->set_building_conflict_popup( abap_false ).
           rf_ztct->refresh_import_queues( ).
@@ -5038,8 +5038,8 @@ CLASS lcl_ztct IMPLEMENTATION.
       FREE rf_table_keys.
       rf_ztct->check_tabkeys = abap_false.
     ELSE.
-      rf_conflicts->close_screen( ).
-      FREE rf_conflicts.
+      ch_conflicts->close_screen( ).
+      FREE ch_conflicts.
     ENDIF.
   ENDMETHOD.
 
