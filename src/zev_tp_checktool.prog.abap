@@ -412,7 +412,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS add_table_keys_to_list   CHANGING  ch_table TYPE ty_request_details_tt.
     METHODS get_additional_tp_info   CHANGING  ch_table TYPE ty_request_details_tt.
     METHODS gui_upload               IMPORTING im_filename         TYPE string
-                                     RETURNING VALUE(ex_cancelled) TYPE abap_bool.
+                                     RETURNING VALUE(re_cancelled) TYPE abap_bool.
     METHODS determine_col_width      IMPORTING im_field    TYPE any
                                      CHANGING  ch_colwidth TYPE lvc_outlen.
     METHODS check_colwidth           IMPORTING im_name            TYPE abap_compname
@@ -2651,7 +2651,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   METHOD gui_upload.
     DATA lt_tab_delimited TYPE table_of_strings.
     DATA lt_temp_table    TYPE table_of_strings.
-    CLEAR ex_cancelled.
+    CLEAR re_cancelled.
     cl_gui_frontend_services=>gui_upload(
       EXPORTING
         filename                = im_filename
@@ -2679,7 +2679,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         error_no_gui            = 18
         OTHERS                  = 19 ).
     IF sy-subrc <> 0.
-      ex_cancelled = abap_true.
+      re_cancelled = abap_true.
       CASE sy-subrc.
         WHEN 1.
           IF im_filename IS INITIAL.
@@ -2761,10 +2761,11 @@ CLASS lcl_ztct IMPLEMENTATION.
 
     FREE lt_e07t.
     IF im_newer_transports[] IS NOT INITIAL.
-      SELECT * FROM e07t INTO TABLE @lt_e07t
-                 FOR ALL ENTRIES IN @im_newer_transports
-                              WHERE trkorr = @im_newer_transports-trkorr
-                                    ORDER BY PRIMARY KEY. "#EC CI_SUBRC
+      SELECT trkorr, langu, as4text
+             FROM e07t INTO CORRESPONDING FIELDS OF TABLE @lt_e07t
+             FOR ALL ENTRIES IN @im_newer_transports
+             WHERE trkorr = @im_newer_transports-trkorr
+             ORDER BY PRIMARY KEY.                        "#EC CI_SUBRC
     ENDIF.
     LOOP AT im_newer_transports INTO ls_newer_line.
 *     Get transport description
@@ -2844,8 +2845,8 @@ CLASS lcl_ztct IMPLEMENTATION.
         APPEND conflict_line TO conflicts.
         CLEAR conflict_line.
       ELSE.
-        line_found_in_list = check_if_in_list( EXPORTING im_line  = ls_newer_line
-                                                         im_tabix = lp_tabix ).
+        line_found_in_list = check_if_in_list( im_line  = ls_newer_line
+                                               im_tabix = lp_tabix ).
         IF line_found_in_list IS NOT INITIAL.
 *         Even if the transport is only in QAS and not in prd (so a
 *         newer transport exists, but will not be overwritten), we still
@@ -2896,10 +2897,11 @@ CLASS lcl_ztct IMPLEMENTATION.
 
     FREE lt_e07t.
     IF im_older_transports[] IS NOT INITIAL.
-      SELECT * FROM e07t INTO TABLE @lt_e07t
-                 FOR ALL ENTRIES IN @im_older_transports
-                              WHERE trkorr = @im_older_transports-trkorr
-                                    ORDER BY PRIMARY KEY. "#EC CI_SUBRC
+      SELECT trkorr, langu, as4text
+             FROM e07t INTO CORRESPONDING FIELDS OF TABLE @lt_e07t
+             FOR ALL ENTRIES IN @im_older_transports
+             WHERE trkorr = @im_older_transports-trkorr
+             ORDER BY PRIMARY KEY.                        "#EC CI_SUBRC
     ENDIF.
     LOOP AT im_older_transports INTO ls_older_line.
 *     Get transport description
@@ -3049,8 +3051,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     CASE im_line-objfunc.
       WHEN 'K'.
 *       Key fields available
-        SELECT SINGLE * FROM e071k
-                 INTO @ls_e071k
+        SELECT SINGLE tabkey, objname
+                 FROM e071k
+                 INTO CORRESPONDING FIELDS OF @ls_e071k
                 WHERE trkorr = @im_newer_older-trkorr
                   AND tabkey = @im_line-tabkey.           "#EC CI_SUBRC
 *       Now check if in both transports an object exists with the
@@ -3081,8 +3084,9 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Documentation - text lines
     DATA ls_doktl  TYPE doktl.
     tp_dokl_object = im_trkorr.
-    SELECT SINGLE * FROM doktl
-             INTO @ls_doktl
+    SELECT SINGLE id, object
+             FROM doktl
+             INTO CORRESPONDING FIELDS OF @ls_doktl
             WHERE id        = 'TA'
               AND object    = @tp_dokl_object
               AND typ       = 'T'
@@ -3935,13 +3939,7 @@ CLASS lcl_ztct IMPLEMENTATION.
              a~as4user, a~as4date, a~as4time
              FROM e070 AS a JOIN e071 AS b
                        ON a~trkorr = b~trkorr
-             INTO (@ls_tp_same_object-trkorr,
-                   @ls_tp_same_object-object,
-                   @ls_tp_same_object-obj_name,
-                   @ls_tp_same_object-objfunc,
-                   @ls_tp_same_object-as4user,
-                   @ls_tp_same_object-as4date,
-                   @ls_tp_same_object-as4time)
+             APPENDING CORRESPONDING FIELDS OF TABLE @lt_aggr_tp_list_of_objects
              WHERE a~trkorr NOT IN @project_trkorrs
                AND a~trfunction <> 'T'
                AND b~obj_name   IN @excluded_objects
@@ -3949,8 +3947,6 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND a~trkorr     LIKE @prefix
                AND b~object     = @im_line-object
                AND b~obj_name   = @im_line-obj_name.
-        APPEND ls_tp_same_object TO lt_aggr_tp_list_of_objects.
-      ENDSELECT.
 
 *   Also read from version table, because in some case, the object can
 *   be part of a 'bigger' group.
@@ -3959,14 +3955,14 @@ CLASS lcl_ztct IMPLEMENTATION.
 *                another (this also transports the FM)
 *   Example 2: - A table (TABL) is part of a table definition (TABD), so
 *                should also be treated as the same object.
-      SELECT korrnum, objtype, objname,
-             author
+      CLEAR ls_tp_same_object.
+      SELECT korrnum AS trkorr,
+             objtype AS object,
+             objname AS obj_name,
+             author  AS as4user
              FROM vrsd
              INNER JOIN e070 ON vrsd~korrnum = e070~trkorr
-             INTO (@ls_tp_same_object-trkorr,
-                   @ls_tp_same_object-object,
-                   @ls_tp_same_object-obj_name,
-                   @ls_tp_same_object-as4user)
+             APPENDING CORRESPONDING FIELDS OF TABLE @lt_aggr_tp_list_of_objects
              WHERE korrnum NOT IN @project_trkorrs
                AND objname IN @excluded_objects
                AND korrnum <> @im_line-trkorr
@@ -3975,8 +3971,6 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND objtype = @im_line-object
                AND objname = @im_line-obj_name          "#EC CI_NOFIELD
                AND e070~trfunction <> 'T'.
-        APPEND ls_tp_same_object TO lt_aggr_tp_list_of_objects.
-      ENDSELECT.
 
 *     Remove duplicates:
       SORT lt_aggr_tp_list_of_objects[] BY trkorr object obj_name.
@@ -5385,15 +5379,13 @@ START-OF-SELECTION.
           ENDIF.
         ENDIF.
 *       Check if the project is in the selection range
-        SELECT reference FROM e070a UP TO 1 ROWS
+        SELECT SINGLE reference FROM e070a
                INTO @tp_project_reference
               WHERE trkorr = @st_trkorr_range-low
-                AND attribute = 'SAP_CTS_PROJECT'
-                    ORDER BY PRIMARY KEY.
-          IF tp_project_reference NOT IN s_proj.
-            DELETE ta_trkorr_range INDEX sy-tabix.
-          ENDIF.
-        ENDSELECT.
+                AND attribute = 'SAP_CTS_PROJECT'.        "#EC CI_SUBRC
+        IF sy-subrc = 0 AND tp_project_reference NOT IN s_proj.
+          DELETE ta_trkorr_range INDEX sy-tabix.
+        ENDIF.
       ENDLOOP.
       SORT ta_trkorr_range.
       DELETE ADJACENT DUPLICATES FROM ta_trkorr_range.

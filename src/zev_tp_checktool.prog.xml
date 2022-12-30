@@ -398,8 +398,8 @@
       <TEXT_TYPE>S</TEXT_TYPE>
       <TEXT_NAME>ICON_HISTORY</TEXT_NAME>
       <ICON_ID>@96@</ICON_ID>
-      <FUN_TEXT>Simple list</FUN_TEXT>
-      <ICON_TEXT>Simple list</ICON_TEXT>
+      <FUN_TEXT>Header view</FUN_TEXT>
+      <ICON_TEXT>Header view</ICON_TEXT>
       <INFO_TEXT>Display the list on Header level (no object info)</INFO_TEXT>
      </RSMPE_FUNT>
      <RSMPE_FUNT>
