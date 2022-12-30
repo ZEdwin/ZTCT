@@ -346,7 +346,8 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
                                      RETURNING VALUE(re_line) TYPE ty_request_details.
     METHODS get_added_objects        IMPORTING im_to_add        TYPE ty_range_trkorr
                                      RETURNING VALUE(re_to_add) TYPE ty_request_details_tt.
-    METHODS add_to_list              IMPORTING im_to_add      TYPE ty_request_details_tt
+    METHODS add_to_list              IMPORTING im_list        TYPE ty_request_details_tt
+                                               im_to_add      TYPE ty_request_details_tt
                                      RETURNING VALUE(re_main) TYPE ty_request_details_tt.
     METHODS build_conflict_popup     IMPORTING im_rows TYPE salv_t_row
                                                im_cell TYPE salv_s_cell.
@@ -387,7 +388,8 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
                                                im_newer_older TYPE ty_request_details
                                      EXPORTING ex_tabkey      TYPE trobj_name
                                                ex_return      TYPE c.
-    METHODS sort_main_list.
+    METHODS sort_list           IMPORTING im_list        TYPE ty_request_details_tt
+                                RETURNING VALUE(re_list) TYPE ty_request_details_tt.
     METHODS determine_warning_text   IMPORTING im_highest_rank        TYPE numc4
                                      RETURNING VALUE(re_highest_text) TYPE text74.
     METHODS get_tps_for_same_object  IMPORTING im_line  TYPE ty_request_details
@@ -920,7 +922,7 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
             RETURN.
           ENDIF.
           LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
-                                       WHERE trkorr IN lt_range_transports_to_add.
+                                    WHERE trkorr IN lt_range_transports_to_add.
             rf_ztct->main_list_line-flag = 'X'.
             rf_ztct->main_list_line-prd  = rf_ztct->co_scrap.
             MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
@@ -1215,7 +1217,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     IF check_flag = abap_false.
       RETURN.
     ENDIF.
-    sort_main_list( ).
+    main_list = sort_list( main_list ).
 *   For each transports, all the objects in the transport will be checked.
 *   If there is a newer version of an object in prd, then a warning will
 *   be displayed. Also if a newer version that was in prd was actually
@@ -1436,11 +1438,11 @@ CLASS lcl_ztct IMPLEMENTATION.
 * If the user will NOT check the table keys, all tables need to be added to
 * the excluded object list (Tables will NOT be checked).
     IF check_tabkeys = abap_false.
-      LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
+      LOOP AT table_keys INTO table_keys_line.
         ls_excluded_objects-sign   = 'E'.
         ls_excluded_objects-option = 'EQ'.
-        ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
-        APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
+        ls_excluded_objects-low    = table_keys_line-tabname.
+        APPEND ls_excluded_objects TO excluded_objects.
       ENDLOOP.
       RETURN.
     ENDIF.
@@ -1729,7 +1731,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                     COMPARING trkorr object obj_name.
 *   Now add all VRSD entries to the main list:
     APPEND LINES OF lt_main_list_vrsd TO main_list.
-    sort_main_list( ).
+    main_list = sort_list( main_list ).
   ENDMETHOD.
 
   METHOD get_tp_info.
@@ -2190,10 +2192,10 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD add_to_list.
+    re_main = im_list.
 *   Add the records:
     APPEND LINES OF im_to_add TO re_main.
-*   Re-sort the list:
-    sort_main_list( ).
+    re_main = sort_list( re_main ).
   ENDMETHOD.
 
   METHOD build_conflict_popup.
@@ -2645,7 +2647,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         APPEND ls_main TO main_list.
       ENDIF.
     ENDLOOP.
-    sort_main_list( ).
+    main_list = sort_list( main_list ).
   ENDMETHOD.
 
   METHOD gui_upload.
@@ -2835,12 +2837,10 @@ CLASS lcl_ztct IMPLEMENTATION.
               WITH KEY trkorr = ls_newer_line-trkorr
               TRANSPORTING prd.
         IF sy-subrc = 0.
-          IF ls_line_temp-prd = co_scrap.
 *           This newer version is in the list and made visible
             conflict_line-warning_lvl  = co_hint.
             conflict_line-warning_rank = co_hint2_rank.
             conflict_line-warning_txt  = lp_hint2_text.
-          ENDIF.
         ENDIF.
         APPEND conflict_line TO conflicts.
         CLEAR conflict_line.
@@ -4073,8 +4073,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
 
-  METHOD sort_main_list.
-    SORT main_list BY as4date   ASCENDING
+  METHOD sort_list.
+    re_list = im_list.
+    SORT re_list BY as4date   ASCENDING
                       as4time    ASCENDING
                       trkorr     ASCENDING
                       object     ASCENDING
@@ -4083,7 +4084,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                       keyobject  ASCENDING
                       keyobjname ASCENDING
                       tabkey     ASCENDING.
-    DELETE ADJACENT DUPLICATES FROM main_list.
+    DELETE ADJACENT DUPLICATES FROM re_list.
   ENDMETHOD.
 
   METHOD top_of_page.
@@ -4207,7 +4208,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           lp_highest_col  = main_list_line-t_color.
         ENDIF.
       ENDLOOP.
-      rf_ztct->refresh_alv( ).
+      refresh_alv( ).
 *     Add correct warning and change Warning Lvl Icon to text:
       IF sy-subrc = 0.
         main_list_line_xls-warning_lvl  = lp_highest_lvl.
@@ -4944,11 +4945,11 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD exclude_all_tables.
-    LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
+    LOOP AT table_keys INTO table_keys_line.
       ls_excluded_objects-sign   = 'E'.
       ls_excluded_objects-option = 'EQ'.
-      ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
-      APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
+      ls_excluded_objects-low    = table_keys_line-tabname.
+      APPEND ls_excluded_objects TO excluded_objects.
     ENDLOOP.
   ENDMETHOD.
 
@@ -4961,16 +4962,16 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     Move the conflicts to a range. The transports in this range will
 *     be added to the main list:
       FREE lt_range_transports_to_add.
-      rf_ztct->set_building_conflict_popup( abap_false ).
+      set_building_conflict_popup( abap_false ).
       CLEAR ls_range_transports_to_add.
       ls_range_transports_to_add-sign = 'I'.
       ls_range_transports_to_add-option = 'EQ'.
 *     If row(s) are selected, use the table
       LOOP AT im_rows INTO ls_row.
-        READ TABLE rf_ztct->conflicts INTO rf_ztct->conflict_line
-                                     INDEX ls_row.
+        READ TABLE conflicts INTO conflict_line
+                            INDEX ls_row.
         IF sy-subrc = 0.
-          ls_range_transports_to_add-low = rf_ztct->conflict_line-trkorr.
+          ls_range_transports_to_add-low = conflict_line-trkorr.
           APPEND ls_range_transports_to_add TO lt_range_transports_to_add.
         ENDIF.
       ENDLOOP.
@@ -4979,22 +4980,23 @@ CLASS lcl_ztct IMPLEMENTATION.
         MESSAGE i000(db) WITH 'No rows selected: No transports will be added'(m06).
       ENDIF.
       IF lt_range_transports_to_add[] IS NOT INITIAL.
-        rf_ztct->add_to_main = rf_ztct->get_added_objects( lt_range_transports_to_add ).
-        rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
-        rf_ztct->main_list = rf_ztct->add_to_list( rf_ztct->add_to_main ).
+        add_to_main = get_added_objects( lt_range_transports_to_add ).
+        get_additional_tp_info( CHANGING ch_table = add_to_main ).
+        main_list = add_to_list( im_list   = main_list
+                                 im_to_add = add_to_main ).
 *       After the transports have been added, check if there are added
 *       transports that are already in prd. If so, make them visible by
 *       changing the prd icon to co_scrap.
-        LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
-                                   WHERE prd    = rf_ztct->co_okay
+        LOOP AT main_list INTO main_list_line
+                                   WHERE prd    = co_okay
                                      AND trkorr IN lt_range_transports_to_add.
-          rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
-          MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
+          main_list_line-prd = co_scrap.
+          MODIFY main_list FROM main_list_line.
         ENDLOOP.
 *       After the transports have been added, we need to check again
-        rf_ztct->flag_same_objects( CHANGING ch_main_list = rf_ztct->main_list ).
-        rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-        rf_ztct->refresh_alv( ).
+        flag_same_objects( CHANGING ch_main_list = main_list ).
+        check_for_conflicts( CHANGING ch_main_list = main_list ).
+        refresh_alv( ).
       ENDIF.
       FREE ch_table.
     ELSEIF rf_table_keys IS BOUND.
@@ -5005,19 +5007,19 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     rows. All rows that weren't selected will be added to the excluded object list.
       ch_table->close_screen( ).
       IF im_rows[] IS NOT INITIAL.
-        LOOP AT rf_ztct->table_keys INTO rf_ztct->table_keys_line.
+        LOOP AT table_keys INTO table_keys_line.
           IF NOT line_exists( im_rows[ table_line = sy-tabix ] ).
             ls_excluded_objects-sign   = 'E'.
             ls_excluded_objects-option = 'EQ'.
-            ls_excluded_objects-low    = rf_ztct->table_keys_line-tabname.
-            APPEND ls_excluded_objects TO rf_ztct->excluded_objects.
+            ls_excluded_objects-low    = table_keys_line-tabname.
+            APPEND ls_excluded_objects TO excluded_objects.
           ENDIF.
         ENDLOOP.
       ELSE.
 *       If user pressed cancel, then add all tables to the excluded object list
-        rf_ztct->exclude_all_tables( ).
+        exclude_all_tables( ).
         MESSAGE i000(db) WITH 'No rows selected: Table keys will not be checked'(m07).
-        rf_ztct->check_tabkeys = abap_false.
+        check_tabkeys = abap_false.
       ENDIF.
       FREE ch_table.
     ENDIF.
@@ -5027,10 +5029,10 @@ CLASS lcl_ztct IMPLEMENTATION.
     IF rf_table_keys IS BOUND.
       rf_table_keys->close_screen( ).
 *     If user pressed cancel (Add all tables, do not check any)
-      rf_ztct->exclude_all_tables( ).
+      exclude_all_tables( ).
       MESSAGE i000(db) WITH 'Cancelled: Table keys will not be checked'(m09).
       FREE rf_table_keys.
-      rf_ztct->check_tabkeys = abap_false.
+      check_tabkeys = abap_false.
     ELSE.
       ch_conflicts->close_screen( ).
       FREE ch_conflicts.
@@ -5040,7 +5042,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   METHOD ofc_ddic.
     DATA lp_answer           TYPE char01.
     DATA(lp_question) = VALUE string( ).
-    IF rf_ztct->where_used[] IS INITIAL.
+    IF where_used[] IS INITIAL.
       lp_question = 'This will take approx. 5-15 minutes... Continue?'(041).
     ELSE.
       lp_question = 'This has already been done. Do again?'(042).
@@ -5061,12 +5063,12 @@ CLASS lcl_ztct IMPLEMENTATION.
         text_not_found        = 1
         OTHERS                = 2.
     IF sy-subrc = 0 AND lp_answer = '1'.
-      rf_ztct->check_ddic = abap_true.
-      rf_ztct->set_ddic_objects( ).
-      rf_ztct->set_where_used( ).
+      check_ddic = abap_true.
+      set_ddic_objects( ).
+      set_where_used( ).
     ENDIF.
-    rf_ztct->do_ddic_check( CHANGING ch_main_list = rf_ztct->main_list ).
-    rf_ztct->refresh_alv( ).
+    do_ddic_check( CHANGING ch_main_list = main_list ).
+    refresh_alv( ).
     MESSAGE i000(db) WITH 'Data Dictionary check finished...'(m15).
   ENDMETHOD.
 
@@ -5114,28 +5116,29 @@ CLASS lcl_ztct IMPLEMENTATION.
       RETURN.
     ENDIF.
 *   Is it already in the list?
-    IF line_exists( rf_ztct->main_list[ trkorr = ls_fields-value(20) ] ).
+    IF line_exists( main_list[ trkorr = ls_fields-value(20) ] ).
       RETURN.
     ENDIF.
 *   Add transport number to the internal table to add:
     ls_range_transports_to_add-low = ls_fields-value.
     APPEND ls_range_transports_to_add TO lt_range_transports_to_add.
-    rf_ztct->add_to_main = rf_ztct->get_added_objects( lt_range_transports_to_add ).
-    rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->add_to_main ).
-    rf_ztct->main_list = rf_ztct->add_to_list( rf_ztct->add_to_main ).
+    add_to_main = get_added_objects( lt_range_transports_to_add ).
+    get_additional_tp_info( CHANGING ch_table = add_to_main ).
+    main_list = add_to_list( im_list   = main_list
+                                               im_to_add = add_to_main ).
 *   After the transports have been added, check if there are added
 *   transports that are already in prd. If so, make them visible by
 *   changing the prd icon to co_scrap.
-    LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line
-                              WHERE prd    = rf_ztct->co_okay
+    LOOP AT main_list INTO main_list_line
+                              WHERE prd    = co_okay
                                 AND trkorr IN lt_range_transports_to_add.
-      rf_ztct->main_list_line-prd = rf_ztct->co_scrap.
-      MODIFY rf_ztct->main_list FROM rf_ztct->main_list_line.
+      main_list_line-prd = co_scrap.
+      MODIFY main_list FROM main_list_line.
     ENDLOOP.
 *   After the transports have been added, we need to check again
-    rf_ztct->flag_same_objects( CHANGING ch_main_list = rf_ztct->main_list ).
-    rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-    rf_ztct->refresh_alv( ).
+    flag_same_objects( CHANGING ch_main_list = main_list ).
+    check_for_conflicts( CHANGING ch_main_list = main_list ).
+    refresh_alv( ).
   ENDMETHOD.
 
   METHOD ofc_save.
@@ -5148,7 +5151,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_desktop          TYPE string.
     DATA lp_timestamp        TYPE tzntstmps.
 *   Build header
-    rf_ztct->tab_delimited = rf_ztct->main_to_tab_delimited( rf_ztct->main_list ).
+    tab_delimited = main_to_tab_delimited( main_list ).
 *   Finding desktop
     cl_gui_frontend_services=>get_desktop_directory(
        CHANGING   desktop_directory = lp_desktop
@@ -5195,7 +5198,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       IMPORTING
         filelength              = lp_filelength
       CHANGING
-        data_tab                = rf_ztct->tab_delimited
+        data_tab                = tab_delimited
       EXCEPTIONS
         file_write_error        = 1
         no_batch                = 2
@@ -5232,9 +5235,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_tabix            TYPE sytabix.
     CLEAR lp_row_found.
     lp_tabix = ch_cell-row + 1.
-    LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line FROM lp_tabix.
+    LOOP AT main_list INTO main_list_line FROM lp_tabix.
       IF lp_row_found IS INITIAL
-          AND rf_ztct->main_list_line-warning_rank >= rf_ztct->co_info_rank.
+          AND main_list_line-warning_rank >= co_info_rank.
         ch_cell-row = sy-tabix.
         ch_cell-columnname = 'WARNING_LVL'.
         im_selections->set_current_cell( ch_cell ).
@@ -5242,9 +5245,9 @@ CLASS lcl_ztct IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
     IF lp_row_found IS INITIAL.
-      LOOP AT rf_ztct->main_list INTO rf_ztct->main_list_line.
+      LOOP AT main_list INTO main_list_line.
         IF lp_row_found IS INITIAL
-            AND rf_ztct->main_list_line-warning_rank >= rf_ztct->co_info_rank.
+            AND main_list_line-warning_rank >= co_info_rank.
           ch_cell-row = sy-tabix.
           ch_cell-columnname = 'WARNING_LVL'.
           im_selections->set_current_cell( ch_cell ).
@@ -5255,7 +5258,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         MESSAGE i000(db) WITH 'No next conflict found'(021).
       ENDIF.
     ENDIF.
-    rf_ztct->refresh_alv( ).
+    refresh_alv( ).
   ENDMETHOD.
 
   METHOD go_back_months.
