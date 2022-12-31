@@ -388,8 +388,7 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
                                                im_newer_older TYPE ty_request_details
                                      EXPORTING ex_tabkey      TYPE trobj_name
                                                ex_return      TYPE c.
-    METHODS sort_list           IMPORTING im_list        TYPE ty_request_details_tt
-                                RETURNING VALUE(re_list) TYPE ty_request_details_tt.
+    METHODS sort_list                CHANGING  ch_list        TYPE ty_request_details_tt.
     METHODS determine_warning_text   IMPORTING im_highest_rank        TYPE numc4
                                      RETURNING VALUE(re_highest_text) TYPE text74.
     METHODS get_tps_for_same_object  IMPORTING im_line  TYPE ty_request_details
@@ -623,12 +622,11 @@ INITIALIZATION.
   WRITE icon_information AS ICON TO sc_ckey.
 
 * Create a range table containing all project numbers:
-  ls_range_project_trkorrs-sign = 'E'.
-  ls_range_project_trkorrs-option = 'EQ'.
-  SELECT trkorr FROM ctsproject
-                INTO @ls_range_project_trkorrs-low.   "#EC CI_SGLSELECT
-    APPEND ls_range_project_trkorrs TO lt_range_project_trkorrs.
-  ENDSELECT.
+  SELECT 'E' AS sign,
+         'EQ' AS option,
+         trkorr AS low
+         FROM ctsproject
+         INTO CORRESPONDING FIELDS OF TABLE @lt_range_project_trkorrs. "#EC CI_SGLSELECT
 
 * Get the transport track
   tp_sysname = sy-sysid.
@@ -1074,18 +1072,19 @@ CLASS lcl_ztct IMPLEMENTATION.
     lp_ddic_text   = 'Uses object not in list or target environment'(w03).
     lp_info_text   = 'Newer version in test environment'(w23).
     lp_fail_text   = 'Transport not possible'(w24).
-*   Create a range table containing all project transport numbers.
-*   When selecting transports, these can be skipped.
-    ls_range_project_trkorrs-sign   = 'I'.
-    ls_range_project_trkorrs-option = 'EQ'.
-    SELECT trkorr FROM ctsproject
-                  INTO @ls_range_project_trkorrs-low. "#EC CI_SGLSELECT
-      APPEND ls_range_project_trkorrs TO project_trkorrs.
-    ENDSELECT.
+* Create a range table containing all project transport numbers.
+* When selecting transports, these can be skipped.
+* Create a range table containing all project numbers:
+    SELECT 'I' AS sign,
+           'EQ' AS option,
+           trkorr AS low
+           FROM ctsproject
+           INTO CORRESPONDING FIELDS OF TABLE @project_trkorrs. "#EC CI_SGLSELECT
 *   Ensure that the range cannot be empty
     IF project_trkorrs IS INITIAL.
-      ls_range_project_trkorrs-low = 'DUMMY'.         "#EC CI_SGLSELECT
-      APPEND ls_range_project_trkorrs TO project_trkorrs.
+      project_trkorrs = VALUE ty_range_trkorr( ( sign   = 'I'
+                                                 option = 'EQ'
+                                                 low = 'DUMMY' ) ).
     ENDIF.
   ENDMETHOD.
 
@@ -1217,7 +1216,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     IF check_flag = abap_false.
       RETURN.
     ENDIF.
-    main_list = sort_list( main_list ).
+    sort_list( CHANGING ch_list = main_list ).
 *   For each transports, all the objects in the transport will be checked.
 *   If there is a newer version of an object in prd, then a warning will
 *   be displayed. Also if a newer version that was in prd was actually
@@ -1731,7 +1730,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                     COMPARING trkorr object obj_name.
 *   Now add all VRSD entries to the main list:
     APPEND LINES OF lt_main_list_vrsd TO main_list.
-    main_list = sort_list( main_list ).
+    sort_list( CHANGING ch_list = main_list ).
   ENDMETHOD.
 
   METHOD get_tp_info.
@@ -1756,51 +1755,44 @@ CLASS lcl_ztct IMPLEMENTATION.
              AND b~obj_name = @im_obj_name.               "#EC CI_SUBRC
 *   Read transport description:
     SELECT SINGLE as4text
-                  FROM e07t
-                  INTO @re_line-tr_descr
-                 WHERE trkorr = @im_trkorr.               "#EC CI_SUBRC
+             FROM e07t
+             INTO @re_line-tr_descr
+            WHERE trkorr = @im_trkorr.                    "#EC CI_SUBRC
     re_line-checked_by = sy-uname.
 *   First get the descriptions (Status/Type/Project):
 *   Retrieve texts for Status Description
-    SELECT ddtext
-           FROM dd07t
-           INTO @re_line-status_text UP TO 1 ROWS
-          WHERE domname    = 'TRSTATUS'
-            AND ddlanguage = @co_langu
-            AND domvalue_l = @re_line-trstatus.
-      EXIT.
-    ENDSELECT.
+    SELECT SINGLE ddtext
+             FROM dd07t
+             INTO @re_line-status_text
+            WHERE domname    = 'TRSTATUS'
+              AND ddlanguage = @co_langu
+              AND domvalue_l = @re_line-trstatus.         "#EC CI_SUBRC
 *   Retrieve texts for Description of request/task type
-    SELECT ddtext
-           FROM dd07t
-           INTO @re_line-trfunction_txt UP TO 1 ROWS
-          WHERE domname    = 'TRFUNCTION'
-            AND ddlanguage = @co_langu
-            AND domvalue_l = @re_line-trfunction.
-      EXIT.
-    ENDSELECT.
+    SELECT SINGLE ddtext
+             FROM dd07t
+             INTO @re_line-trfunction_txt
+            WHERE domname    = 'TRFUNCTION'
+              AND ddlanguage = @co_langu
+              AND domvalue_l = @re_line-trfunction.       "#EC CI_SUBRC
 *   Retrieve the project number (and description):
-    SELECT reference
-           FROM e070a UP TO 1 ROWS
-           INTO @re_line-project
-          WHERE trkorr    = @re_line-trkorr
-            AND attribute = 'SAP_CTS_PROJECT'.
-      SELECT descriptn
-             FROM ctsproject UP TO 1 ROWS
-             INTO @re_line-project_descr
-            WHERE trkorr  = @re_line-project.
-        EXIT.
-      ENDSELECT.
-    ENDSELECT.
+    SELECT SINGLE reference
+             FROM e070a
+             INTO @re_line-project
+            WHERE trkorr    = @re_line-trkorr
+              AND attribute = 'SAP_CTS_PROJECT'.
+    IF sy-subrc = 0.
+      SELECT SINGLE descriptn
+               FROM ctsproject
+               INTO @re_line-project_descr
+              WHERE trkorr  = @re_line-project.           "#EC CI_SUBRC
+    ENDIF.
 *   Retrieve the description of the status
-    SELECT ddtext
-           FROM dd07t UP TO 1 ROWS
-           INTO @re_line-trstatus
-          WHERE domname    = 'TRSTATUS'
-            AND ddlanguage = @co_langu
-            AND domvalue_l = @re_line-trstatus.
-      EXIT.
-    ENDSELECT.
+    SELECT SINGLE ddtext
+             FROM dd07t
+             INTO @re_line-trstatus
+            WHERE domname    = 'TRSTATUS'
+              AND ddlanguage = @co_langu
+              AND domvalue_l = @re_line-trstatus.         "#EC CI_SUBRC
 
   ENDMETHOD.
 
@@ -1976,18 +1968,17 @@ CLASS lcl_ztct IMPLEMENTATION.
                   AND ddlanguage = @co_langu
                   AND domvalue_l = @main_list_line-trfunction. "#EC CI_SEL_NESTED #EC CI_SUBRC
 *       Retrieve the project number (and description):
-        SELECT reference
-               FROM e070a UP TO 1 ROWS
+        SELECT SINGLE reference
+               FROM e070a
                INTO @main_list_line-project
               WHERE trkorr    = @main_list_line-trkorr
                 AND attribute = 'SAP_CTS_PROJECT'.   "#EC CI_SEL_NESTED
-          IF sy-subrc = 0.
-            SELECT SINGLE descriptn
-                     FROM ctsproject
-                     INTO @main_list_line-project_descr "#EC CI_SGLSELECT
-                    WHERE trkorr = @main_list_line-project. "#EC CI_SEL_NESTED #EC CI_SUBRC
-          ENDIF.
-        ENDSELECT.
+        IF sy-subrc = 0.
+          SELECT SINGLE descriptn
+                   FROM ctsproject
+                   INTO @main_list_line-project_descr "#EC CI_SGLSELECT
+                  WHERE trkorr = @main_list_line-project. "#EC CI_SEL_NESTED #EC CI_SUBRC
+        ENDIF.
 *       Check if transport has been released.
 *       D - Modifiable
 *       L - Modifiable, protected
@@ -2195,7 +2186,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     re_main = im_list.
 *   Add the records:
     APPEND LINES OF im_to_add TO re_main.
-    re_main = sort_list( re_main ).
   ENDMETHOD.
 
   METHOD build_conflict_popup.
@@ -2647,7 +2637,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         APPEND ls_main TO main_list.
       ENDIF.
     ENDLOOP.
-    main_list = sort_list( main_list ).
+    sort_list( CHANGING ch_list = main_list ).
   ENDMETHOD.
 
   METHOD gui_upload.
@@ -2837,10 +2827,10 @@ CLASS lcl_ztct IMPLEMENTATION.
               WITH KEY trkorr = ls_newer_line-trkorr
               TRANSPORTING prd.
         IF sy-subrc = 0.
-*           This newer version is in the list and made visible
-            conflict_line-warning_lvl  = co_hint.
-            conflict_line-warning_rank = co_hint2_rank.
-            conflict_line-warning_txt  = lp_hint2_text.
+*         This newer version is in the list and made visible
+          conflict_line-warning_lvl  = co_hint.
+          conflict_line-warning_rank = co_hint2_rank.
+          conflict_line-warning_txt  = lp_hint2_text.
         ENDIF.
         APPEND conflict_line TO conflicts.
         CLEAR conflict_line.
@@ -3946,7 +3936,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND a~strkorr    = ''
                AND a~trkorr     LIKE @prefix
                AND b~object     = @im_line-object
-               AND b~obj_name   = @im_line-obj_name.
+               AND b~obj_name   = @im_line-obj_name.      "#EC CI_SUBRC
 
 *   Also read from version table, because in some case, the object can
 *   be part of a 'bigger' group.
@@ -3970,7 +3960,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND korrnum <> ''
                AND objtype = @im_line-object
                AND objname = @im_line-obj_name          "#EC CI_NOFIELD
-               AND e070~trfunction <> 'T'.
+               AND e070~trfunction <> 'T'.                "#EC CI_SUBRC
 
 *     Remove duplicates:
       SORT lt_aggr_tp_list_of_objects[] BY trkorr object obj_name.
@@ -4074,8 +4064,7 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD sort_list.
-    re_list = im_list.
-    SORT re_list BY as4date   ASCENDING
+    SORT ch_list BY as4date   ASCENDING
                       as4time    ASCENDING
                       trkorr     ASCENDING
                       object     ASCENDING
@@ -4084,7 +4073,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                       keyobject  ASCENDING
                       keyobjname ASCENDING
                       tabkey     ASCENDING.
-    DELETE ADJACENT DUPLICATES FROM re_list.
+    DELETE ADJACENT DUPLICATES FROM ch_list.
   ENDMETHOD.
 
   METHOD top_of_page.
@@ -4991,7 +4980,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                    WHERE prd    = co_okay
                                      AND trkorr IN lt_range_transports_to_add.
           main_list_line-prd = co_scrap.
-          MODIFY main_list FROM main_list_line.
+          MODIFY TABLE main_list FROM main_list_line.
         ENDLOOP.
 *       After the transports have been added, we need to check again
         flag_same_objects( CHANGING ch_main_list = main_list ).
@@ -5125,15 +5114,15 @@ CLASS lcl_ztct IMPLEMENTATION.
     add_to_main = get_added_objects( lt_range_transports_to_add ).
     get_additional_tp_info( CHANGING ch_table = add_to_main ).
     main_list = add_to_list( im_list   = main_list
-                                               im_to_add = add_to_main ).
+                             im_to_add = add_to_main ).
 *   After the transports have been added, check if there are added
 *   transports that are already in prd. If so, make them visible by
 *   changing the prd icon to co_scrap.
     LOOP AT main_list INTO main_list_line
-                              WHERE prd    = co_okay
-                                AND trkorr IN lt_range_transports_to_add.
+                     WHERE prd    = co_okay
+                       AND trkorr IN lt_range_transports_to_add.
       main_list_line-prd = co_scrap.
-      MODIFY main_list FROM main_list_line.
+      MODIFY TABLE main_list FROM main_list_line.
     ENDLOOP.
 *   After the transports have been added, we need to check again
     flag_same_objects( CHANGING ch_main_list = main_list ).
