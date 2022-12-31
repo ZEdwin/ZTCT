@@ -378,10 +378,12 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS top_of_page              RETURNING VALUE(re_form_element) TYPE REF TO cl_salv_form_element.
     METHODS check_newer_transports   IMPORTING im_newer_transports TYPE ty_request_details_tt
                                                im_main_list        TYPE ty_request_details_tt
+                                               im_target           TYPE tmssysnam
                                      CHANGING  ch_conflicts        TYPE ty_request_details_tt
                                                ch_main             TYPE ty_request_details.
     METHODS check_older_transports   IMPORTING im_older_transports TYPE ty_request_details_tt
                                                im_main_list        TYPE ty_request_details_tt
+                                               im_target           TYPE tmssysnam
                                      CHANGING  ch_conflicts        TYPE ty_request_details_tt
                                                ch_main             TYPE ty_request_details.
     METHODS check_if_same_object     IMPORTING im_line        TYPE ty_request_details
@@ -1275,6 +1277,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       IF lt_newer_transports[] IS NOT INITIAL.
         check_newer_transports( EXPORTING im_newer_transports = lt_newer_transports
                                           im_main_list        = ch_main_list
+                                          im_target           = lp_target
                                 CHANGING  ch_conflicts        = conflicts
                                           ch_main             = ls_main ).
       ENDIF.
@@ -1285,6 +1288,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       IF lt_older_transports[] IS NOT INITIAL.
         check_older_transports( EXPORTING im_older_transports = lt_older_transports
                                           im_main_list        = ch_main_list
+                                          im_target           = lp_target
                                 CHANGING  ch_conflicts        = conflicts
                                           ch_main             = ls_main ).
       ENDIF.
@@ -2745,7 +2749,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_return            TYPE c.
     DATA ls_line_temp         TYPE ty_request_details.
     DATA ls_newer_line        TYPE ty_request_details.
-    DATA lp_target            TYPE tmssysnam.
     DATA lt_e07t              TYPE e07t_t.
     DATA ls_e07t              TYPE e07t.
 
@@ -2771,14 +2774,14 @@ CLASS lcl_ztct IMPLEMENTATION.
       CLEAR lt_stms_wbo_requests.
       READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
            WITH TABLE KEY request          = ls_newer_line-trkorr
-                          target_system    = lp_target.
+                          target_system    = im_target.
       IF sy-subrc = 0.
         lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
       ELSE.
         CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
           EXPORTING
             iv_request                 = ls_newer_line-trkorr
-            iv_target_system           = lp_target
+            iv_target_system           = im_target
             iv_header_only             = 'X'
             iv_monitor                 = ' '
           IMPORTING
@@ -2793,7 +2796,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                   WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
         ELSE.
           tms_mgr_buffer_line-request       = ls_newer_line-trkorr.
-          tms_mgr_buffer_line-target_system = lp_target.
+          tms_mgr_buffer_line-target_system = im_target.
           tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
           INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
         ENDIF.
@@ -2826,14 +2829,23 @@ CLASS lcl_ztct IMPLEMENTATION.
               INTO ls_line_temp
               WITH KEY trkorr = ls_newer_line-trkorr
               TRANSPORTING prd.
+*        IF sy-subrc = 0.
+**         This newer version is in the list and made visible
+*          conflict_line-warning_lvl  = co_hint.
+*          conflict_line-warning_rank = co_hint2_rank.
+*          conflict_line-warning_txt  = lp_hint2_text.
+*        ENDIF.
+*        APPEND conflict_line TO conflicts.
+*        CLEAR conflict_line.
         IF sy-subrc = 0.
-*         This newer version is in the list and made visible
-          conflict_line-warning_lvl  = co_hint.
-          conflict_line-warning_rank = co_hint2_rank.
-          conflict_line-warning_txt  = lp_hint2_text.
+          IF ls_line_temp-prd = co_scrap.
+*           This newer version is in the list and made visible:
+            conflict_line-warning_lvl = co_scrap.
+          ENDIF.
+        ELSE.
+          APPEND conflict_line TO conflicts.
+          CLEAR conflict_line.
         ENDIF.
-        APPEND conflict_line TO conflicts.
-        CLEAR conflict_line.
       ELSE.
         line_found_in_list = check_if_in_list( im_line  = ls_newer_line
                                                im_tabix = lp_tabix ).
@@ -2881,7 +2893,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_stms_wbo_requests TYPE stms_wbo_request.
     DATA lp_return            TYPE c.
     DATA ls_older_line        TYPE ty_request_details.
-    DATA lp_target            TYPE tmssysnam.
     DATA lt_e07t              TYPE e07t_t.
     DATA ls_e07t              TYPE e07t.
 
@@ -2905,14 +2916,14 @@ CLASS lcl_ztct IMPLEMENTATION.
       CLEAR lt_stms_wbo_requests.
       READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
                       WITH TABLE KEY request          = ls_older_line-trkorr
-                                     target_system    = lp_target.
+                                     target_system    = im_target.
       IF sy-subrc = 0.
         lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
       ELSE.
         CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
           EXPORTING
             iv_request                 = ls_older_line-trkorr
-            iv_target_system           = lp_target
+            iv_target_system           = im_target
             iv_header_only             = 'X'
             iv_monitor                 = ' '
           IMPORTING
@@ -2927,7 +2938,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                   WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
         ELSE.
           tms_mgr_buffer_line-request       = ls_older_line-trkorr.
-          tms_mgr_buffer_line-target_system = lp_target.
+          tms_mgr_buffer_line-target_system = im_target.
           tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
           INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
         ENDIF.
@@ -2995,7 +3006,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                       WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
             ELSE.
               tms_mgr_buffer_line-request       = ls_older_line-trkorr.
-              tms_mgr_buffer_line-target_system = lp_target.
+              tms_mgr_buffer_line-target_system = im_target.
               tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
               INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
             ENDIF.
