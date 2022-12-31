@@ -2935,7 +2935,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     Was an older transport found that has not yet gone to EEP?
       READ TABLE lt_stms_wbo_requests INDEX 1
                                       INTO ls_stms_wbo_requests.
-      IF sy-subrc = 0 AND ls_stms_wbo_requests-e070 IS NOT INITIAL.
+      IF sy-subrc = 0 AND ls_stms_wbo_requests-e070 IS INITIAL.
         check_if_same_object( EXPORTING im_line        = ch_main
                                         im_newer_older = ls_older_line
                               IMPORTING ex_tabkey      = tp_tabkey
