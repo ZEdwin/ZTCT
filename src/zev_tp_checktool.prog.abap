@@ -1908,7 +1908,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
     SORT re_to_add.
-    DELETE ADJACENT DUPLICATES FROM re_to_add.
+    DELETE ADJACENT DUPLICATES FROM re_to_add COMPARING ALL FIELDS.
   ENDMETHOD.
 
   METHOD get_additional_tp_info.
@@ -4084,7 +4084,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                       keyobject  ASCENDING
                       keyobjname ASCENDING
                       tabkey     ASCENDING.
-    DELETE ADJACENT DUPLICATES FROM ch_list.
+    DELETE ADJACENT DUPLICATES FROM ch_list COMPARING ALL FIELDS.
   ENDMETHOD.
 
   METHOD top_of_page.
