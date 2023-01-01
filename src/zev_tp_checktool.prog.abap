@@ -378,12 +378,10 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS top_of_page              RETURNING VALUE(re_form_element) TYPE REF TO cl_salv_form_element.
     METHODS check_newer_transports   IMPORTING im_newer_transports TYPE ty_request_details_tt
                                                im_main_list        TYPE ty_request_details_tt
-                                               im_target           TYPE tmssysnam
                                      CHANGING  ch_conflicts        TYPE ty_request_details_tt
                                                ch_main             TYPE ty_request_details.
     METHODS check_older_transports   IMPORTING im_older_transports TYPE ty_request_details_tt
                                                im_main_list        TYPE ty_request_details_tt
-                                               im_target           TYPE tmssysnam
                                      CHANGING  ch_conflicts        TYPE ty_request_details_tt
                                                ch_main             TYPE ty_request_details.
     METHODS check_if_same_object     IMPORTING im_line        TYPE ty_request_details
@@ -628,7 +626,7 @@ INITIALIZATION.
          'EQ' AS option,
          trkorr AS low
          FROM ctsproject
-         INTO CORRESPONDING FIELDS OF TABLE @lt_range_project_trkorrs. "#EC CI_SGLSELECT
+         INTO CORRESPONDING FIELDS OF TABLE @lt_range_project_trkorrs. "#EC CI_SGLSELECT #EC CI_SUBRC
 
 * Get the transport track
   tp_sysname = sy-sysid.
@@ -1081,12 +1079,12 @@ CLASS lcl_ztct IMPLEMENTATION.
            'EQ' AS option,
            trkorr AS low
            FROM ctsproject
-           INTO CORRESPONDING FIELDS OF TABLE @project_trkorrs. "#EC CI_SGLSELECT
+           INTO CORRESPONDING FIELDS OF TABLE @project_trkorrs. "#EC CI_SGLSELECT #EC CI_SUBRC
 *   Ensure that the range cannot be empty
     IF project_trkorrs IS INITIAL.
       project_trkorrs = VALUE ty_range_trkorr( ( sign   = 'I'
                                                  option = 'EQ'
-                                                 low = 'DUMMY' ) ).
+                                                 low    = 'DUMMY' ) ).
     ENDIF.
   ENDMETHOD.
 
@@ -1210,7 +1208,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_highest_rank      TYPE numc4.
     DATA lp_highest_text      TYPE text74.
     DATA lp_highest_col       TYPE lvc_t_scol.
-    DATA lp_target            TYPE tmssysnam.
 
     FREE conflicts.
     CLEAR conflict_line.
@@ -1262,11 +1259,6 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     Check for documentation:
       check_documentation( EXPORTING im_trkorr = ls_main-trkorr
                            CHANGING  ch_table  = ch_main_list ).
-*     The check is only relevant if transport is in QAS or DEV! Check is
-*     skipped for the transports, already in prd.
-      IF ls_main-qas = co_okay.
-        lp_target = prd_system.
-      ENDIF.
 *     Now check the object:
       get_tps_for_same_object( EXPORTING im_line  = ls_main
                                IMPORTING ex_newer = lt_newer_transports
@@ -1277,7 +1269,6 @@ CLASS lcl_ztct IMPLEMENTATION.
       IF lt_newer_transports[] IS NOT INITIAL.
         check_newer_transports( EXPORTING im_newer_transports = lt_newer_transports
                                           im_main_list        = ch_main_list
-                                          im_target           = lp_target
                                 CHANGING  ch_conflicts        = conflicts
                                           ch_main             = ls_main ).
       ENDIF.
@@ -1288,7 +1279,6 @@ CLASS lcl_ztct IMPLEMENTATION.
       IF lt_older_transports[] IS NOT INITIAL.
         check_older_transports( EXPORTING im_older_transports = lt_older_transports
                                           im_main_list        = ch_main_list
-                                          im_target           = lp_target
                                 CHANGING  ch_conflicts        = conflicts
                                           ch_main             = ls_main ).
       ENDIF.
@@ -1554,12 +1544,12 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDLOOP.
 
     LOOP AT lt_keys_main INTO ls_keys.
-      SELECT object, objname, tabkey
+      SELECT object AS keyobject,
+             objname AS keyobjname,
+             tabkey
              FROM e071k
              INNER JOIN e070 ON e070~trkorr = e071k~trkorr
-             INTO (@ls_keys-keyobject,
-                   @ls_keys-keyobjname,
-                   @ls_keys-tabkey)
+             INTO CORRESPONDING FIELDS OF @ls_keys
              WHERE e071k~trkorr     = @ls_keys-trkorr
                AND e071k~trkorr     NOT IN @project_trkorrs
                AND e071k~trkorr     LIKE @prefix
@@ -2751,10 +2741,18 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_newer_line        TYPE ty_request_details.
     DATA lt_e07t              TYPE e07t_t.
     DATA ls_e07t              TYPE e07t.
+    DATA lp_target            TYPE tmssysnam.
 
     DATA(lp_exit) = abap_false.
 
     FREE lt_e07t.
+
+*   The check is only relevant if transport is in QAS or DEV! Check is
+*   skipped for the transports, already in prd.
+    IF ch_main-qas = co_okay.
+      lp_target = prd_system.
+    ENDIF.
+
     IF im_newer_transports[] IS NOT INITIAL.
       SELECT trkorr, langu, as4text
              FROM e07t INTO CORRESPONDING FIELDS OF TABLE @lt_e07t
@@ -2774,14 +2772,14 @@ CLASS lcl_ztct IMPLEMENTATION.
       CLEAR lt_stms_wbo_requests.
       READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
            WITH TABLE KEY request          = ls_newer_line-trkorr
-                          target_system    = im_target.
+                          target_system    = lp_target.
       IF sy-subrc = 0.
         lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
       ELSE.
         CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
           EXPORTING
             iv_request                 = ls_newer_line-trkorr
-            iv_target_system           = im_target
+            iv_target_system           = lp_target
             iv_header_only             = 'X'
             iv_monitor                 = ' '
           IMPORTING
@@ -2796,7 +2794,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                   WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
         ELSE.
           tms_mgr_buffer_line-request       = ls_newer_line-trkorr.
-          tms_mgr_buffer_line-target_system = im_target.
+          tms_mgr_buffer_line-target_system = lp_target.
           tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
           INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
         ENDIF.
@@ -2829,14 +2827,6 @@ CLASS lcl_ztct IMPLEMENTATION.
               INTO ls_line_temp
               WITH KEY trkorr = ls_newer_line-trkorr
               TRANSPORTING prd.
-*        IF sy-subrc = 0.
-**         This newer version is in the list and made visible
-*          conflict_line-warning_lvl  = co_hint.
-*          conflict_line-warning_rank = co_hint2_rank.
-*          conflict_line-warning_txt  = lp_hint2_text.
-*        ENDIF.
-*        APPEND conflict_line TO conflicts.
-*        CLEAR conflict_line.
         IF sy-subrc = 0.
           IF ls_line_temp-prd = co_scrap.
 *           This newer version is in the list and made visible:
@@ -2895,8 +2885,16 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_older_line        TYPE ty_request_details.
     DATA lt_e07t              TYPE e07t_t.
     DATA ls_e07t              TYPE e07t.
+    DATA lp_target            TYPE tmssysnam.
 
     FREE lt_e07t.
+
+*   The check is only relevant if transport is in QAS or DEV! Check is
+*   skipped for the transports, already in prd.
+    IF ch_main-qas = co_okay.
+      lp_target = prd_system.
+    ENDIF.
+
     IF im_older_transports[] IS NOT INITIAL.
       SELECT trkorr, langu, as4text
              FROM e07t INTO CORRESPONDING FIELDS OF TABLE @lt_e07t
@@ -2916,14 +2914,14 @@ CLASS lcl_ztct IMPLEMENTATION.
       CLEAR lt_stms_wbo_requests.
       READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
                       WITH TABLE KEY request          = ls_older_line-trkorr
-                                     target_system    = im_target.
+                                     target_system    = lp_target.
       IF sy-subrc = 0.
         lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
       ELSE.
         CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
           EXPORTING
             iv_request                 = ls_older_line-trkorr
-            iv_target_system           = im_target
+            iv_target_system           = lp_target
             iv_header_only             = 'X'
             iv_monitor                 = ' '
           IMPORTING
@@ -2938,7 +2936,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                   WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
         ELSE.
           tms_mgr_buffer_line-request       = ls_older_line-trkorr.
-          tms_mgr_buffer_line-target_system = im_target.
+          tms_mgr_buffer_line-target_system = lp_target.
           tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
           INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
         ENDIF.
@@ -3006,7 +3004,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                       WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
             ELSE.
               tms_mgr_buffer_line-request       = ls_older_line-trkorr.
-              tms_mgr_buffer_line-target_system = im_target.
+              tms_mgr_buffer_line-target_system = lp_target.
               tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
               INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
             ENDIF.
