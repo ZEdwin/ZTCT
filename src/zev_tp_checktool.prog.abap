@@ -626,7 +626,8 @@ INITIALIZATION.
          'EQ' AS option,
          trkorr AS low
          FROM ctsproject
-         INTO CORRESPONDING FIELDS OF TABLE @lt_range_project_trkorrs. "#EC CI_SGLSELECT #EC CI_SUBRC
+         INTO CORRESPONDING FIELDS OF TABLE @lt_range_project_trkorrs
+         ORDER BY low.                   "#EC CI_SGLSELECT #EC CI_SUBRC
 
 * Get the transport track
   tp_sysname = sy-sysid.
@@ -1057,7 +1058,6 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD constructor.
     DATA lt_range_project_trkorrs TYPE RANGE OF trkorr.
-    DATA ls_range_project_trkorrs LIKE LINE OF lt_range_project_trkorrs.
 
     lp_alert0_text = 'Log couldn''t be read or TP not released'(w16).
     lp_alert1_text = 'Transport not released'(w19).
@@ -1079,7 +1079,8 @@ CLASS lcl_ztct IMPLEMENTATION.
            'EQ' AS option,
            trkorr AS low
            FROM ctsproject
-           INTO CORRESPONDING FIELDS OF TABLE @project_trkorrs. "#EC CI_SGLSELECT #EC CI_SUBRC
+           INTO CORRESPONDING FIELDS OF TABLE @project_trkorrs
+           ORDER BY low.                 "#EC CI_SGLSELECT #EC CI_SUBRC
 *   Ensure that the range cannot be empty
     IF project_trkorrs IS INITIAL.
       project_trkorrs = VALUE ty_range_trkorr( ( sign   = 'I'
@@ -3969,7 +3970,8 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND korrnum <> ''
                AND objtype = @im_line-object
                AND objname = @im_line-obj_name          "#EC CI_NOFIELD
-               AND e070~trfunction <> 'T'.                "#EC CI_SUBRC
+               AND e070~trfunction <> 'T'
+               ORDER BY korrnum, objtype, objname, author. "#EC CI_SUBRC
 
 *     Remove duplicates:
       SORT lt_aggr_tp_list_of_objects[] BY trkorr object obj_name.
@@ -4618,7 +4620,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     IF sy-subrc = 0 AND lt_tadir IS NOT INITIAL.
 *     DD01L (Domains)
       IF lt_tadir[] IS NOT INITIAL.
-        SELECT domname AS ddic_object
+        SELECT domname
                APPENDING TABLE @ddic_objects
                FROM dd01l FOR ALL ENTRIES IN @lt_tadir
               WHERE domname = @lt_tadir-obj_name(30).     "#EC CI_SUBRC
