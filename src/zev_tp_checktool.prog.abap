@@ -1892,7 +1892,9 @@ CLASS lcl_ztct IMPLEMENTATION.
                            AND tabkey     = ls_added-tabkey
                            AND prd        = co_okay.
           main_list_line-prd = co_scrap.
-          MODIFY main_list FROM main_list_line INDEX sy-tabix.
+          MODIFY main_list FROM main_list_line
+                           INDEX sy-tabix
+                           TRANSPORTING prd.
         ENDLOOP.
 *       No need to add this transport again:
         DELETE re_to_add INDEX lp_tabix.
@@ -2167,7 +2169,8 @@ CLASS lcl_ztct IMPLEMENTATION.
                       WHERE flag = abap_true.
       CLEAR main_list_line-flag.
       MODIFY main_list FROM main_list_line
-                           TRANSPORTING flag.
+                       INDEX sy-tabix
+                       TRANSPORTING flag.
     ENDLOOP.
   ENDMETHOD.
 
@@ -2528,7 +2531,8 @@ CLASS lcl_ztct IMPLEMENTATION.
                         WHERE checked = co_checked.
         CLEAR main_list_line-checked.
         MODIFY main_list FROM main_list_line
-                         INDEX sy-tabix.
+                         INDEX sy-tabix
+                         TRANSPORTING checked.
       ENDLOOP.
     ENDIF.
   ENDMETHOD.
@@ -3821,7 +3825,9 @@ CLASS lcl_ztct IMPLEMENTATION.
                                            ex_as4date = ls_tp_same_object-as4date
                                            ex_return  = lp_return ).
         IF lp_return = 0.
-          MODIFY lt_aggr_tp_list_of_objects FROM ls_tp_same_object. "#EC CI_SUBRC
+          MODIFY lt_aggr_tp_list_of_objects FROM ls_tp_same_object
+                                            INDEX lp_index
+                                            TRANSPORTING as4time as4date. "#EC CI_SUBRC
         ELSE.
           DELETE lt_aggr_tp_list_of_objects INDEX lp_index.
         ENDIF.
@@ -4812,7 +4818,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                    WHERE prd    = co_okay
                                      AND trkorr IN lt_range_transports_to_add.
           main_list_line-prd = co_scrap.
-          MODIFY main_list FROM main_list_line.
+          MODIFY main_list FROM main_list_line INDEX sy-tabix.
         ENDLOOP.
 *       After the transports have been added, we need to check again
         flag_same_objects( CHANGING ch_main_list = main_list ).
