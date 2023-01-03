@@ -3821,7 +3821,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                            ex_as4date = ls_tp_same_object-as4date
                                            ex_return  = lp_return ).
         IF lp_return = 0.
-          MODIFY TABLE lt_aggr_tp_list_of_objects FROM ls_tp_same_object. "#EC CI_SUBRC
+          MODIFY lt_aggr_tp_list_of_objects FROM ls_tp_same_object. "#EC CI_SUBRC
         ELSE.
           DELETE lt_aggr_tp_list_of_objects INDEX lp_index.
         ENDIF.
@@ -4054,7 +4054,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       ENDIF.
 *     Apply the changes
       TRY.
-          MODIFY TABLE main_list_xls FROM main_list_line_xls.
+          MODIFY main_list_xls FROM main_list_line_xls.
         CATCH cx_root INTO rf_root ##CATCH_ALL.
           handle_error( rf_root ).
       ENDTRY.
@@ -4812,7 +4812,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                                    WHERE prd    = co_okay
                                      AND trkorr IN lt_range_transports_to_add.
           main_list_line-prd = co_scrap.
-          MODIFY TABLE main_list FROM main_list_line.
+          MODIFY main_list FROM main_list_line.
         ENDLOOP.
 *       After the transports have been added, we need to check again
         flag_same_objects( CHANGING ch_main_list = main_list ).
@@ -4954,7 +4954,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                      WHERE prd    = co_okay
                        AND trkorr IN lt_range_transports_to_add.
       main_list_line-prd = co_scrap.
-      MODIFY TABLE main_list FROM main_list_line.
+      MODIFY main_list FROM main_list_line.
     ENDLOOP.
 *   After the transports have been added, we need to check again
     flag_same_objects( CHANGING ch_main_list = main_list ).
