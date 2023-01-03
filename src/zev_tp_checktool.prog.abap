@@ -439,6 +439,9 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS ofc_save.
     METHODS ofc_nconf                IMPORTING im_selections TYPE REF TO cl_salv_selections
                                      CHANGING  ch_cell       TYPE salv_s_cell.
+    METHODS get_additional_info      IMPORTING im_indexinc       TYPE sytabix
+                                     CHANGING  ch_main_list_line TYPE ty_request_details
+                                               ch_table          TYPE ty_request_details_tt.
 ENDCLASS.
 
 *--------------------------------------------------------------------*
@@ -863,7 +866,6 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           rf_ztct->get_additional_tp_info( CHANGING ch_table = rf_ztct->main_list ).
           rf_ztct->flag_same_objects( CHANGING ch_main_list = rf_ztct->main_list ).
           rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-          rf_ztct->refresh_alv( ).
         WHEN 'DDIC'.
           rf_ztct->ofc_ddic( ).
         WHEN '&ADD'.
@@ -889,7 +891,6 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
                               im_display    = abap_true
                               im_displ_mode = '2' ).
           rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-          rf_ztct->refresh_alv( ).
         WHEN '&DEL'.
 *         Mark all records for the selected transport(s)
           rf_ztct->clear_flags( ).
@@ -900,7 +901,6 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           rf_ztct->flag_same_objects( CHANGING ch_main_list = rf_ztct->main_list ).
           rf_ztct->delete_tp_from_list( lt_rows ).
           rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-          rf_ztct->refresh_alv( ).
         WHEN '&IMPORT'.
 *         Re-transport a request (transport already in production)
           rf_ztct->clear_flags( ).
@@ -928,7 +928,6 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           ENDLOOP.
           rf_ztct->flag_same_objects( CHANGING ch_main_list = rf_ztct->main_list ).
           rf_ztct->check_for_conflicts( CHANGING ch_main_list = rf_ztct->main_list ).
-          rf_ztct->refresh_alv( ).
         WHEN '&DOC'.
           tp_dokl_object = rf_ztct->main_list_line-trkorr.
           rf_ztct->docu_call( im_object = tp_dokl_object
@@ -946,6 +945,9 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
           rf_ztct->ofc_nconf( EXPORTING im_selections = lr_selections
                               CHANGING  ch_cell       = ls_cell ).
       ENDCASE.
+      IF rf_table IS BOUND.
+        rf_ztct->refresh_alv( ).
+      ENDIF.
     ENDIF.
   ENDMETHOD.
 
@@ -1057,8 +1059,6 @@ ENDCLASS.
 CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD constructor.
-    DATA lt_range_project_trkorrs TYPE RANGE OF trkorr.
-
     lp_alert0_text = 'Log couldn''t be read or TP not released'(w16).
     lp_alert1_text = 'Transport not released'(w19).
     lp_alert2_text = 'Release started'(w20).
@@ -1903,17 +1903,11 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_additional_tp_info.
-    DATA lt_tr_cofilines      TYPE tr_cofilines.
-    DATA ls_tstrfcofil        TYPE tstrfcofil.
-    DATA lt_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
-    DATA ls_stms_wbo_requests TYPE stms_wbo_request.
-    DATA ls_systems           TYPE ctslg_system.
     DATA lp_counter           TYPE i.
     DATA lp_index             TYPE sytabix.
     DATA lp_indexinc          TYPE sytabix.
     DATA lp_trkorr            TYPE trkorr.
     DATA ls_main_backup       TYPE ty_request_details.
-    DATA lv_prd_backup        TYPE icon_l4.
     CLEAR: lp_counter,
            total.
 *   The CHECKED_BY field is always going to be filled. If it is empty,
@@ -1946,187 +1940,10 @@ CLASS lcl_ztct IMPLEMENTATION.
 *     different from the previous one.
       IF lp_trkorr <> main_list_line-trkorr.
         lp_trkorr = main_list_line-trkorr.
-        main_list_line-checked_by = sy-uname.
-*       First get the descriptions (Status/Type/Project):
-*       Retrieve texts for Status Description
-        SELECT SINGLE ddtext
-                 FROM dd07t
-                 INTO @main_list_line-status_text
-                WHERE domname    = 'TRSTATUS'
-                  AND ddlanguage = @co_langu
-                  AND domvalue_l = @main_list_line-trstatus. "#EC CI_SEL_NESTED #EC CI_SUBRC
-*       Retrieve texts for Description of request/task type
-        SELECT SINGLE ddtext
-                 FROM dd07t
-                 INTO @main_list_line-trfunction_txt
-                WHERE domname    = 'TRFUNCTION'
-                  AND ddlanguage = @co_langu
-                  AND domvalue_l = @main_list_line-trfunction. "#EC CI_SEL_NESTED #EC CI_SUBRC
-*       Retrieve the project number (and description):
-        SELECT SINGLE reference
-               FROM e070a
-               INTO @main_list_line-project
-              WHERE trkorr    = @main_list_line-trkorr
-                AND attribute = 'SAP_CTS_PROJECT'.   "#EC CI_SEL_NESTED
-        IF sy-subrc = 0.
-          SELECT SINGLE descriptn
-                   FROM ctsproject
-                   INTO @main_list_line-project_descr "#EC CI_SGLSELECT
-                  WHERE trkorr = @main_list_line-project. "#EC CI_SEL_NESTED #EC CI_SUBRC
-        ENDIF.
-*       Check if transport has been released.
-*       D - Modifiable
-*       L - Modifiable, protected
-*       A - Modifiable, protected
-*       O - Release started
-*       R - Released
-*       N - Released (with import protection for repaired objects)
-        FREE lt_stms_wbo_requests.
-        READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
-                   WITH TABLE KEY request       = main_list_line-trkorr
-                                  target_system = dev_system.
-        IF sy-subrc = 0.
-          lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
-        ELSE.
-          CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
-            EXPORTING
-              iv_request                 = main_list_line-trkorr
-              iv_target_system           = dev_system
-              iv_header_only             = 'X'
-              iv_monitor                 = ' '
-            IMPORTING
-              et_request_infos           = lt_stms_wbo_requests
-            EXCEPTIONS
-              read_config_failed         = 1
-              table_of_requests_is_empty = 2
-              system_not_available       = 3
-              OTHERS                     = 4.
-          IF sy-subrc <> 0.
-            MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-                    WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-          ELSE.
-            tms_mgr_buffer_line-request       = main_list_line-trkorr.
-            tms_mgr_buffer_line-target_system = dev_system.
-            tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
-            INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
-          ENDIF.
-        ENDIF.
-        READ TABLE lt_stms_wbo_requests INDEX 1
-                                        INTO ls_stms_wbo_requests. "#EC CI_SUBRC
-*       Check if there is documentation available
-        CLEAR main_list_line-info.
-        IF ls_stms_wbo_requests-docu[] IS NOT INITIAL.
-          check_documentation( EXPORTING im_trkorr = main_list_line-trkorr
-                               CHANGING  ch_table  = ch_table ).
-        ENDIF.
-* Check the returncode of this transport to QAS
-        CALL FUNCTION 'STRF_READ_COFILE'
-          EXPORTING
-            iv_trkorr     = main_list_line-trkorr
-          TABLES
-            tt_cofi_lines = lt_tr_cofilines
-          EXCEPTIONS
-            wrong_call    = 1
-            no_info_found = 2
-            OTHERS        = 3.
-        IF sy-subrc <> 0.
-          MESSAGE ID sy-msgid TYPE 'I' NUMBER sy-msgno
-                  WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-        ENDIF.
-        READ TABLE lt_tr_cofilines INTO ls_tstrfcofil
-                                   WITH KEY tarsystem = qas_system
-                                            function  = 'G'. "#EC CI_SUBRC
-        main_list_line-retcode = ls_tstrfcofil-retcode.
-        IF ls_stms_wbo_requests-e070-trstatus NA 'NR'.
-          main_list_line-warning_lvl  = co_alert.
-          main_list_line-warning_rank = co_alert1_rank.
-          main_list_line-warning_txt  = lp_alert1_text.
-        ELSEIF ls_stms_wbo_requests-e070-trstatus = 'O'.
-          main_list_line-warning_lvl  = co_alert.
-          main_list_line-warning_rank = co_alert2_rank.
-          main_list_line-warning_txt  = lp_alert2_text.
-        ELSE.
-*         Retrieve the environments where the transport can be found.
-*         Read the info of the request (transport log) to determine the
-*         highest environment the transport has been moved to.
-          CALL FUNCTION 'TR_READ_GLOBAL_INFO_OF_REQUEST'
-            EXPORTING
-              iv_trkorr = main_list_line-trkorr
-            IMPORTING
-              es_cofile = st_request-cofile.
 
-          IF st_request-cofile-systems IS INITIAL.
-*           Transport log does not exist: not released or log deleted
-            main_list_line-warning_lvl  = co_alert.
-            main_list_line-warning_rank = co_alert0_rank.
-            main_list_line-warning_txt  = lp_alert0_text.
-*           First check if the object can also be found further down in
-*           the list. If it is, then THAT transport will be checked.
-*           Because, even if this transport's log can't be read, if the
-*           same object is found later in the list, that one will be
-*           checked too. We don't have to worry about the fact that the
-*           log does not exist for this transport.
-            LOOP AT ch_table INTO line_found_in_list FROM lp_indexinc
-                            WHERE object     = main_list_line-object
-                              AND obj_name   = main_list_line-obj_name
-                              AND keyobject  = main_list_line-keyobject
-                              AND keyobjname = main_list_line-keyobjname
-                              AND tabkey     = main_list_line-tabkey
-                              AND prd        <> co_okay.
-              EXIT.
-            ENDLOOP.
-            IF sy-subrc = 0.
-              main_list_line-warning_lvl  = co_hint.
-              main_list_line-warning_rank = co_hint3_rank.
-              main_list_line-warning_txt  = lp_hint3_text.
-            ENDIF.
-          ELSE.
-*           Initialize environment fields. The environments will be
-*           checked and updated with the correct environment later
-            main_list_line-dev = co_inact.
-            main_list_line-qas = co_inact.
-* If a transport is in production and marked for re-import, do not
-* change the SCRAP icon to the OKAY icon
-            lv_prd_backup = main_list_line-prd.
-            main_list_line-prd = co_inact.
-*           Now check in which environments the transport can be found
-            LOOP AT st_request-cofile-systems INTO ls_systems.
-*             For each environment, set the status icon:
-              CASE ls_systems-systemid.
-                WHEN dev_system.
-*                 Green - Exists
-                  main_list_line-dev = co_okay.
-                WHEN qas_system.
-*                 Green - Exists
-                  main_list_line-qas = co_okay.
-*                 Get the latest date/time stamp
-                  READ TABLE ls_systems-steps INTO st_steps
-                                              INDEX lines( ls_systems-steps ).
-                  IF sy-subrc = 0.
-                    CHECK st_steps-stepid <> '<'.
-                    READ TABLE st_steps-actions INTO st_actions
-                                                INDEX lines( st_steps-actions ).
-                    IF sy-subrc = 0.
-                      main_list_line-as4time = st_actions-time.
-                      main_list_line-as4date = st_actions-date.
-                    ENDIF.
-                  ENDIF.
-                WHEN prd_system.
-                  READ TABLE ls_systems-steps INTO st_steps
-                                             INDEX lines( ls_systems-steps ).
-                  IF sy-subrc = 0.
-                    CHECK st_steps-stepid <> '<'.
-*                   Green - Exists
-                    IF lv_prd_backup IS NOT INITIAL.
-                      main_list_line-prd = lv_prd_backup.
-                    ELSE.
-                      main_list_line-prd = co_okay.
-                    ENDIF.
-                  ENDIF.
-              ENDCASE.
-            ENDLOOP.
-          ENDIF.
-        ENDIF.
+        get_additional_info( EXPORTING im_indexinc       = lp_indexinc
+                             CHANGING  ch_main_list_line = main_list_line
+                                       ch_table          = ch_table ).
 *       Update the main table from the workarea.
         MODIFY ch_table FROM main_list_line
                         INDEX lp_index
@@ -3500,6 +3317,10 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD alv_xls_output.
+*   Declaration for Top of List settings
+    DATA lr_form_element TYPE REF TO cl_salv_form_element.
+    lr_form_element = top_of_page( ).
+    rf_table_xls->set_top_of_list( lr_form_element ).
 *   Display the ALV output
     rf_table_xls->display( ).
   ENDMETHOD.
@@ -5259,6 +5080,196 @@ CLASS lcl_ztct IMPLEMENTATION.
       ENDIF.
     ENDIF.
     refresh_alv( ).
+  ENDMETHOD.
+
+  METHOD get_additional_info.
+    DATA lt_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
+    DATA ls_stms_wbo_requests TYPE stms_wbo_request.
+    DATA lt_tr_cofilines      TYPE tr_cofilines.
+    DATA ls_tstrfcofil        TYPE tstrfcofil.
+    DATA ls_systems           TYPE ctslg_system.
+    DATA lv_prd_backup        TYPE icon_l4.
+    ch_main_list_line-checked_by = sy-uname.
+*   First get the descriptions (Status/Type/Project):
+*   Retrieve texts for Status Description
+    SELECT SINGLE ddtext
+             FROM dd07t
+             INTO @main_list_line-status_text
+            WHERE domname    = 'TRSTATUS'
+              AND ddlanguage = @co_langu
+              AND domvalue_l = @ch_main_list_line-trstatus. "#EC CI_SEL_NESTED #EC CI_SUBRC
+*   Retrieve texts for Description of request/task type
+    SELECT SINGLE ddtext
+             FROM dd07t
+             INTO @ch_main_list_line-trfunction_txt
+            WHERE domname    = 'TRFUNCTION'
+              AND ddlanguage = @co_langu
+              AND domvalue_l = @ch_main_list_line-trfunction. "#EC CI_SEL_NESTED #EC CI_SUBRC
+*   Retrieve the project number (and description):
+    SELECT SINGLE reference
+           FROM e070a
+           INTO @ch_main_list_line-project
+          WHERE trkorr    = @ch_main_list_line-trkorr
+            AND attribute = 'SAP_CTS_PROJECT'.       "#EC CI_SEL_NESTED
+    IF sy-subrc = 0.
+      SELECT SINGLE descriptn
+               FROM ctsproject
+               INTO @ch_main_list_line-project_descr  "#EC CI_SGLSELECT
+              WHERE trkorr = @ch_main_list_line-project. "#EC CI_SEL_NESTED #EC CI_SUBRC
+    ENDIF.
+*   Check if transport has been released.
+*   D - Modifiable
+*   L - Modifiable, protected
+*   A - Modifiable, protected
+*   O - Release started
+*   R - Released
+*   N - Released (with import protection for repaired objects)
+    FREE lt_stms_wbo_requests.
+    READ TABLE tms_mgr_buffer INTO tms_mgr_buffer_line
+               WITH TABLE KEY request       = ch_main_list_line-trkorr
+                              target_system = dev_system.
+    IF sy-subrc = 0.
+      lt_stms_wbo_requests = tms_mgr_buffer_line-request_infos.
+    ELSE.
+      CALL FUNCTION 'TMS_MGR_READ_TRANSPORT_REQUEST'
+        EXPORTING
+          iv_request                 = ch_main_list_line-trkorr
+          iv_target_system           = dev_system
+          iv_header_only             = 'X'
+          iv_monitor                 = ' '
+        IMPORTING
+          et_request_infos           = lt_stms_wbo_requests
+        EXCEPTIONS
+          read_config_failed         = 1
+          table_of_requests_is_empty = 2
+          system_not_available       = 3
+          OTHERS                     = 4.
+      IF sy-subrc <> 0.
+        MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+      ELSE.
+        tms_mgr_buffer_line-request       = ch_main_list_line-trkorr.
+        tms_mgr_buffer_line-target_system = dev_system.
+        tms_mgr_buffer_line-request_infos = lt_stms_wbo_requests.
+        INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
+      ENDIF.
+    ENDIF.
+    READ TABLE lt_stms_wbo_requests INDEX 1
+                                    INTO ls_stms_wbo_requests. "#EC CI_SUBRC
+*   Check if there is documentation available
+    CLEAR ch_main_list_line-info.
+    IF ls_stms_wbo_requests-docu[] IS NOT INITIAL.
+      check_documentation( EXPORTING im_trkorr = ch_main_list_line-trkorr
+                           CHANGING  ch_table  = ch_table ).
+    ENDIF.
+*   Check the returncode of this transport to QAS
+    CALL FUNCTION 'STRF_READ_COFILE'
+      EXPORTING
+        iv_trkorr     = ch_main_list_line-trkorr
+      TABLES
+        tt_cofi_lines = lt_tr_cofilines
+      EXCEPTIONS
+        wrong_call    = 1
+        no_info_found = 2
+        OTHERS        = 3.
+    IF sy-subrc <> 0.
+      MESSAGE ID sy-msgid TYPE 'I' NUMBER sy-msgno
+              WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+    ENDIF.
+    READ TABLE lt_tr_cofilines INTO ls_tstrfcofil
+                               WITH KEY tarsystem = qas_system
+                                        function  = 'G'.  "#EC CI_SUBRC
+    ch_main_list_line-retcode = ls_tstrfcofil-retcode.
+    IF ls_stms_wbo_requests-e070-trstatus NA 'NR'.
+      ch_main_list_line-warning_lvl  = co_alert.
+      ch_main_list_line-warning_rank = co_alert1_rank.
+      ch_main_list_line-warning_txt  = lp_alert1_text.
+    ELSEIF ls_stms_wbo_requests-e070-trstatus = 'O'.
+      ch_main_list_line-warning_lvl  = co_alert.
+      ch_main_list_line-warning_rank = co_alert2_rank.
+      ch_main_list_line-warning_txt  = lp_alert2_text.
+    ELSE.
+*     Retrieve the environments where the transport can be found.
+*     Read the info of the request (transport log) to determine the
+*     highest environment the transport has been moved to.
+      CALL FUNCTION 'TR_READ_GLOBAL_INFO_OF_REQUEST'
+        EXPORTING
+          iv_trkorr = ch_main_list_line-trkorr
+        IMPORTING
+          es_cofile = st_request-cofile.
+
+      IF st_request-cofile-systems IS INITIAL.
+*       Transport log does not exist: not released or log deleted
+        ch_main_list_line-warning_lvl  = co_alert.
+        ch_main_list_line-warning_rank = co_alert0_rank.
+        ch_main_list_line-warning_txt  = lp_alert0_text.
+*       First check if the object can also be found further down in
+*       the list. If it is, then THAT transport will be checked.
+*       Because, even if this transport's log can't be read, if the
+*       same object is found later in the list, that one will be
+*       checked too. We don't have to worry about the fact that the
+*       log does not exist for this transport.
+        LOOP AT ch_table INTO line_found_in_list FROM im_indexinc
+                        WHERE object     = ch_main_list_line-object
+                          AND obj_name   = ch_main_list_line-obj_name
+                          AND keyobject  = ch_main_list_line-keyobject
+                          AND keyobjname = ch_main_list_line-keyobjname
+                          AND tabkey     = ch_main_list_line-tabkey
+                          AND prd        <> co_okay.
+          EXIT.
+        ENDLOOP.
+        IF sy-subrc = 0.
+          ch_main_list_line-warning_lvl  = co_hint.
+          ch_main_list_line-warning_rank = co_hint3_rank.
+          ch_main_list_line-warning_txt  = lp_hint3_text.
+        ENDIF.
+      ELSE.
+*       Initialize environment fields. The environments will be
+*       checked and updated with the correct environment later
+        ch_main_list_line-dev = co_inact.
+        ch_main_list_line-qas = co_inact.
+*       If a transport is in production and marked for re-import, do not
+*       change the SCRAP icon to the OKAY icon
+        lv_prd_backup = ch_main_list_line-prd.
+        ch_main_list_line-prd = co_inact.
+*       Now check in which environments the transport can be found
+        LOOP AT st_request-cofile-systems INTO ls_systems.
+*         For each environment, set the status icon:
+          CASE ls_systems-systemid.
+            WHEN dev_system.
+*             Green - Exists
+              ch_main_list_line-dev = co_okay.
+            WHEN qas_system.
+*             Green - Exists
+              ch_main_list_line-qas = co_okay.
+*             Get the latest date/time stamp
+              READ TABLE ls_systems-steps INTO st_steps
+                                          INDEX lines( ls_systems-steps ).
+              IF sy-subrc = 0.
+                CHECK st_steps-stepid <> '<'.
+                READ TABLE st_steps-actions INTO st_actions
+                                            INDEX lines( st_steps-actions ).
+                IF sy-subrc = 0.
+                  ch_main_list_line-as4time = st_actions-time.
+                  ch_main_list_line-as4date = st_actions-date.
+                ENDIF.
+              ENDIF.
+            WHEN prd_system.
+              READ TABLE ls_systems-steps INTO st_steps
+                                         INDEX lines( ls_systems-steps ).
+              IF sy-subrc = 0.
+                CHECK st_steps-stepid <> '<'.
+*               Green - Exists
+                IF lv_prd_backup IS NOT INITIAL.
+                  ch_main_list_line-prd = lv_prd_backup.
+                ELSE.
+                  ch_main_list_line-prd = co_okay.
+                ENDIF.
+              ENDIF.
+          ENDCASE.
+        ENDLOOP.
+      ENDIF.
+    ENDIF.
   ENDMETHOD.
 
   METHOD go_back_months.
