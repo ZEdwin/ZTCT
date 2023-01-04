@@ -966,55 +966,51 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     IF rf_table_xls IS BOUND.
       RETURN.
     ELSE.
-      READ TABLE rf_ztct->main_list INTO rf_ztct->main_list_line INDEX row.
-      IF sy-subrc = 0.
-        CASE column.
-          WHEN 'TRKORR'.
-            rf_ztct->display_transport( rf_ztct->main_list_line-trkorr ).
-          WHEN 'AS4USER'.
-            rf_ztct->display_user( rf_ztct->main_list_line-as4user ).
-          WHEN 'CHECKED_BY'.
-            rf_ztct->display_user( rf_ztct->main_list_line-checked_by ).
+      rf_ztct->main_list_line = rf_ztct->main_list[ row ].
+      CASE column.
+        WHEN 'TRKORR'.
+          rf_ztct->display_transport( rf_ztct->main_list_line-trkorr ).
+        WHEN 'AS4USER'.
+          rf_ztct->display_user( rf_ztct->main_list_line-as4user ).
+        WHEN 'CHECKED_BY'.
+          rf_ztct->display_user( rf_ztct->main_list_line-checked_by ).
 *         Documentation
-          WHEN 'INFO'.
-            rf_ztct->display_docu( rf_ztct->main_list_line-trkorr ).
-            rf_ztct->refresh_alv( ).
-          WHEN 'WARNING_LVL'.
+        WHEN 'INFO'.
+          rf_ztct->display_docu( rf_ztct->main_list_line-trkorr ).
+          rf_ztct->refresh_alv( ).
+        WHEN 'WARNING_LVL'.
 *           Display popup with the conflicting transports/objects
-            IF rf_ztct->main_list_line-warning_lvl IS NOT INITIAL.
-              rf_ztct->build_conflict_popup( im_rows = lt_rows
-                                             im_cell = ls_cell ).
-              rf_ztct->refresh_alv( ).
-            ENDIF.
-        ENDCASE.
-      ENDIF.
+          IF rf_ztct->main_list_line-warning_lvl IS NOT INITIAL.
+            rf_ztct->build_conflict_popup( im_rows = lt_rows
+                                           im_cell = ls_cell ).
+            rf_ztct->refresh_alv( ).
+          ENDIF.
+      ENDCASE.
     ENDIF.
   ENDMETHOD.
 
   METHOD on_double_click_popup.
-    READ TABLE rf_ztct->conflicts INTO rf_ztct->conflict_line INDEX row.
-    IF sy-subrc = 0.
-      CASE column.
-        WHEN 'TRKORR'.
-          rf_ztct->display_transport( rf_ztct->conflict_line-trkorr ).
-        WHEN 'AS4USER'.
-          rf_ztct->display_user( rf_ztct->conflict_line-as4user ).
-        WHEN 'CHECKED_BY'.
-          rf_ztct->display_user( rf_ztct->conflict_line-checked_by ).
+    rf_ztct->conflict_line = rf_ztct->conflicts[ row ].
+    CASE column.
+      WHEN 'TRKORR'.
+        rf_ztct->display_transport( rf_ztct->conflict_line-trkorr ).
+      WHEN 'AS4USER'.
+        rf_ztct->display_user( rf_ztct->conflict_line-as4user ).
+      WHEN 'CHECKED_BY'.
+        rf_ztct->display_user( rf_ztct->conflict_line-checked_by ).
 *     Documentation
-        WHEN 'INFO'.
-          rf_ztct->display_docu( rf_ztct->conflict_line-trkorr ).
-          rf_ztct->refresh_alv( ).
-      ENDCASE.
-    ENDIF.
+      WHEN 'INFO'.
+        rf_ztct->display_docu( rf_ztct->conflict_line-trkorr ).
+        rf_ztct->refresh_alv( ).
+    ENDCASE.
   ENDMETHOD.
 
   METHOD on_link_click.
 *   Which table are we displaying? Object level or Header level (XLS)?
     IF rf_table_xls IS BOUND.
-      READ TABLE rf_ztct->main_list_xls INTO rf_ztct->main_list_line INDEX row. "#EC CI_SUBRC
+      rf_ztct->main_list_line = rf_ztct->main_list_xls[ row ].
     ELSE.
-      READ TABLE rf_ztct->main_list INTO rf_ztct->main_list_line INDEX row. "#EC CI_SUBRC
+      rf_ztct->main_list_line = rf_ztct->main_list[ row ].
     ENDIF.
     CASE column.
       WHEN 'TRKORR'.
@@ -1045,8 +1041,8 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD on_link_click_popup.
-    READ TABLE rf_ztct->conflicts INTO rf_ztct->conflict_line INDEX row.
-    IF sy-subrc = 0 AND column = 'TRKORR'.
+    rf_ztct->conflict_line = rf_ztct->conflicts[ row ].
+    IF column = 'TRKORR'.
       rf_ztct->display_transport( rf_ztct->conflict_line-trkorr ).
     ENDIF.
   ENDMETHOD.
@@ -1524,7 +1520,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD add_table_keys_to_list.
     TYPES: BEGIN OF ty_keys,
-             trkorr     type trkorr,
+             trkorr     TYPE trkorr,
              object     TYPE trobjtype,
              obj_name   TYPE trobj_name,
              keyobject  TYPE trobjtype,
@@ -2105,12 +2101,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     ls_range_trkorr-sign   = 'I'.
     ls_range_trkorr-option = 'EQ'.
     LOOP AT im_rows INTO ls_row.
-      READ TABLE main_list INTO main_list_line
-                          INDEX ls_row.
-      IF sy-subrc = 0.
-        ls_range_trkorr-low = main_list_line-trkorr.
-        APPEND ls_range_trkorr TO lt_range_trkorr.
-      ENDIF.
+      main_list_line = main_list[ ls_row ].
+      ls_range_trkorr-low = main_list_line-trkorr.
+      APPEND ls_range_trkorr TO lt_range_trkorr.
     ENDLOOP.
     SORT lt_range_trkorr.
     DELETE ADJACENT DUPLICATES FROM lt_range_trkorr.
@@ -2152,19 +2145,16 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lt_range_trkorr TYPE RANGE OF trkorr.
     DATA ls_range_trkorr LIKE LINE OF lt_range_trkorr.
     DATA ls_row          TYPE int4.
-* Add transports to range
+*   Add transports to range
     ls_range_trkorr-sign   = 'I'.
     ls_range_trkorr-option = 'EQ'.
-* If row(s) are selected, use the table
+*   If row(s) are selected, use the table
     LOOP AT ch_rows INTO ls_row.
-      READ TABLE main_list INTO main_list_line
-                           INDEX ls_row.
-      IF sy-subrc = 0.
-        ls_range_trkorr-low = main_list_line-trkorr.
-        APPEND ls_range_trkorr TO lt_range_trkorr.
-      ENDIF.
+      main_list_line = main_list[ ls_row ].
+      ls_range_trkorr-low = main_list_line-trkorr.
+      APPEND ls_range_trkorr TO lt_range_trkorr.
     ENDLOOP.
-* If no rows were selected, take the current cell instead
+*   If no rows were selected, take the current cell instead
     IF sy-subrc <> 0.
       READ TABLE main_list INTO main_list_line
                            INDEX im_cell-row.
@@ -2178,7 +2168,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDIF.
     SORT lt_range_trkorr.
     DELETE ADJACENT DUPLICATES FROM lt_range_trkorr.
-* Mark all records for all marked transports
+*   Mark all records for all marked transports
     LOOP AT main_list INTO main_list_line
                       WHERE trkorr IN lt_range_trkorr.
       APPEND sy-tabix TO ch_rows.
@@ -2374,11 +2364,14 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDTRY.
 *   First line contains the name of the fields
 *   Now modify the lines of the main list to a tab delimited list
-    READ TABLE im_tab_delimited INDEX 1
-                                INTO DATA(lp_header).
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
+    TRY.
+        DATA(lp_header) = im_tab_delimited[ 1 ].
+      CATCH cx_root INTO rf_root ##CATCH_ALL.
+        tp_msg = rf_root->get_text( ).
+        CONCATENATE 'ERROR:'(038) tp_msg INTO tp_msg SEPARATED BY space.
+        MESSAGE tp_msg TYPE 'I' DISPLAY LIKE 'E'.
+        RETURN.
+    ENDTRY.
 *   Build list of fields, in order of uploaded file
     DO.
       SPLIT lp_header AT tp_tab INTO ls_item-field lp_header.
@@ -2396,26 +2389,25 @@ CLASS lcl_ztct IMPLEMENTATION.
       DO.
 *       Get the corresponding line from the table containing
 *       the fields and values (to be updated with the value)
-        READ TABLE lt_items INDEX sy-index
-                            INTO ls_item.
-        IF sy-subrc <> 0.
-          EXIT.
-        ELSE.
-          SPLIT lp_header AT tp_tab INTO ls_item-value lp_header.
-          MODIFY lt_items FROM ls_item
-                          INDEX sy-tabix
-                          TRANSPORTING value.
-        ENDIF.
+        TRY.
+            ls_item = lt_items[ sy-index ].
+          CATCH cx_root INTO rf_root ##CATCH_ALL.
+            EXIT.
+        ENDTRY.
+        SPLIT lp_header AT tp_tab INTO ls_item-value lp_header.
+        MODIFY lt_items FROM ls_item
+                        INDEX sy-index
+                        TRANSPORTING value.
       ENDDO.
 *     Map the fields from the uploaded line to the correct component
 *     of the main list
       DO.
 *       Get corresponding fieldname for file column
-        READ TABLE lt_items INTO ls_item
-                            INDEX sy-index.
-        IF sy-subrc <> 0.
-          EXIT.
-        ENDIF.
+        TRY.
+            ls_item = lt_items[ sy-index ].
+          CATCH cx_root INTO rf_root ##CATCH_ALL.
+            EXIT.
+        ENDTRY.
 *       Get information about where the column is in the structure
 *       Get the lenght and position from the structure definition:
         READ TABLE lr_o_structdescr->components
