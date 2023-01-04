@@ -1553,6 +1553,7 @@ CLASS lcl_ztct IMPLEMENTATION.
       APPEND ls_keys_main TO lt_keys_main.
       DELETE TABLE ch_table FROM ls_keys_main.
     ENDLOOP.
+* Collect all the keys for all the transports in the list
     IF lt_keys_main IS NOT INITIAL.
       SELECT e071k~trkorr,
              e071k~mastertype AS object,
@@ -1571,6 +1572,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND e071k~mastertype = @lt_keys_main-object
                AND e071k~mastername = @lt_keys_main-obj_name(40)
                AND e071k~objname    IN @excluded_objects.
+* Add all the keys to the table (keeping all other fields in workarea the same)
       LOOP AT lt_keys_main INTO ls_keys_main.
         LOOP AT lt_keys INTO ls_keys
                        WHERE trkorr   = ls_keys_main-trkorr
