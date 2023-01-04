@@ -1523,9 +1523,19 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD add_table_keys_to_list.
-    DATA lt_keys_main        TYPE ty_request_details_tt.
-    DATA ls_keys_main        TYPE ty_request_details.
-    DATA ls_keys             TYPE ty_request_details.
+    TYPES: BEGIN OF ty_keys,
+             trkorr     type trkorr,
+             object     TYPE trobjtype,
+             obj_name   TYPE trobj_name,
+             keyobject  TYPE trobjtype,
+             keyobjname TYPE tabname,
+             tabkey     TYPE tabkey,
+           END OF ty_keys.
+    TYPES ty_keys_tt    TYPE STANDARD TABLE OF ty_keys.
+    DATA lt_keys_main   TYPE ty_request_details_tt.
+    DATA ls_keys_main   TYPE ty_request_details.
+    DATA lt_keys        TYPE ty_keys_tt.
+    DATA ls_keys        TYPE ty_keys.
 *   Only if the option to check for table keys is switched ON, on the
 *   selection screen:
     IF check_tabkeys = abap_false.
@@ -1543,25 +1553,36 @@ CLASS lcl_ztct IMPLEMENTATION.
       APPEND ls_keys_main TO lt_keys_main.
       DELETE TABLE ch_table FROM ls_keys_main.
     ENDLOOP.
-
-    LOOP AT lt_keys_main INTO ls_keys.
-      SELECT object AS keyobject,
-             objname AS keyobjname,
-             tabkey
+    IF lt_keys_main IS NOT INITIAL.
+      SELECT e071k~trkorr,
+             e071k~mastertype AS object,
+             e071k~mastername AS obj_name,
+             e071k~object AS keyobject,
+             e071k~objname AS keyobjname,
+             e071k~tabkey
              FROM e071k
              INNER JOIN e070 ON e070~trkorr = e071k~trkorr
-             INTO CORRESPONDING FIELDS OF @ls_keys
-             WHERE e071k~trkorr     = @ls_keys-trkorr
+             INTO CORRESPONDING FIELDS OF TABLE @lt_keys
+             FOR ALL ENTRIES IN @lt_keys_main
+             WHERE e071k~trkorr     = @lt_keys_main-trkorr
                AND e071k~trkorr     NOT IN @project_trkorrs
                AND e071k~trkorr     LIKE @prefix
                AND e070~trfunction  <> 'T'
-               AND e071k~mastertype = @ls_keys-object
-               AND e071k~mastername = @ls_keys-obj_name(40)
+               AND e071k~mastertype = @lt_keys_main-object
+               AND e071k~mastername = @lt_keys_main-obj_name(40)
                AND e071k~objname    IN @excluded_objects.
-        APPEND ls_keys TO ch_table.
-      ENDSELECT.
-    ENDLOOP.
-
+      LOOP AT lt_keys_main INTO ls_keys_main.
+        LOOP AT lt_keys INTO ls_keys
+                       WHERE trkorr   = ls_keys_main-trkorr
+                         AND object   = ls_keys_main-object
+                         AND obj_name = ls_keys_main-obj_name.
+          ls_keys_main-keyobject = ls_keys-keyobject.
+          ls_keys_main-keyobjname = ls_keys-keyobjname.
+          ls_keys_main-tabkey = ls_keys-tabkey.
+          APPEND ls_keys_main TO ch_table.
+        ENDLOOP.
+      ENDLOOP.
+    ENDIF.
   ENDMETHOD.
 
   METHOD progress_indicator.
@@ -2405,10 +2426,7 @@ CLASS lcl_ztct IMPLEMENTATION.
           ELSE.
             DESCRIBE FIELD <lf_string> TYPE lp_type.
             IF lp_type NA co_non_charlike.
-              TRY.
-                  <lf_string> = ls_item-value.
-                CATCH cx_root INTO rf_root  ##CATCH_ALL ##NO_HANDLER.
-              ENDTRY.
+              <lf_string> = ls_item-value.
             ENDIF.
           ENDIF.
         ENDIF.
@@ -3984,6 +4002,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD display_excel.
     DATA lp_return        TYPE c.
+    DATA lp_tabix         TYPE sytabix.
     DATA lp_highest_lvl   TYPE icon_d.
     DATA lp_highest_rank  TYPE numc4.
     DATA lp_highest_text  TYPE text74.
@@ -4004,6 +4023,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   - remove transports not in QAS
     CLEAR lp_return.
     LOOP AT main_list_xls INTO main_list_line_xls.
+      lp_tabix = sy-tabix.
       CLEAR: lp_highest_lvl,
              lp_highest_rank,
              lp_highest_text,
@@ -4059,11 +4079,8 @@ CLASS lcl_ztct IMPLEMENTATION.
         ENDIF.
       ENDIF.
 *     Apply the changes
-      TRY.
-          MODIFY main_list_xls FROM main_list_line_xls.
-        CATCH cx_root INTO rf_root ##CATCH_ALL.
-          handle_error( rf_root ).
-      ENDTRY.
+      MODIFY main_list_xls FROM main_list_line_xls
+                          INDEX lp_tabix.
     ENDLOOP.
 *   Message if entries were deleted because they were not in QAS:
     IF lp_return = abap_true.
@@ -4895,7 +4912,6 @@ CLASS lcl_ztct IMPLEMENTATION.
       set_where_used( ).
     ENDIF.
     do_ddic_check( CHANGING ch_main_list = main_list ).
-    refresh_alv( ).
     MESSAGE i000(db) WITH 'Data Dictionary check finished...'(m15).
   ENDMETHOD.
 
@@ -4960,12 +4976,12 @@ CLASS lcl_ztct IMPLEMENTATION.
                      WHERE prd    = co_okay
                        AND trkorr IN lt_range_transports_to_add.
       main_list_line-prd = co_scrap.
-      MODIFY main_list FROM main_list_line.
+      MODIFY main_list FROM main_list_line
+                      INDEX sy-tabix.
     ENDLOOP.
 *   After the transports have been added, we need to check again
     flag_same_objects( CHANGING ch_main_list = main_list ).
     check_for_conflicts( CHANGING ch_main_list = main_list ).
-    refresh_alv( ).
   ENDMETHOD.
 
   METHOD ofc_save.
@@ -5085,7 +5101,6 @@ CLASS lcl_ztct IMPLEMENTATION.
         MESSAGE i000(db) WITH 'No next conflict found'(021).
       ENDIF.
     ENDIF.
-    refresh_alv( ).
   ENDMETHOD.
 
   METHOD get_additional_info.
