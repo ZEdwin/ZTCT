@@ -848,8 +848,10 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
       lt_rows       = lr_selections->get_selected_rows( ).
       ls_cell       = lr_selections->get_current_cell( ).
       IF e_salv_function <> 'GOON' AND e_salv_function <> 'ABR'.
-        READ TABLE rf_ztct->main_list INTO rf_ztct->main_list_line
-                                     INDEX ls_cell-row.   "#EC CI_SUBRC
+        TRY.
+            rf_ztct->main_list_line = rf_ztct->main_list[ ls_cell-row ].
+          CATCH cx_root INTO rf_root ##CATCH_ALL.
+        ENDTRY.
       ENDIF.
       CASE e_salv_function.
         WHEN 'GOON'.
@@ -966,43 +968,51 @@ CLASS lcl_eventhandler_ztct IMPLEMENTATION.
     IF rf_table_xls IS BOUND.
       RETURN.
     ELSE.
-      rf_ztct->main_list_line = rf_ztct->main_list[ row ].
-      CASE column.
-        WHEN 'TRKORR'.
-          rf_ztct->display_transport( rf_ztct->main_list_line-trkorr ).
-        WHEN 'AS4USER'.
-          rf_ztct->display_user( rf_ztct->main_list_line-as4user ).
-        WHEN 'CHECKED_BY'.
-          rf_ztct->display_user( rf_ztct->main_list_line-checked_by ).
-*         Documentation
-        WHEN 'INFO'.
-          rf_ztct->display_docu( rf_ztct->main_list_line-trkorr ).
-          rf_ztct->refresh_alv( ).
-        WHEN 'WARNING_LVL'.
-*           Display popup with the conflicting transports/objects
-          IF rf_ztct->main_list_line-warning_lvl IS NOT INITIAL.
-            rf_ztct->build_conflict_popup( im_rows = lt_rows
-                                           im_cell = ls_cell ).
-            rf_ztct->refresh_alv( ).
-          ENDIF.
-      ENDCASE.
+      TRY.
+          rf_ztct->main_list_line = rf_ztct->main_list[ row ].
+          CASE column.
+            WHEN 'TRKORR'.
+              rf_ztct->display_transport( rf_ztct->main_list_line-trkorr ).
+            WHEN 'AS4USER'.
+              rf_ztct->display_user( rf_ztct->main_list_line-as4user ).
+            WHEN 'CHECKED_BY'.
+              rf_ztct->display_user( rf_ztct->main_list_line-checked_by ).
+*               Documentation
+            WHEN 'INFO'.
+              rf_ztct->display_docu( rf_ztct->main_list_line-trkorr ).
+              rf_ztct->refresh_alv( ).
+            WHEN 'WARNING_LVL'.
+*                 Display popup with the conflicting transports/objects
+              IF rf_ztct->main_list_line-warning_lvl IS NOT INITIAL.
+                rf_ztct->build_conflict_popup( im_rows = lt_rows
+                                               im_cell = ls_cell ).
+                rf_ztct->refresh_alv( ).
+              ENDIF.
+          ENDCASE.
+        CATCH cx_root INTO rf_root ##CATCH_ALL.
+          tp_msg = rf_root->get_text( ).
+      ENDTRY.
     ENDIF.
   ENDMETHOD.
 
   METHOD on_double_click_popup.
-    rf_ztct->conflict_line = rf_ztct->conflicts[ row ].
-    CASE column.
-      WHEN 'TRKORR'.
-        rf_ztct->display_transport( rf_ztct->conflict_line-trkorr ).
-      WHEN 'AS4USER'.
-        rf_ztct->display_user( rf_ztct->conflict_line-as4user ).
-      WHEN 'CHECKED_BY'.
-        rf_ztct->display_user( rf_ztct->conflict_line-checked_by ).
-*     Documentation
-      WHEN 'INFO'.
-        rf_ztct->display_docu( rf_ztct->conflict_line-trkorr ).
-        rf_ztct->refresh_alv( ).
-    ENDCASE.
+    TRY.
+        rf_ztct->conflict_line = rf_ztct->conflicts[ row ].
+        CASE column.
+          WHEN 'TRKORR'.
+            rf_ztct->display_transport( rf_ztct->conflict_line-trkorr ).
+          WHEN 'AS4USER'.
+            rf_ztct->display_user( rf_ztct->conflict_line-as4user ).
+          WHEN 'CHECKED_BY'.
+            rf_ztct->display_user( rf_ztct->conflict_line-checked_by ).
+*         Documentation
+          WHEN 'INFO'.
+            rf_ztct->display_docu( rf_ztct->conflict_line-trkorr ).
+            rf_ztct->refresh_alv( ).
+        ENDCASE.
+      CATCH cx_root INTO rf_root ##CATCH_ALL.
+        tp_msg = rf_root->get_text( ).
+    ENDTRY.
   ENDMETHOD.
 
   METHOD on_link_click.
@@ -1186,11 +1196,12 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDLOOP.
 *   If no rows were selected, take the current cell instead
     IF sy-subrc <> 0.
-      READ TABLE main_list INTO main_list_line INDEX im_cell-row.
-      IF sy-subrc = 0.
-        main_list_line-flag = abap_true.
-        MODIFY main_list FROM main_list_line INDEX im_cell-row TRANSPORTING flag.
-      ENDIF.
+      TRY.
+          main_list_line = main_list[ im_cell-row ].
+          main_list_line-flag = abap_true.
+          MODIFY main_list FROM main_list_line INDEX im_cell-row TRANSPORTING flag.
+        CATCH cx_root INTO rf_root ##CATCH_ALL.
+      ENDTRY.
     ENDIF.
   ENDMETHOD.
 
@@ -1453,11 +1464,11 @@ CLASS lcl_ztct IMPLEMENTATION.
             r_salv_table = rf_table_keys
           CHANGING
             t_table      = table_keys ).
-*   Global display settings
+*       Global display settings
         lr_display_settings = rf_table_keys->get_display_settings( ).
-*   Activate Striped Pattern
+*       Activate Striped Pattern
         lr_display_settings->set_striped_pattern( if_salv_c_bool_sap=>true ).
-*   Report header
+*       Report header
         lr_display_settings->set_list_header( lp_title ).
 *       Table Selection Settings
         lr_selections = rf_table_keys->get_selections( ).
@@ -1567,7 +1578,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND e070~trfunction  <> 'T'
                AND e071k~mastertype = @lt_keys_main-object
                AND e071k~mastername = @lt_keys_main-obj_name(40)
-               AND e071k~objname    IN @excluded_objects.
+               AND e071k~objname    IN @excluded_objects. "#EC CI_SUBRC
 * Add all the keys to the table (keeping all other fields in workarea the same)
       LOOP AT lt_keys_main INTO ls_keys_main.
         LOOP AT lt_keys INTO ls_keys
@@ -1718,23 +1729,41 @@ CLASS lcl_ztct IMPLEMENTATION.
                    @ls_main_list_vrsd-as4time)
              FOR ALL ENTRIES IN @main_list
              WHERE korrnum = @main_list-trkorr.
-        READ TABLE main_list INTO main_list_line
-                             WITH KEY trkorr = ls_main_list_vrsd-trkorr.
-        IF sy-subrc = 0.
-          main_list_line-object   = ls_main_list_vrsd-object.
-          main_list_line-obj_name = ls_main_list_vrsd-obj_name.
-          main_list_line-as4user  = ls_main_list_vrsd-as4user.
-          main_list_line-as4date  = ls_main_list_vrsd-as4date.
-          main_list_line-as4time  = ls_main_list_vrsd-as4time.
-*       Only append if the object from VRSD does not already exist in the
-*       main list:
-          IF NOT line_exists( main_list[ trkorr   = main_list_line-trkorr
-                                         object   = main_list_line-object
-                                         obj_name = main_list_line-obj_name ] ).
-            main_list_line-flag = abap_true.
-            APPEND main_list_line TO lt_main_list_vrsd.
-          ENDIF.
-        ENDIF.
+*        READ TABLE main_list INTO main_list_line
+*                             WITH KEY trkorr = ls_main_list_vrsd-trkorr.
+*        IF sy-subrc = 0.
+*          main_list_line-object   = ls_main_list_vrsd-object.
+*          main_list_line-obj_name = ls_main_list_vrsd-obj_name.
+*          main_list_line-as4user  = ls_main_list_vrsd-as4user.
+*          main_list_line-as4date  = ls_main_list_vrsd-as4date.
+*          main_list_line-as4time  = ls_main_list_vrsd-as4time.
+**       Only append if the object from VRSD does not already exist in the
+**       main list:
+*          IF NOT line_exists( main_list[ trkorr   = main_list_line-trkorr
+*                                         object   = main_list_line-object
+*                                         obj_name = main_list_line-obj_name ] ).
+*            main_list_line-flag = abap_true.
+*            APPEND main_list_line TO lt_main_list_vrsd.
+*          ENDIF.
+*        ENDIF.
+        TRY.
+            main_list_line = main_list[ trkorr = ls_main_list_vrsd-trkorr ].
+            main_list_line-object   = ls_main_list_vrsd-object.
+            main_list_line-obj_name = ls_main_list_vrsd-obj_name.
+            main_list_line-as4user  = ls_main_list_vrsd-as4user.
+            main_list_line-as4date  = ls_main_list_vrsd-as4date.
+            main_list_line-as4time  = ls_main_list_vrsd-as4time.
+*           Only append if the object from VRSD does not already exist in the
+*           main list:
+            IF NOT line_exists( main_list[ trkorr   = main_list_line-trkorr
+                                           object   = main_list_line-object
+                                           obj_name = main_list_line-obj_name ] ).
+              main_list_line-flag = abap_true.
+              APPEND main_list_line TO lt_main_list_vrsd.
+            ENDIF.
+          CATCH cx_root INTO rf_root ##CATCH_ALL.
+        ENDTRY.
+
       ENDSELECT.
     ENDIF.
 *   Duplicates may exist if the same object exists in different tasks
@@ -1864,24 +1893,23 @@ CLASS lcl_ztct IMPLEMENTATION.
                    @ls_main_list_vrsd-as4time)
              FOR ALL ENTRIES IN @re_to_add
              WHERE korrnum = @re_to_add-trkorr.
-        READ TABLE re_to_add
-                   INTO ls_main
-                   WITH KEY trkorr = ls_main_list_vrsd-trkorr.
-        IF sy-subrc = 0.
-          ls_main-object   = ls_main_list_vrsd-object.
-          ls_main-obj_name = ls_main_list_vrsd-obj_name.
-          ls_main-as4user  = ls_main_list_vrsd-as4user.
-          ls_main-as4date  = ls_main_list_vrsd-as4date.
-          ls_main-as4time  = ls_main_list_vrsd-as4time.
-*       Only append if the object from VRSD does not already exist
-*       in the main list:
-          IF NOT line_exists( re_to_add[ trkorr   = ls_main-trkorr
-                                         object   = ls_main-object
-                                         obj_name = ls_main-obj_name ] ).
-            ls_main-flag = abap_true.
-            APPEND ls_main TO lt_main_list_vrsd.
-          ENDIF.
-        ENDIF.
+        TRY.
+            ls_main = re_to_add[ trkorr = ls_main_list_vrsd-trkorr ].
+            ls_main-object   = ls_main_list_vrsd-object.
+            ls_main-obj_name = ls_main_list_vrsd-obj_name.
+            ls_main-as4user  = ls_main_list_vrsd-as4user.
+            ls_main-as4date  = ls_main_list_vrsd-as4date.
+            ls_main-as4time  = ls_main_list_vrsd-as4time.
+*           Only append if the object from VRSD does not already exist
+*           in the main list:
+            IF NOT line_exists( re_to_add[ trkorr   = ls_main-trkorr
+                                           object   = ls_main-object
+                                           obj_name = ls_main-obj_name ] ).
+              ls_main-flag = abap_true.
+              APPEND ls_main TO lt_main_list_vrsd.
+            ENDIF.
+          CATCH cx_root INTO rf_root ##CATCH_ALL.
+        ENDTRY.
       ENDSELECT.
 *     Now add all VRSD entries to the main list
       APPEND LINES OF lt_main_list_vrsd TO re_to_add.
@@ -2096,8 +2124,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lt_range_trkorr TYPE RANGE OF trkorr.
     DATA ls_range_trkorr LIKE LINE OF lt_range_trkorr.
     DATA ls_row TYPE int4.
-* If row(s) are selected, use the table
-* Add transports to range
+*   If row(s) are selected, use the table
+*   Add transports to range
+    CHECK im_rows[] IS NOT INITIAL.
     ls_range_trkorr-sign   = 'I'.
     ls_range_trkorr-option = 'EQ'.
     LOOP AT im_rows INTO ls_row.
@@ -2156,12 +2185,13 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDLOOP.
 *   If no rows were selected, take the current cell instead
     IF sy-subrc <> 0.
-      READ TABLE main_list INTO main_list_line
-                           INDEX im_cell-row.
-      IF sy-subrc = 0.
-        ls_range_trkorr-low = main_list_line-trkorr.
-        APPEND ls_range_trkorr TO lt_range_trkorr.
-      ENDIF.
+      TRY.
+          main_list_line = main_list[ im_cell-row ].
+          ls_range_trkorr-low = main_list_line-trkorr.
+          APPEND ls_range_trkorr TO lt_range_trkorr.
+        CATCH cx_root INTO rf_root ##CATCH_ALL.
+          tp_msg = rf_root->get_text( ).
+      ENDTRY.
     ENDIF.
     IF lt_range_trkorr IS INITIAL.
       RETURN.
@@ -2230,12 +2260,12 @@ CLASS lcl_ztct IMPLEMENTATION.
       MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
               WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
     ENDIF.
-    READ TABLE lt_filetable INDEX 1 INTO DATA(lp_file).
-    IF sy-subrc = 0.
-      re_file = lp_file.
-    ELSE.
-      re_file = 'No file selected'(061).
-    ENDIF.
+    TRY.
+        DATA(lp_file) = lt_filetable[ 1 ].
+        re_file = lp_file.
+      CATCH cx_root INTO rf_root ##CATCH_ALL.
+        re_file = 'No file selected'(061).
+    ENDTRY.
   ENDMETHOD.
 
   METHOD main_to_tab_delimited.
@@ -2633,9 +2663,14 @@ CLASS lcl_ztct IMPLEMENTATION.
           INSERT tms_mgr_buffer_line INTO TABLE tms_mgr_buffer.
         ENDIF.
       ENDIF.
-      READ TABLE lt_stms_wbo_requests INDEX 1
-                 INTO ls_stms_wbo_requests.
-      IF sy-subrc = 0 AND ls_stms_wbo_requests-e070 IS NOT INITIAL.
+
+      TRY.
+          ls_stms_wbo_requests = lt_stms_wbo_requests[ 1 ].
+        CATCH cx_root INTO rf_root ##CATCH_ALL.
+          tp_msg = rf_root->get_text( ).
+          MESSAGE tp_msg TYPE 'I' DISPLAY LIKE 'E'.
+      ENDTRY.
+      IF ls_stms_wbo_requests-e070 IS NOT INITIAL.
 *       Only display the warning if the preceding transport is not
 *       one of the selected transports (and in an earlier
 *       position)
@@ -2738,11 +2773,8 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDIF.
     LOOP AT im_older_transports INTO ls_older_line.
 *     Get transport description
-      READ TABLE lt_e07t INTO ls_e07t
-                     WITH KEY trkorr = ls_older_line-trkorr.
-      IF sy-subrc = 0.
-        ls_older_line-tr_descr = ls_e07t-as4text.
-      ENDIF.
+      ls_e07t = lt_e07t[ trkorr = ls_older_line-trkorr ].
+      ls_older_line-tr_descr = ls_e07t-as4text.
 *     Check if it has been transported to QAS
       FREE lt_stms_wbo_requests.
       CLEAR lt_stms_wbo_requests.
@@ -3361,10 +3393,6 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Hide columns when empty
     DATA lt_range_hide_when_empty TYPE RANGE OF ty_field_ran.
     DATA ls_hide_when_empty  TYPE ty_field_ran.
-*   Texts
-    DATA lp_short_text       TYPE char10.
-    DATA lp_medium_text      TYPE char20.
-    DATA lp_long_text        TYPE char40.
 
     DATA lp_sys_s TYPE REF TO data.
     DATA lp_sys_m TYPE REF TO data.
@@ -3513,12 +3541,12 @@ CLASS lcl_ztct IMPLEMENTATION.
             lr_column_table->set_cell_type( if_salv_c_cell_type=>hotspot ).
           WHEN 'CHECKED'.
             IF check_flag = abap_true.
-              lp_short_text  = 'Checked'(044).
-              lp_long_text   = 'Checked'(044).
-              lp_medium_text = 'Checked'(044).
-              lr_column_table->set_short_text( lp_short_text ).
-              lr_column_table->set_medium_text( lp_medium_text ).
-              lr_column_table->set_long_text( lp_long_text ).
+              <lf_text_s> = 'Checked'(044).
+              <lf_text_m> = 'Checked'(044).
+              <lf_text_l> = 'Checked'(044).
+              lr_column_table->set_short_text( <lf_text_s> ).
+              lr_column_table->set_medium_text( <lf_text_m> ).
+              lr_column_table->set_long_text( <lf_text_l> ).
               lr_column_table->set_alignment( if_salv_c_alignment=>centered ).
             ELSE.
               lr_column_table->set_technical( ).
@@ -3534,49 +3562,49 @@ CLASS lcl_ztct IMPLEMENTATION.
               lr_column_table->set_technical( ).
             ENDIF.
           WHEN 'RETCODE'.
-            lp_short_text  = 'RC'(015).
-            lp_medium_text = 'Return Code'(016).
-            lp_long_text   = 'Return Code'(016).
-            lr_column_table->set_short_text( lp_short_text ).
-            lr_column_table->set_medium_text( lp_medium_text ).
-            lr_column_table->set_long_text( lp_long_text ).
+            <lf_text_s> = 'RC'(015).
+            <lf_text_m> = 'Return Code'(016).
+            <lf_text_l> = 'Return Code'(016).
+            lr_column_table->set_short_text( <lf_text_s> ).
+            lr_column_table->set_medium_text( <lf_text_m> ).
+            lr_column_table->set_long_text( <lf_text_l> ).
           WHEN 'STATUS_TEXT'.
-            lp_short_text  = 'Descript.'(017).
-            lp_medium_text = 'Description'(018).
-            lp_long_text   = 'Description'(018).
-            lr_column_table->set_short_text( lp_short_text ).
-            lr_column_table->set_medium_text( lp_medium_text ).
-            lr_column_table->set_long_text( lp_long_text ).
+            <lf_text_s> = 'Descript.'(017).
+            <lf_text_m> = 'Description'(018).
+            <lf_text_l> = 'Description'(018).
+            lr_column_table->set_short_text( <lf_text_s> ).
+            lr_column_table->set_medium_text( <lf_text_m> ).
+            lr_column_table->set_long_text( <lf_text_l> ).
           WHEN 'WARNING_LVL'.
             IF check_flag = abap_true.
-              lp_short_text  = 'Warning'(045).
-              lp_medium_text = 'Warning'(045).
-              lp_long_text   = 'Warning'(045).
-              lr_column_table->set_short_text( lp_short_text ).
-              lr_column_table->set_medium_text( lp_medium_text ).
-              lr_column_table->set_long_text( lp_long_text ).
+              <lf_text_s> = 'Warning'(045).
+              <lf_text_m> = 'Warning'(045).
+              <lf_text_l> = 'Warning'(045).
+              lr_column_table->set_short_text( <lf_text_s> ).
+              lr_column_table->set_medium_text( <lf_text_m> ).
+              lr_column_table->set_long_text( <lf_text_l> ).
               lr_column_table->set_icon( ).
             ELSE.
               lr_column_table->set_technical( ).
             ENDIF.
           WHEN 'WARNING_TXT'.
             IF check_flag = abap_true.
-              lp_short_text  = 'Warn. text'(046).
-              lp_medium_text = 'Warning message'(054).
-              lp_long_text   = 'Warning message'(054).
-              lr_column_table->set_short_text( lp_short_text ).
-              lr_column_table->set_medium_text( lp_medium_text ).
-              lr_column_table->set_long_text( lp_long_text ).
+              <lf_text_s> = 'Warn. text'(046).
+              <lf_text_m> = 'Warning message'(054).
+              <lf_text_l> = 'Warning message'(054).
+              lr_column_table->set_short_text( <lf_text_s> ).
+              lr_column_table->set_medium_text( <lf_text_m> ).
+              lr_column_table->set_long_text( <lf_text_l> ).
             ELSE.
               lr_column_table->set_technical( ).
             ENDIF.
           WHEN 'PROJECT'.
-            lp_short_text  = 'Project Nr'(055).
-            lp_medium_text = 'Project Number'(056).
-            lp_long_text   = 'Project Number'(056).
-            lr_column_table->set_short_text( lp_short_text ).
-            lr_column_table->set_medium_text( lp_medium_text ).
-            lr_column_table->set_long_text( lp_long_text ).
+            <lf_text_s> = 'Project Nr'(055).
+            <lf_text_m> = 'Project Number'(056).
+            <lf_text_l> = 'Project Number'(056).
+            lr_column_table->set_short_text( <lf_text_s> ).
+            lr_column_table->set_medium_text( <lf_text_m> ).
+            lr_column_table->set_long_text( <lf_text_l> ).
           WHEN 'STATUS'.
             ls_reference-table = 'TRHEADER'.
             ls_reference-field = 'TRSTATUS'.
@@ -3586,53 +3614,33 @@ CLASS lcl_ztct IMPLEMENTATION.
             <lf_text_s> = dev_system.
             <lf_text_m> = dev_system.
             <lf_text_l> = dev_system.
-            IF <lf_text_s> IS ASSIGNED.
-              lr_column_table->set_short_text( <lf_text_s> ).
-            ENDIF.
-            IF <lf_text_m> IS ASSIGNED.
-              lr_column_table->set_medium_text( <lf_text_m> ).
-            ENDIF.
-            IF <lf_text_l> IS ASSIGNED.
-              lr_column_table->set_long_text( <lf_text_l> ).
-            ENDIF.
+            lr_column_table->set_short_text( <lf_text_s> ).
+            lr_column_table->set_medium_text( <lf_text_m> ).
+            lr_column_table->set_long_text( <lf_text_l> ).
             lr_column_table->set_icon( ).
           WHEN 'QAS'.
             <lf_text_s> = qas_system.
             <lf_text_m> = qas_system.
             <lf_text_l> = qas_system.
-            IF <lf_text_s> IS ASSIGNED.
-              lr_column_table->set_short_text( <lf_text_s> ).
-            ENDIF.
-            IF <lf_text_m> IS ASSIGNED.
-              lr_column_table->set_medium_text( <lf_text_m> ).
-            ENDIF.
-            IF <lf_text_l> IS ASSIGNED.
-              lr_column_table->set_long_text( <lf_text_l> ).
-            ENDIF.
+            lr_column_table->set_short_text( <lf_text_s> ).
+            lr_column_table->set_medium_text( <lf_text_m> ).
+            lr_column_table->set_long_text( <lf_text_l> ).
             lr_column_table->set_icon( ).
           WHEN 'PRD'.
-            IF <lf_text_l> IS ASSIGNED.
-              <lf_text_s> = prd_system.
-              <lf_text_m> = prd_system.
-              <lf_text_l> = prd_system.
-              IF <lf_text_s> IS ASSIGNED.
-                lr_column_table->set_short_text( <lf_text_s> ).
-              ENDIF.
-              IF <lf_text_m> IS ASSIGNED.
-                lr_column_table->set_medium_text( <lf_text_m> ).
-              ENDIF.
-              IF <lf_text_l> IS ASSIGNED.
-                lr_column_table->set_long_text( <lf_text_l> ).
-              ENDIF.
-              lr_column_table->set_icon( ).
-            ENDIF.
+            <lf_text_s> = prd_system.
+            <lf_text_m> = prd_system.
+            <lf_text_l> = prd_system.
+            lr_column_table->set_short_text( <lf_text_s> ).
+            lr_column_table->set_medium_text( <lf_text_m> ).
+            lr_column_table->set_long_text( <lf_text_l> ).
+            lr_column_table->set_icon( ).
           WHEN 'RE_IMPORT'.
-            lp_short_text  = 'Import again'(059).
-            lp_medium_text = 'Import again'(059).
-            lp_long_text   = 'Import again'(059).
-            lr_column_table->set_short_text( lp_short_text ).
-            lr_column_table->set_medium_text( lp_medium_text ).
-            lr_column_table->set_long_text( lp_long_text ).
+            <lf_text_s> = 'Import again'(059).
+            <lf_text_m> = 'Import again'(059).
+            <lf_text_l> = 'Import again'(059).
+            lr_column_table->set_short_text( <lf_text_s> ).
+            lr_column_table->set_medium_text( <lf_text_m> ).
+            lr_column_table->set_long_text( <lf_text_l> ).
         ENDCASE.
       ENDIF.
     ENDLOOP.
