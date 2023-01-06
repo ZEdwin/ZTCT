@@ -222,6 +222,13 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
            END OF ty_ddic_e071.
     TYPES ty_ddic_e071_tt           TYPE STANDARD TABLE OF ty_ddic_e071.
 
+    TYPES: BEGIN OF ty_ddic_objects,
+             object TYPE rollname,
+           END OF ty_ddic_objects.
+    TYPES ty_ddic_objects_tt TYPE STANDARD TABLE OF ty_ddic_objects.
+
+    DATA ddic_objects               TYPE ty_ddic_objects_tt.
+    DATA ddic_objects_sub           TYPE string_table.
     DATA ls_excluded_objects        LIKE LINE OF lt_excluded_objects.
     DATA table_keys                 TYPE TABLE OF ty_tables_with_keys.
     DATA table_keys_line            TYPE ty_tables_with_keys.
@@ -311,8 +318,6 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     DATA conflict_line               TYPE ty_request_details.
     DATA line_found_in_list          TYPE ty_request_details.
     DATA total                       TYPE sytabix.
-    DATA ddic_objects                TYPE string_table.
-    DATA ddic_objects_sub            TYPE string_table.
     DATA ddic_e071                   TYPE ty_ddic_e071_tt.
     DATA ddic_e071_line              TYPE ty_ddic_e071.
     DATA where_used                  TYPE sci_findlst.
@@ -1729,23 +1734,6 @@ CLASS lcl_ztct IMPLEMENTATION.
                    @ls_main_list_vrsd-as4time)
              FOR ALL ENTRIES IN @main_list
              WHERE korrnum = @main_list-trkorr.
-*        READ TABLE main_list INTO main_list_line
-*                             WITH KEY trkorr = ls_main_list_vrsd-trkorr.
-*        IF sy-subrc = 0.
-*          main_list_line-object   = ls_main_list_vrsd-object.
-*          main_list_line-obj_name = ls_main_list_vrsd-obj_name.
-*          main_list_line-as4user  = ls_main_list_vrsd-as4user.
-*          main_list_line-as4date  = ls_main_list_vrsd-as4date.
-*          main_list_line-as4time  = ls_main_list_vrsd-as4time.
-**       Only append if the object from VRSD does not already exist in the
-**       main list:
-*          IF NOT line_exists( main_list[ trkorr   = main_list_line-trkorr
-*                                         object   = main_list_line-object
-*                                         obj_name = main_list_line-obj_name ] ).
-*            main_list_line-flag = abap_true.
-*            APPEND main_list_line TO lt_main_list_vrsd.
-*          ENDIF.
-*        ENDIF.
         TRY.
             main_list_line = main_list[ trkorr = ls_main_list_vrsd-trkorr ].
             main_list_line-object   = ls_main_list_vrsd-object.
@@ -2126,7 +2114,9 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA ls_row TYPE int4.
 *   If row(s) are selected, use the table
 *   Add transports to range
-    CHECK im_rows[] IS NOT INITIAL.
+    IF im_rows[] IS INITIAL.
+      RETURN.
+    ENDIF.
     ls_range_trkorr-sign   = 'I'.
     ls_range_trkorr-option = 'EQ'.
     LOOP AT im_rows INTO ls_row.
@@ -4458,6 +4448,14 @@ CLASS lcl_ztct IMPLEMENTATION.
     TYPES ty_tadir_tt TYPE STANDARD TABLE OF ty_tadir.
     DATA lt_tadir TYPE ty_tadir_tt.
 
+    TYPES: BEGIN OF ty_dd0xl,
+             object   TYPE  rollname,
+             as4local TYPE as4local,
+             as4vers  TYPE as4vers,
+           END OF ty_dd0xl.
+    TYPES ty_dd0xl_tt TYPE STANDARD TABLE OF ty_dd0xl.
+    DATA lt_dd0xl TYPE ty_dd0xl_tt.
+
     FREE ddic_objects.
 *   Get all objects in Z-devclasses
     SELECT devclass, obj_name FROM tadir INTO TABLE @lt_tadir
@@ -4466,25 +4464,36 @@ CLASS lcl_ztct IMPLEMENTATION.
     IF sy-subrc = 0 AND lt_tadir IS NOT INITIAL.
 *     DD01L (Domains)
       IF lt_tadir[] IS NOT INITIAL.
-        SELECT domname
-               APPENDING TABLE @ddic_objects
+        SELECT domname AS object,
+               as4local,
+               as4vers
+               APPENDING CORRESPONDING FIELDS OF TABLE @lt_dd0xl
                FROM dd01l FOR ALL ENTRIES IN @lt_tadir
-              WHERE domname = @lt_tadir-obj_name(30).     "#EC CI_SUBRC
+              WHERE domname = @lt_tadir-obj_name(30)
+                    ORDER BY PRIMARY KEY.                 "#EC CI_SUBRC
       ENDIF.
 *     DD02L (SAP-tables)
       IF lt_tadir[] IS NOT INITIAL.
-        SELECT tabname
-               APPENDING TABLE @ddic_objects
+        SELECT tabname AS object,
+               as4local,
+               as4vers
+               APPENDING CORRESPONDING FIELDS OF TABLE @lt_dd0xl
                FROM dd02l FOR ALL ENTRIES IN @lt_tadir
-              WHERE tabname = @lt_tadir-obj_name(30).     "#EC CI_SUBRC
+              WHERE tabname = @lt_tadir-obj_name(30)
+                    ORDER BY PRIMARY KEY.                 "#EC CI_SUBRC
       ENDIF.
 *     DD04L (Data elements)
       IF lt_tadir[] IS NOT INITIAL.
-        SELECT rollname
-               APPENDING TABLE @ddic_objects
+        SELECT rollname AS object,
+               as4local,
+               as4vers
+               APPENDING CORRESPONDING FIELDS OF TABLE @lt_dd0xl
                FROM dd04l FOR ALL ENTRIES IN @lt_tadir
-              WHERE rollname = @lt_tadir-obj_name(30).    "#EC CI_SUBRC
+              WHERE rollname = @lt_tadir-obj_name(30)
+                    ORDER BY PRIMARY KEY.                 "#EC CI_SUBRC
       ENDIF.
+      SORT lt_dd0xl.
+      APPEND LINES OF lt_dd0xl TO ddic_objects.
       SORT ddic_objects.
       DELETE ADJACENT DUPLICATES FROM ddic_objects.
     ENDIF.
