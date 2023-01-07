@@ -1731,28 +1731,33 @@ CLASS lcl_ztct IMPLEMENTATION.
              datum AS as4date,
              zeit AS as4time
              FROM vrsd
-             INTO CORRESPONDING FIELDS OF @ls_main_list_vrsd
+             INTO CORRESPONDING FIELDS OF TABLE @lt_main_list_vrsd
              FOR ALL ENTRIES IN @main_list
              WHERE korrnum = @main_list-trkorr ORDER BY PRIMARY KEY.
-        TRY.
-            main_list_line = main_list[ trkorr = ls_main_list_vrsd-trkorr ].
-            main_list_line-object   = ls_main_list_vrsd-object.
-            main_list_line-obj_name = ls_main_list_vrsd-obj_name.
-            main_list_line-as4user  = ls_main_list_vrsd-as4user.
-            main_list_line-as4date  = ls_main_list_vrsd-as4date.
-            main_list_line-as4time  = ls_main_list_vrsd-as4time.
-*           Only append if the object from VRSD does not already exist in the
-*           main list:
-            IF NOT line_exists( main_list[ trkorr   = main_list_line-trkorr
-                                           object   = main_list_line-object
-                                           obj_name = main_list_line-obj_name ] ).
-              main_list_line-flag = abap_true.
-              APPEND main_list_line TO lt_main_list_vrsd.
-            ENDIF.
-          CATCH cx_root INTO rf_root ##CATCH_ALL.
-        ENDTRY.
-
-      ENDSELECT.
+      LOOP AT lt_main_list_vrsd ASSIGNING FIELD-SYMBOL(<main_list_vrsd>).
+*       Only append if the object from VRSD does not already exist in
+*       the main list
+        IF line_exists( main_list[ trkorr   = <main_list_vrsd>-trkorr
+                                   object   = <main_list_vrsd>-object
+                                   obj_name = <main_list_vrsd>-obj_name ] ).
+          DELETE lt_main_list_vrsd INDEX sy-tabix.
+        ELSE.
+*         Copy all data for the main line, enrich the data with relevant
+*         object data from VRSD. Table LT_MAIN_LIST_VRSD will then have all
+*         the data needed
+          TRY.
+              main_list_line = main_list[ trkorr = <main_list_vrsd>-trkorr ].
+              main_list_line-object   = <main_list_vrsd>-object.
+              main_list_line-obj_name = <main_list_vrsd>-obj_name.
+              main_list_line-as4user  = <main_list_vrsd>-as4user.
+              main_list_line-as4date  = <main_list_vrsd>-as4date.
+              main_list_line-as4time  = <main_list_vrsd>-as4time.
+              main_list_line-flag     = abap_true.
+              MOVE-CORRESPONDING main_list_line TO <main_list_vrsd>.
+            CATCH cx_root INTO rf_root ##CATCH_ALL.
+          ENDTRY.
+        ENDIF.
+      ENDLOOP.
     ENDIF.
 *   Duplicates may exist if the same object exists in different tasks
 *   belonging to the same request:
@@ -3782,7 +3787,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND a~trkorr     LIKE @prefix
                AND b~object     = @im_line-object
                AND b~obj_name   = @im_line-obj_name
-          ORDER BY a~trkorr.      "#EC CI_SUBRC
+          ORDER BY a~trkorr.                              "#EC CI_SUBRC
 
 *   Also read from version table, because in some case, the object can
 *   be part of a 'bigger' group.
