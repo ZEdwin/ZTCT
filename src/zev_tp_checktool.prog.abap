@@ -1723,17 +1723,17 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   Also read from the version table VRSD. This table contains all
 *   dependent objects. For example: If from E071 a function group
 *   is retrieved, VRSD will contain all functions too.
-      SELECT korrnum, objtype, objname,
-             author, datum, zeit
+      SELECT objtype AS object,
+             objname AS obj_name,
+             versno,
+             korrnum AS trkorr,
+             author AS as4user,
+             datum AS as4date,
+             zeit AS as4time
              FROM vrsd
-             INTO (@ls_main_list_vrsd-trkorr,
-                   @ls_main_list_vrsd-object,
-                   @ls_main_list_vrsd-obj_name,
-                   @ls_main_list_vrsd-as4user,
-                   @ls_main_list_vrsd-as4date,
-                   @ls_main_list_vrsd-as4time)
+             INTO CORRESPONDING FIELDS OF @ls_main_list_vrsd
              FOR ALL ENTRIES IN @main_list
-             WHERE korrnum = @main_list-trkorr.
+             WHERE korrnum = @main_list-trkorr ORDER BY PRIMARY KEY.
         TRY.
             main_list_line = main_list[ trkorr = ls_main_list_vrsd-trkorr ].
             main_list_line-object   = ls_main_list_vrsd-object.
@@ -3781,7 +3781,8 @@ CLASS lcl_ztct IMPLEMENTATION.
                AND a~strkorr    = ''
                AND a~trkorr     LIKE @prefix
                AND b~object     = @im_line-object
-               AND b~obj_name   = @im_line-obj_name.      "#EC CI_SUBRC
+               AND b~obj_name   = @im_line-obj_name
+          ORDER BY a~trkorr.      "#EC CI_SUBRC
 
 *   Also read from version table, because in some case, the object can
 *   be part of a 'bigger' group.
@@ -4554,6 +4555,12 @@ CLASS lcl_ztct IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD set_where_used.
+    TYPES: BEGIN OF ty_objtype,
+             object TYPE versobjtyp,
+           END OF ty_objtype.
+    TYPES ty_objtype_tt       TYPE STANDARD TABLE OF ty_objtype.
+    DATA lt_objtype           TYPE ty_objtype_tt.
+
     DATA lt_stms_wbo_requests TYPE TABLE OF stms_wbo_request.
     DATA ls_stms_wbo_requests TYPE stms_wbo_request.
     DATA ls_systems           TYPE ctslg_system.
@@ -4565,7 +4572,6 @@ CLASS lcl_ztct IMPLEMENTATION.
     DATA lp_obj_name          TYPE trobj_name.
     DATA lt_objrangtab        TYPE objrangtab.
     DATA ls_objtyprang        TYPE objtyprang.
-    DATA lt_objtype           TYPE TABLE OF versobjtyp.
     DATA lp_chars             TYPE string VALUE '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
     DATA lt_where_used_sub    TYPE sci_findlst.
     DATA lp_string            TYPE string.
@@ -4578,7 +4584,9 @@ CLASS lcl_ztct IMPLEMENTATION.
 * Get all object types
 * Select values for pgmid/object/text from database--------------------
 * Get all object types that have been transported before
-    SELECT DISTINCT object FROM e071 INTO TABLE @lt_objtype.
+    SELECT DISTINCT object FROM e071
+                    INTO CORRESPONDING FIELDS OF TABLE @lt_objtype
+                    ORDER BY object.
     IF sy-subrc = 0.
       ls_objtyprang-sign   = 'I'.
       ls_objtyprang-option = 'EQ'.
@@ -4605,7 +4613,8 @@ CLASS lcl_ztct IMPLEMENTATION.
              FROM e071 APPENDING CORRESPONDING FIELDS OF TABLE @ddic_e071
             WHERE pgmid    = 'R3TR'
               AND object   IN @lt_objrangtab
-              AND obj_name = @ls_ddic_object. "#EC CI_SEL_NESTED #EC CI_SUBRC
+              AND obj_name = @ls_ddic_object
+         ORDER BY trkorr.               "#EC CI_SEL_NESTED #EC CI_SUBRC
     ENDLOOP.
 
 *   Check if the transport is in production, if it is, then the
@@ -5399,7 +5408,8 @@ START-OF-SELECTION.
           AND a~trkorr   LIKE @tp_prefix
           AND a~trkorr   IN @lt_range_project_trkorrs
           AND ( pgmid    = 'LIMU' OR
-                pgmid    = 'R3TR' ).
+                pgmid    = 'R3TR' )
+     ORDER BY a~trkorr.
 
 *   Read transport description:
     IF sy-subrc = 0 AND ta_trkorr_range[] IS NOT INITIAL.
@@ -5407,7 +5417,8 @@ START-OF-SELECTION.
         tp_tabix = sy-tabix.
 *       Check if the description contains the search string
         SELECT as4text FROM e07t INTO TABLE @ta_transport_descr
-                       WHERE trkorr = @st_trkorr_range-low ##WARN_OK.
+                      WHERE trkorr = @st_trkorr_range-low ##WARN_OK
+                   ORDER BY trkorr.
         IF sy-subrc = 0.
           tp_descr_exists = abap_false.
           LOOP AT ta_transport_descr INTO tp_transport_descr.
