@@ -4233,7 +4233,7 @@ CLASS lcl_ztct IMPLEMENTATION.
                            CHANGING  ch_colwidth = lp_cw_reimport ).
     ENDLOOP.
 *   Global Display Settings
-    CLEAR: lr_display_settings.
+    CLEAR lr_display_settings.
 *   Global display settings
     lr_display_settings = rf_conflicts->get_display_settings( ).
 *   Activate Striped Pattern
