@@ -346,11 +346,13 @@ CLASS lcl_ztct DEFINITION FINAL FRIENDS lcl_eventhandler_ztct.
     METHODS flag_for_process         IMPORTING im_rows TYPE salv_t_row
                                                im_cell TYPE salv_s_cell.
     METHODS get_main_transports      IMPORTING im_trkorr_range TYPE gtabkey_trkorrt.
+    METHODS get_added_objects        IMPORTING im_to_add        TYPE ty_range_trkorr
+                                     RETURNING VALUE(re_to_add) TYPE ty_request_details_tt.
+    METHODS get_vrsd_objects         IMPORTING im_table       TYPE ty_request_details_tt
+                                     RETURNING VALUE(re_vrsd) TYPE ty_request_details_tt.
     METHODS get_tp_info              IMPORTING im_trkorr      TYPE trkorr
                                                im_obj_name    TYPE trobj_name
                                      RETURNING VALUE(re_line) TYPE ty_request_details.
-    METHODS get_added_objects        IMPORTING im_to_add        TYPE ty_range_trkorr
-                                     RETURNING VALUE(re_to_add) TYPE ty_request_details_tt.
     METHODS add_to_list              IMPORTING im_list        TYPE ty_request_details_tt
                                                im_to_add      TYPE ty_request_details_tt
                                      RETURNING VALUE(re_main) TYPE ty_request_details_tt.
@@ -1717,56 +1719,149 @@ CLASS lcl_ztct IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 *   Only continue if there are transports left to check
-    IF main_list IS INITIAL.
+    IF main_list IS NOT INITIAL.
+      lt_main_list_vrsd = get_vrsd_objects( EXPORTING im_table = main_list ).
+*     Add the VRSD entries to the list
+      APPEND LINES OF lt_main_list_vrsd TO main_list.
+      sort_list( CHANGING ch_list = main_list ).
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD get_added_objects.
+    DATA lp_tabix          TYPE sytabix.
+    DATA ls_main           TYPE ty_request_details.
+    DATA ls_main_list_vrsd TYPE ty_request_details.
+    DATA lt_main_list_vrsd TYPE ty_request_details_tt.
+    DATA ls_added          TYPE ty_request_details.
+    FIELD-SYMBOLS <lf_main_list> TYPE ty_request_details.
+    FREE re_to_add.
+    FREE lt_main_list_vrsd.
+    CLEAR ls_main.
+*   Select all requests (not tasks) in the range. Objects belonging to
+*   the request are included in the table.
+    SELECT a~trkorr,  a~trfunction, a~trstatus,
+           a~as4user, a~as4date,    a~as4time,
+           b~pgmid,   b~object,     b~obj_name,
+           b~objfunc
+           INTO CORRESPONDING FIELDS OF TABLE @re_to_add
+           FROM  e070 AS a JOIN e071 AS b
+             ON  a~trkorr = b~trkorr
+           WHERE a~trkorr IN @im_to_add
+           AND   a~strkorr = ''
+           AND   ( b~pgmid = 'LIMU' OR
+                   b~pgmid = 'R3TR' OR
+                   b~pgmid = 'R3OB' OR
+                   b~pgmid = 'LANG' )
+           ORDER BY a~trkorr ASCENDING, b~as4pos ASCENDING ##TOO_MANY_ITAB_FIELDS.
+    IF sy-subrc <> 0.
       RETURN.
-    ELSE.
+    ENDIF.
+*   Read transport description:
+    IF re_to_add[] IS NOT INITIAL.
+      LOOP AT re_to_add ASSIGNING <lf_main_list>.
+        <lf_main_list>-flag = abap_true.
+        SELECT SINGLE as4text
+                 FROM e07t
+                 INTO @<lf_main_list>-tr_descr
+                WHERE trkorr = @<lf_main_list>-trkorr.    "#EC CI_SUBRC
+      ENDLOOP.
+    ENDIF.
 *   Also read from the version table VRSD. This table contains all
 *   dependent objects. For example: If from E071 a function group
 *   is retrieved, VRSD will contain all functions too.
-      SELECT objtype AS object,
-             objname AS obj_name,
-             versno,
-             korrnum AS trkorr,
-             author AS as4user,
-             datum AS as4date,
-             zeit AS as4time
-             FROM vrsd
-             INTO CORRESPONDING FIELDS OF TABLE @lt_main_list_vrsd
-             FOR ALL ENTRIES IN @main_list
-             WHERE korrnum = @main_list-trkorr ORDER BY PRIMARY KEY.
-      LOOP AT lt_main_list_vrsd ASSIGNING FIELD-SYMBOL(<main_list_vrsd>).
+    IF re_to_add[] IS NOT INITIAL.
+      lt_main_list_vrsd = get_vrsd_objects( EXPORTING im_table = re_to_add ).
+*     Add the VRSD entries to the list
+      APPEND LINES OF lt_main_list_vrsd TO re_to_add.
+    ENDIF.
+    add_table_keys_to_list( CHANGING ch_table = re_to_add ).
+*   Only add the records that are not yet existing in the main list.
+*   Do not add the records that already exist in the main list.
+    LOOP AT re_to_add INTO ls_added.
+      lp_tabix = sy-tabix.
+      IF line_exists( main_list[ trkorr     = ls_added-trkorr
+                                 object     = ls_added-object
+                                 obj_name   = ls_added-obj_name
+                                 keyobject  = ls_added-keyobject
+                                 keyobjname = ls_added-keyobjname
+                                 tabkey     = ls_added-tabkey ] ).
+*       If the added transports are already in the list, but in prd, they
+*       will be 'invisible', because the records with prd icon = co_okay
+*       are filtered out. So, the prd icon needs to be changed to co_scrap
+*       to become visible. Make sure that all records for this
+*       transport are made visible.
+        LOOP AT main_list INTO main_list_line
+                         WHERE trkorr     = ls_added-trkorr
+                           AND object     = ls_added-object
+                           AND obj_name   = ls_added-obj_name
+                           AND keyobject  = ls_added-keyobject
+                           AND keyobjname = ls_added-keyobjname
+                           AND tabkey     = ls_added-tabkey
+                           AND prd        = co_okay.
+          main_list_line-prd = co_scrap.
+          MODIFY main_list FROM main_list_line
+                           INDEX sy-tabix
+                           TRANSPORTING prd.
+        ENDLOOP.
+*       No need to add this transport again:
+        DELETE re_to_add INDEX lp_tabix.
+      ENDIF.
+    ENDLOOP.
+    SORT re_to_add.
+    DELETE ADJACENT DUPLICATES FROM re_to_add COMPARING ALL FIELDS.
+  ENDMETHOD.
+
+  METHOD get_vrsd_objects.
+    DATA lt_main_list_vrsd  TYPE ty_request_details_tt.
+    DATA ls_main_list_vrsd  TYPE ty_request_details.
+    FIELD-SYMBOLS <lf_main_list> TYPE ty_request_details.
+
+    FREE lt_main_list_vrsd.
+*     Also read from the version table VRSD. This table contains all
+*     dependent objects. For example: If from E071 a function group
+*     is retrieved, VRSD will contain all functions too.
+    SELECT objtype AS object,
+           objname AS obj_name,
+           versno,
+           korrnum AS trkorr,
+           author AS as4user,
+           datum AS as4date,
+           zeit AS as4time
+           FROM vrsd
+           INTO CORRESPONDING FIELDS OF TABLE @lt_main_list_vrsd
+           FOR ALL ENTRIES IN @im_table
+           WHERE korrnum = @im_table-trkorr ORDER BY PRIMARY KEY. "#EC CI_SUBRC
+    LOOP AT lt_main_list_vrsd ASSIGNING FIELD-SYMBOL(<lf_main_list_vrsd>).
 *       Only append if the object from VRSD does not already exist in
 *       the main list
-        IF line_exists( main_list[ trkorr   = <main_list_vrsd>-trkorr
-                                   object   = <main_list_vrsd>-object
-                                   obj_name = <main_list_vrsd>-obj_name ] ).
-          DELETE lt_main_list_vrsd INDEX sy-tabix.
-        ELSE.
-*         Copy all data for the main line, enrich the data with relevant
-*         object data from VRSD. Table LT_MAIN_LIST_VRSD will then have all
-*         the data needed
-          TRY.
-              main_list_line = main_list[ trkorr = <main_list_vrsd>-trkorr ].
-              main_list_line-object   = <main_list_vrsd>-object.
-              main_list_line-obj_name = <main_list_vrsd>-obj_name.
-              main_list_line-as4user  = <main_list_vrsd>-as4user.
-              main_list_line-as4date  = <main_list_vrsd>-as4date.
-              main_list_line-as4time  = <main_list_vrsd>-as4time.
-              main_list_line-flag     = abap_true.
-              MOVE-CORRESPONDING main_list_line TO <main_list_vrsd>.
-            CATCH cx_root INTO rf_root ##CATCH_ALL.
-          ENDTRY.
-        ENDIF.
-      ENDLOOP.
-    ENDIF.
+      IF line_exists( im_table[ trkorr   = <lf_main_list_vrsd>-trkorr
+                                object   = <lf_main_list_vrsd>-object
+                                obj_name = <lf_main_list_vrsd>-obj_name ] ).
+        DELETE lt_main_list_vrsd INDEX sy-tabix.
+      ELSE.
+*       Copy all data for the main line, enrich the data with relevant
+*       object data from VRSD. Table LT_MAIN_LIST_VRSD will then have all
+*       the data needed
+        TRY.
+            main_list_line = im_table[ trkorr = <lf_main_list_vrsd>-trkorr ].
+            main_list_line-object   = <lf_main_list_vrsd>-object.
+            main_list_line-obj_name = <lf_main_list_vrsd>-obj_name.
+            main_list_line-as4user  = <lf_main_list_vrsd>-as4user.
+            main_list_line-as4date  = <lf_main_list_vrsd>-as4date.
+            main_list_line-as4time  = <lf_main_list_vrsd>-as4time.
+            main_list_line-flag     = abap_true.
+            <lf_main_list_vrsd> = CORRESPONDING #( main_list_line ).
+          CATCH cx_root INTO rf_root ##CATCH_ALL.
+        ENDTRY.
+      ENDIF.
+    ENDLOOP.
 *   Duplicates may exist if the same object exists in different tasks
 *   belonging to the same request:
     SORT lt_main_list_vrsd DESCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_main_list_vrsd
                     COMPARING trkorr object obj_name.
-*   Now add all VRSD entries to the main list:
-    APPEND LINES OF lt_main_list_vrsd TO main_list.
-    sort_list( CHANGING ch_list = main_list ).
+    re_vrsd[] = lt_main_list_vrsd[].
   ENDMETHOD.
 
   METHOD get_tp_info.
@@ -1830,118 +1925,6 @@ CLASS lcl_ztct IMPLEMENTATION.
               AND ddlanguage = @co_langu
               AND domvalue_l = @re_line-trstatus.         "#EC CI_SUBRC
 
-  ENDMETHOD.
-
-  METHOD get_added_objects.
-    DATA lp_tabix          TYPE sytabix.
-    DATA ls_main           TYPE ty_request_details.
-    DATA ls_main_list_vrsd TYPE ty_request_details.
-    DATA lt_main_list_vrsd TYPE ty_request_details_tt.
-    DATA ls_added          TYPE ty_request_details.
-    FIELD-SYMBOLS <lf_main_list> TYPE ty_request_details.
-    FREE re_to_add.
-    FREE lt_main_list_vrsd.
-    CLEAR ls_main.
-*   Select all requests (not tasks) in the range. Objects belonging to
-*   the request are included in the table.
-    SELECT a~trkorr,  a~trfunction, a~trstatus,
-           a~as4user, a~as4date,    a~as4time,
-           b~pgmid,   b~object,     b~obj_name,
-           b~objfunc
-           INTO CORRESPONDING FIELDS OF TABLE @re_to_add
-           FROM  e070 AS a JOIN e071 AS b
-             ON  a~trkorr = b~trkorr
-           WHERE a~trkorr IN @im_to_add
-           AND   a~strkorr = ''
-           AND   ( b~pgmid = 'LIMU' OR
-                   b~pgmid = 'R3TR' OR
-                   b~pgmid = 'R3OB' OR
-                   b~pgmid = 'LANG' )
-           ORDER BY a~trkorr ASCENDING, b~as4pos ASCENDING ##TOO_MANY_ITAB_FIELDS.
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
-*   Read transport description:
-    IF re_to_add[] IS NOT INITIAL.
-      LOOP AT re_to_add ASSIGNING <lf_main_list>.
-        <lf_main_list>-flag = abap_true.
-        SELECT SINGLE as4text
-                 FROM e07t
-                 INTO @<lf_main_list>-tr_descr
-                WHERE trkorr = @<lf_main_list>-trkorr.    "#EC CI_SUBRC
-      ENDLOOP.
-    ENDIF.
-*   Also read from the version table VRSD. This table contains all
-*   dependent objects. For example: If from E071 a function group
-*   is retrieved, VRSD will contain all functions too.
-    IF re_to_add[] IS NOT INITIAL.
-      SELECT korrnum, objtype, objname,
-             author, datum, zeit
-             FROM vrsd
-             INTO (@ls_main_list_vrsd-trkorr,
-                   @ls_main_list_vrsd-object,
-                   @ls_main_list_vrsd-obj_name,
-                   @ls_main_list_vrsd-as4user,
-                   @ls_main_list_vrsd-as4date,
-                   @ls_main_list_vrsd-as4time)
-             FOR ALL ENTRIES IN @re_to_add
-             WHERE korrnum = @re_to_add-trkorr.
-        TRY.
-            ls_main = re_to_add[ trkorr = ls_main_list_vrsd-trkorr ].
-            ls_main-object   = ls_main_list_vrsd-object.
-            ls_main-obj_name = ls_main_list_vrsd-obj_name.
-            ls_main-as4user  = ls_main_list_vrsd-as4user.
-            ls_main-as4date  = ls_main_list_vrsd-as4date.
-            ls_main-as4time  = ls_main_list_vrsd-as4time.
-*           Only append if the object from VRSD does not already exist
-*           in the main list:
-            IF NOT line_exists( re_to_add[ trkorr   = ls_main-trkorr
-                                           object   = ls_main-object
-                                           obj_name = ls_main-obj_name ] ).
-              ls_main-flag = abap_true.
-              APPEND ls_main TO lt_main_list_vrsd.
-            ENDIF.
-          CATCH cx_root INTO rf_root ##CATCH_ALL.
-        ENDTRY.
-      ENDSELECT.
-*     Now add all VRSD entries to the main list
-      APPEND LINES OF lt_main_list_vrsd TO re_to_add.
-    ENDIF.
-    add_table_keys_to_list( CHANGING ch_table = re_to_add ).
-*   Only add the records that are not yet existing in the main list.
-*   Do not add the records that already exist in the main list.
-    LOOP AT re_to_add INTO ls_added.
-      lp_tabix = sy-tabix.
-      IF line_exists( main_list[ trkorr     = ls_added-trkorr
-                                 object     = ls_added-object
-                                 obj_name   = ls_added-obj_name
-                                 keyobject  = ls_added-keyobject
-                                 keyobjname = ls_added-keyobjname
-                                 tabkey     = ls_added-tabkey ] ).
-*       If the added transports are already in the list, but in prd, they
-*       will be 'invisible', because the records with prd icon = co_okay
-*       are filtered out. So, the prd icon needs to be changed to co_scrap
-*       to become visible. Make sure that all records for this
-*       transport are made visible.
-        LOOP AT main_list INTO main_list_line
-                         WHERE trkorr     = ls_added-trkorr
-                           AND object     = ls_added-object
-                           AND obj_name   = ls_added-obj_name
-                           AND keyobject  = ls_added-keyobject
-                           AND keyobjname = ls_added-keyobjname
-                           AND tabkey     = ls_added-tabkey
-                           AND prd        = co_okay.
-          main_list_line-prd = co_scrap.
-          MODIFY main_list FROM main_list_line
-                           INDEX sy-tabix
-                           TRANSPORTING prd.
-        ENDLOOP.
-*       No need to add this transport again:
-        DELETE re_to_add INDEX lp_tabix.
-      ENDIF.
-    ENDLOOP.
-    SORT re_to_add.
-    DELETE ADJACENT DUPLICATES FROM re_to_add COMPARING ALL FIELDS.
   ENDMETHOD.
 
   METHOD get_additional_tp_info.
@@ -5414,7 +5397,7 @@ START-OF-SELECTION.
           AND a~trkorr   IN @lt_range_project_trkorrs
           AND ( pgmid    = 'LIMU' OR
                 pgmid    = 'R3TR' )
-     ORDER BY a~trkorr.
+          ORDER BY a~trkorr.
 
 *   Read transport description:
     IF sy-subrc = 0 AND ta_trkorr_range[] IS NOT INITIAL.
@@ -5422,8 +5405,8 @@ START-OF-SELECTION.
         tp_tabix = sy-tabix.
 *       Check if the description contains the search string
         SELECT as4text FROM e07t INTO TABLE @ta_transport_descr
-                      WHERE trkorr = @st_trkorr_range-low ##WARN_OK
-                   ORDER BY trkorr.
+                      WHERE trkorr = @st_trkorr_range-low
+                   ORDER BY trkorr ##WARN_OK.
         IF sy-subrc = 0.
           tp_descr_exists = abap_false.
           LOOP AT ta_transport_descr INTO tp_transport_descr.
