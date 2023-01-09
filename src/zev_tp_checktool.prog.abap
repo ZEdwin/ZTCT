@@ -1666,8 +1666,8 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD get_main_transports.
     DATA lt_main_list_vrsd  TYPE ty_request_details_tt.
-    DATA ls_main_list_vrsd  TYPE ty_request_details.
     FIELD-SYMBOLS <lf_main_list> TYPE ty_request_details.
+
     FREE lt_main_list_vrsd.
 
     cl_progress_indicator=>progress_indicate( i_text = 'Selecting data...'(014) ).
@@ -1720,7 +1720,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDIF.
 *   Only continue if there are transports left to check
     IF main_list IS NOT INITIAL.
-      lt_main_list_vrsd = get_vrsd_objects( EXPORTING im_table = main_list ).
+      lt_main_list_vrsd = get_vrsd_objects( im_table = main_list ).
 *     Add the VRSD entries to the list
       APPEND LINES OF lt_main_list_vrsd TO main_list.
       sort_list( CHANGING ch_list = main_list ).
@@ -1731,7 +1731,6 @@ CLASS lcl_ztct IMPLEMENTATION.
   METHOD get_added_objects.
     DATA lp_tabix          TYPE sytabix.
     DATA ls_main           TYPE ty_request_details.
-    DATA ls_main_list_vrsd TYPE ty_request_details.
     DATA lt_main_list_vrsd TYPE ty_request_details_tt.
     DATA ls_added          TYPE ty_request_details.
     FIELD-SYMBOLS <lf_main_list> TYPE ty_request_details.
@@ -1771,7 +1770,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   dependent objects. For example: If from E071 a function group
 *   is retrieved, VRSD will contain all functions too.
     IF re_to_add[] IS NOT INITIAL.
-      lt_main_list_vrsd = get_vrsd_objects( EXPORTING im_table = re_to_add ).
+      lt_main_list_vrsd = get_vrsd_objects( im_table = re_to_add ).
 *     Add the VRSD entries to the list
       APPEND LINES OF lt_main_list_vrsd TO re_to_add.
     ENDIF.
@@ -1814,8 +1813,6 @@ CLASS lcl_ztct IMPLEMENTATION.
 
   METHOD get_vrsd_objects.
     DATA lt_main_list_vrsd  TYPE ty_request_details_tt.
-    DATA ls_main_list_vrsd  TYPE ty_request_details.
-    FIELD-SYMBOLS <lf_main_list> TYPE ty_request_details.
 
     FREE lt_main_list_vrsd.
 *     Also read from the version table VRSD. This table contains all
