@@ -1720,7 +1720,7 @@ CLASS lcl_ztct IMPLEMENTATION.
     ENDIF.
 *   Only continue if there are transports left to check
     IF main_list IS NOT INITIAL.
-      lt_main_list_vrsd = get_vrsd_objects( im_table = main_list ).
+      lt_main_list_vrsd = get_vrsd_objects( main_list ).
 *     Add the VRSD entries to the list
       APPEND LINES OF lt_main_list_vrsd TO main_list.
       sort_list( CHANGING ch_list = main_list ).
@@ -1770,7 +1770,7 @@ CLASS lcl_ztct IMPLEMENTATION.
 *   dependent objects. For example: If from E071 a function group
 *   is retrieved, VRSD will contain all functions too.
     IF re_to_add[] IS NOT INITIAL.
-      lt_main_list_vrsd = get_vrsd_objects( im_table = re_to_add ).
+      lt_main_list_vrsd = get_vrsd_objects( re_to_add ).
 *     Add the VRSD entries to the list
       APPEND LINES OF lt_main_list_vrsd TO re_to_add.
     ENDIF.
