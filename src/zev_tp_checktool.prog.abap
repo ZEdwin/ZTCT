@@ -1990,7 +1990,6 @@ CLASS lcl_ztct IMPLEMENTATION.
 *       same for all the transport objects (data retrieved on transport
 *       level).
         ls_main_backup = main_list_line.
-        CONTINUE.
       ELSE.
 *       Update the main table from the workarea.
         MODIFY ch_table FROM ls_main_backup
@@ -2011,7 +2010,6 @@ CLASS lcl_ztct IMPLEMENTATION.
                                      as4date
                                      project
                                      project_descr.
-        CONTINUE.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
