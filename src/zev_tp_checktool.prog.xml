@@ -2399,6 +2399,12 @@
     </item>
     <item>
      <ID>I</ID>
+     <KEY>C46</KEY>
+     <ENTRY>Message if cofiles are missing</ENTRY>
+     <LENGTH>132</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
      <KEY>C51</KEY>
      <ENTRY>Objects in the range will not be taken into account when checking the</ENTRY>
      <LENGTH>132</LENGTH>
@@ -3108,6 +3114,12 @@
        <KEY>C45</KEY>
        <ENTRY>Remove transports not in buffer</ENTRY>
        <LENGTH>50</LENGTH>
+      </item>
+      <item>
+       <ID>I</ID>
+       <KEY>C46</KEY>
+       <ENTRY>Message if cofiles are missing</ENTRY>
+       <LENGTH>132</LENGTH>
       </item>
       <item>
        <ID>I</ID>

@@ -544,6 +544,12 @@ SELECTION-SCREEN PUSHBUTTON (4) sc_buff
 SELECTION-SCREEN END OF LINE.
 
 SELECTION-SCREEN BEGIN OF LINE.
+PARAMETERS p_cofile AS CHECKBOX DEFAULT ' '.
+* C46 - Message if co-file is missing
+SELECTION-SCREEN COMMENT 4(63) sc_c46.
+SELECTION-SCREEN END OF LINE.
+
+SELECTION-SCREEN BEGIN OF LINE.
 PARAMETERS p_chkky AS CHECKBOX DEFAULT 'X' MODIF ID chk
                    USER-COMMAND key.
 * C43 - Check table keys
@@ -624,6 +630,7 @@ INITIALIZATION.
   sc_c43 = 'Check table keys'(c43).
   sc_c44 = 'Reset `Checked` field'(c44).
   sc_c45 = 'Remove transports not in buffer'(c45).
+  sc_c46 = 'Message if cofiles are missing'(c46).
   sc_c51 = 'Objects in the range will not be taken into account when checking the'(c51).
   sc_c52 = 'transports. Useful to exclude common customizing tables (like SWOTICE for'(c52).
   sc_c53 = 'workflow or the tables for Pricing procedures).'(c53).
@@ -5196,7 +5203,7 @@ CLASS lcl_ztct IMPLEMENTATION.
         wrong_call    = 1
         no_info_found = 2
         OTHERS        = 3.
-    IF sy-subrc <> 0.
+    IF sy-subrc <> 0 and p_cofile = abap_true.
       MESSAGE ID sy-msgid TYPE 'I' NUMBER sy-msgno
               WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
     ENDIF.
